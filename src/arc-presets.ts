@@ -9,7 +9,7 @@ export const arcPresetSources: SourceEntry[] = [
     url: 'https://gamewith.net/nte/76491',
     verifiedAt: '2026-08-03',
     scope: {
-      ru: 'Актуальные характеристики The Wrong Gate на 80 уровне и значения эффекта на базовом и максимальном Mixing Level.',
+      ru: 'Актуальные характеристики «Неверных врат» на 80 уровне и значения эффекта на базовом и максимальном уровне M.',
       en: 'Current level-80 stats and base/max Mixing Level effect values for The Wrong Gate.',
     },
   },
@@ -31,7 +31,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'wrong-gate-m5', name: 'The Wrong Gate', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 5,
     benchmarkNote: {
-      ru: 'M5: постоянные +32% ATK; после лечения — +60% Anima DMG Ирой и +30% урона союзников на 20 секунд.',
+      ru: 'M5: постоянные +32% ATK; после лечения — +60% урона Анима Ирой и +30% урона союзников на 20 секунд.',
       en: 'M5: permanent +32% ATK; after healing, +60% Iroi Anima DMG and +30% ally damage for 20 seconds.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/47.webp',
@@ -46,7 +46,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'wrong-gate-m1', name: 'The Wrong Gate', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 1, benchmarkPercent: 100,
     benchmarkNote: {
-      ru: 'M1: постоянные +16% ATK; после лечения — +30% Anima DMG Ирой и +15% урона союзников на 20 секунд.',
+      ru: 'M1: постоянные +16% ATK; после лечения — +30% урона Анима Ирой и +15% урона союзников на 20 секунд.',
       en: 'M1: permanent +16% ATK; after healing, +30% Iroi Anima DMG and +15% ally damage for 20 seconds.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/47.webp',
@@ -61,14 +61,14 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'last-rose-m1', name: 'The Last Rose', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'CRIT Rate', secondaryValue: 24, mixing: 1, benchmarkPercent: 92.97,
     benchmarkNote: {
-      ru: 'Постоянные +14% ATK учитываются. Короткое окно Chaos Thorn до +60% CRIT DMG намеренно не включено в консервативную модель.',
+      ru: 'Постоянные +14% ATK учитываются. Короткое окно «Шипа хаоса» (Chaos Thorn) до +60% крит. урона намеренно не включено в консервативную модель.',
       en: 'The permanent +14% ATK is included. The short Chaos Thorn window of up to +60% CRIT DMG is deliberately omitted from the conservative model.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/8.webp',
     model: {
       static: { atkPct: 14 },
       conditional: {},
-      trigger: { ru: 'Chaos Thorn не моделируется', en: 'Chaos Thorn is not modeled' },
+      trigger: { ru: '«Шип хаоса» не моделируется', en: 'Chaos Thorn is not modeled' },
     },
     sourceId: 'prydwen-iroi',
   },
@@ -76,7 +76,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'youthful-fantasy-m5', name: 'Youthful Fantasy', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 5,
     benchmarkNote: {
-      ru: 'Break Intensity и Black Tome зависят от боя; частичная модель учитывает только постоянные 570 ATK и 30% ATK.',
+      ru: 'Сила пробития и эффект «Чёрного тома» зависят от боя; частичная модель учитывает только постоянные 570 ATK и 30% ATK.',
       en: 'Break Intensity and Black Tome are encounter-dependent; the partial model includes only the permanent 570 ATK and 30% ATK.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/4.webp',
@@ -87,7 +87,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'youthful-fantasy-m1', name: 'Youthful Fantasy', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 1, benchmarkPercent: 92.55,
     benchmarkNote: {
-      ru: 'Break Intensity и Black Tome зависят от боя; частичная модель учитывает только постоянные 570 ATK и 30% ATK.',
+      ru: 'Сила пробития и эффект «Чёрного тома» зависят от боя; частичная модель учитывает только постоянные 570 ATK и 30% ATK.',
       en: 'Break Intensity and Black Tome are encounter-dependent; the partial model includes only the permanent 570 ATK and 30% ATK.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/4.webp',
@@ -98,7 +98,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'fluff-fleetness-m1', name: 'Fluff of Fleetness', rarity: 'S', type: 'Liquid', baseAtk: 512,
     secondaryLabel: 'CRIT DMG', secondaryValue: 44, mixing: 1, benchmarkPercent: 92,
     benchmarkNote: {
-      ru: 'Постоянные 44% CRIT DMG учитываются. Стаки ATK на поле исключены, потому что Ирой почти всегда вне поля.',
+      ru: 'Постоянные 44% крит. урона учитываются. Стаки ATK на поле исключены, потому что Ирой почти всегда вне поля.',
       en: 'The permanent 44% CRIT DMG is included. On-field ATK stacks are omitted because Iroi is nearly always off-field.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/6.webp',
@@ -109,18 +109,18 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'shiny-days-m5', name: 'Shiny Days', rarity: 'A', type: 'Liquid', baseAtk: 475,
     secondaryLabel: 'ATK%', secondaryValue: 25, mixing: 5, benchmarkPercent: 91.88,
     benchmarkNote: {
-      ru: 'Постоянные 25% ATK учитываются. Бонус по Broken-целям исключён как зависящий от боя.',
+      ru: 'Постоянные 25% ATK учитываются. Бонус по пробитым целям исключён как зависящий от боя.',
       en: 'The permanent 25% ATK is included. The Broken-target bonus is omitted as encounter-dependent.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/1.webp',
-    model: { static: {}, conditional: {}, trigger: { ru: 'Broken-бонус не моделируется', en: 'Broken-target bonus is not modeled' } },
+    model: { static: {}, conditional: {}, trigger: { ru: 'Бонус по пробитым целям не моделируется', en: 'Broken-target bonus is not modeled' } },
     sourceId: 'prydwen-iroi',
   },
   {
     id: 'clear-skies-m5', name: 'Clear Skies', rarity: 'A', type: 'Liquid', baseAtk: 475,
     secondaryLabel: 'ATK%', secondaryValue: 25, mixing: 5, benchmarkPercent: 91.63,
     benchmarkNote: {
-      ru: 'Постоянные 25% ATK учитываются. Специализированный бонус Redirect Skill и Ultimate не применяется ко всему выбранному окну.',
+      ru: 'Постоянные 25% ATK учитываются. Специализированный бонус навыка перенаправления и ультимейта не применяется ко всему выбранному окну.',
       en: 'The permanent 25% ATK is included. The specialized Redirect Skill and Ultimate bonus is not applied to the whole selected window.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/5.webp',
