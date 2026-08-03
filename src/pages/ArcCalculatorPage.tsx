@@ -41,19 +41,20 @@ const initialStats: ArcStats = {
   baseAtk: 1500, flatAtk: 250, atkPercent: 70, critRate: 30, critDamage: 70, damageBonus: 10,
   skillMultiplier: 1000, hits: 1, enemyLevel: 82, resistance: 20, teamFixed: 2_300_000, passiveUptime: 100,
 };
+const initialScenario = arcBenchmarkScenarios[0]!;
 
 export function ArcCalculatorPage() {
   const { locale } = useI18n();
   const ru = locale === 'ru';
   const [mode, setMode] = useState<'benchmark' | 'custom'>('benchmark');
-  const [scenarioId, setScenarioId] = useState(arcBenchmarkScenarios[0].id);
+  const [scenarioId, setScenarioId] = useState(initialScenario.id);
   const [stats, setStats] = useState<ArcStats>(initialStats);
 
   const arcMap = useMemo(() => new Map(arcPresets.map((arc) => [arc.id, arc])), []);
   const sourceMap = useMemo(() => new Map(sources.map((source) => [source.id, source])), []);
   const customArcIdSet = useMemo(() => new Set<string>(customModelArcIds), []);
   const modelArcs = useMemo(() => arcPresets.filter((arc) => customArcIdSet.has(arc.id)), [customArcIdSet]);
-  const scenario = arcBenchmarkScenarios.find((item) => item.id === scenarioId) ?? arcBenchmarkScenarios[0];
+  const scenario = arcBenchmarkScenarios.find((item) => item.id === scenarioId) ?? initialScenario;
   const scenarioSource = sourceMap.get(scenario.sourceId);
 
   const benchmarkRows = useMemo(() => scenario.rows.flatMap<BenchmarkDisplayRow>((benchmark) => {
