@@ -22,6 +22,8 @@
     "src/arc-presets.ts",
     "src/esper-cycles.ts",
     "src/rotation-presets.ts",
+    "src/progression-data.ts",
+    "src/progression-engine.ts",
     "src/types.ts",
     "packages/calculation-core/src/index.ts"
   ]
