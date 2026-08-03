@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateDamage, calculateTeam, defenceMultiplier, resistanceMultiplier } from './index';
+import { calculateDamage, calculateTeam, compareArcTeams, defenceMultiplier, resistanceMultiplier } from './index';
 
 const baseInput = {
   characterLevel: 80,
@@ -15,6 +15,14 @@ const baseInput = {
   critRate: 50,
   critDamage: 100,
   enemy: { level: 80, resistance: 20, defenceReduction: 0, resistanceReduction: 0 },
+};
+
+const emptyModifiers = {
+  atkPercent: 0,
+  critRate: 0,
+  critDamage: 0,
+  damageBonus: 0,
+  allyDamageBonus: 0,
 };
 
 describe('calculation core', () => {
@@ -46,5 +54,51 @@ describe('calculation core', () => {
   it('sanitizes non-finite numeric values instead of propagating NaN', () => {
     const result = calculateDamage({ ...baseInput, baseAtk: Number.NaN });
     expect(Number.isFinite(result.expected)).toBe(true);
+  });
+
+  it('keeps static Arc stats independent from conditional uptime', () => {
+    const base = { ...baseInput, teamDamageBonus: 0 };
+    const rows = compareArcTeams(base, [
+      {
+        id: 'zero-uptime', name: 'Zero', arcAtk: 500,
+        static: { ...emptyModifiers, atkPercent: 30 },
+        conditional: emptyModifiers,
+        conditionalUptime: 0,
+      },
+      {
+        id: 'full-uptime', name: 'Full', arcAtk: 500,
+        static: { ...emptyModifiers, atkPercent: 30 },
+        conditional: emptyModifiers,
+        conditionalUptime: 100,
+      },
+    ], 1000);
+    expect(rows[0]!.wearerDamage).toBeCloseTo(rows[1]!.wearerDamage, 8);
+    expect(rows[0]!.teamDamage).toBeCloseTo(rows[1]!.teamDamage, 8);
+  });
+
+  it('applies ally-only bonuses to fixed ally damage instead of wearer damage', () => {
+    const base = { ...baseInput, teamDamageBonus: 0 };
+    const [baseline, buffed] = [
+      compareArcTeams(base, [{ id: 'base', name: 'Base', arcAtk: 500, static: emptyModifiers, conditional: emptyModifiers, conditionalUptime: 100 }], 1000)[0]!,
+      compareArcTeams(base, [{ id: 'buff', name: 'Buff', arcAtk: 500, static: emptyModifiers, conditional: { ...emptyModifiers, allyDamageBonus: 15 }, conditionalUptime: 100 }], 1000)[0]!,
+    ];
+    expect(buffed.wearerDamage).toBeCloseTo(baseline.wearerDamage, 8);
+    expect(buffed.allyDamage).toBe(1150);
+    expect(buffed.teamDamage - baseline.teamDamage).toBeCloseTo(150, 8);
+  });
+
+  it('ranks Arc comparisons by total team damage', () => {
+    const rows = compareArcTeams({ ...baseInput, teamDamageBonus: 0 }, [
+      {
+        id: 'wearer', name: 'Wearer Arc', arcAtk: 600,
+        static: { ...emptyModifiers, damageBonus: 20 }, conditional: emptyModifiers, conditionalUptime: 100,
+      },
+      {
+        id: 'team', name: 'Team Arc', arcAtk: 500,
+        static: emptyModifiers, conditional: { ...emptyModifiers, allyDamageBonus: 50 }, conditionalUptime: 100,
+      },
+    ], 10000);
+    expect(rows[0]!.id).toBe('team');
+    expect(rows[0]!.relative).toBe(1);
   });
 });
