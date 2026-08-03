@@ -99,43 +99,69 @@ export function calculateTeam(members: TeamMemberInput[], duration: number): Tea
   };
 }
 
-export interface ArcModelInput {
-  id: string;
-  name: string;
-  arcAtk: number;
+export interface ArcModifierSet {
   atkPercent: number;
   critRate: number;
   critDamage: number;
   damageBonus: number;
-  teamDamageBonus: number;
-  passiveUptime: number;
+  allyDamageBonus: number;
 }
 
-export function compareArcs(
-  base: Omit<DamageInput, 'arcAtk' | 'atkPercent' | 'critRate' | 'critDamage' | 'damageBonus' | 'teamDamageBonus'> & {
+export interface ArcModelInput {
+  id: string;
+  name: string;
+  arcAtk: number;
+  static: ArcModifierSet;
+  conditional: ArcModifierSet;
+  conditionalUptime: number;
+}
+
+export interface ArcTeamComparisonResult extends ArcModelInput, DamageResult {
+  wearerDamage: number;
+  allyDamage: number;
+  teamDamage: number;
+  relative: number;
+}
+
+const scaledModifiers = (arc: ArcModelInput): ArcModifierSet => {
+  const uptime = clamp(finite(arc.conditionalUptime), 0, 100) / 100;
+  return {
+    atkPercent: finite(arc.static.atkPercent) + finite(arc.conditional.atkPercent) * uptime,
+    critRate: finite(arc.static.critRate) + finite(arc.conditional.critRate) * uptime,
+    critDamage: finite(arc.static.critDamage) + finite(arc.conditional.critDamage) * uptime,
+    damageBonus: finite(arc.static.damageBonus) + finite(arc.conditional.damageBonus) * uptime,
+    allyDamageBonus: finite(arc.static.allyDamageBonus) + finite(arc.conditional.allyDamageBonus) * uptime,
+  };
+};
+
+export function compareArcTeams(
+  base: Omit<DamageInput, 'arcAtk' | 'atkPercent' | 'critRate' | 'critDamage' | 'damageBonus'> & {
     atkPercent: number;
     critRate: number;
     critDamage: number;
     damageBonus: number;
-    teamDamageBonus: number;
   },
   arcs: ArcModelInput[],
-): Array<ArcModelInput & DamageResult & { relative: number }> {
+  fixedAllyDamage: number,
+): ArcTeamComparisonResult[] {
+  const safeAllyDamage = Math.max(0, finite(fixedAllyDamage));
   const rows = arcs.map((arc) => {
-    const uptime = clamp(arc.passiveUptime, 0, 100) / 100;
+    const modifiers = scaledModifiers(arc);
     const result = calculateDamage({
       ...base,
       arcAtk: arc.arcAtk,
-      atkPercent: base.atkPercent + arc.atkPercent * uptime,
-      critRate: base.critRate + arc.critRate * uptime,
-      critDamage: base.critDamage + arc.critDamage * uptime,
-      damageBonus: base.damageBonus + arc.damageBonus * uptime,
-      teamDamageBonus: base.teamDamageBonus + arc.teamDamageBonus * uptime,
+      atkPercent: finite(base.atkPercent) + modifiers.atkPercent,
+      critRate: finite(base.critRate) + modifiers.critRate,
+      critDamage: finite(base.critDamage) + modifiers.critDamage,
+      damageBonus: finite(base.damageBonus) + modifiers.damageBonus,
     });
-    return { ...arc, ...result };
+    const allyDamage = safeAllyDamage * Math.max(0, 1 + modifiers.allyDamageBonus / 100);
+    const wearerDamage = result.expected;
+    const teamDamage = wearerDamage + allyDamage;
+    return { ...arc, ...result, wearerDamage, allyDamage, teamDamage, relative: 0 };
   });
-  const best = rows.reduce((max, row) => Math.max(max, row.expected), 0);
+  const best = rows.reduce((max, row) => Math.max(max, row.teamDamage), 0);
   return rows
-    .map((row) => ({ ...row, relative: best > 0 ? row.expected / best : 0 }))
-    .sort((a, b) => b.expected - a.expected);
+    .map((row) => ({ ...row, relative: best > 0 ? row.teamDamage / best : 0 }))
+    .sort((a, b) => b.teamDamage - a.teamDamage);
 }

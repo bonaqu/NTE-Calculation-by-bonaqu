@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { arcDirectory } from './arc-directory';
+import { arcCatalog, arcCatalogSourceIds } from './arc-catalog';
 
-const findArc = (name: string) => arcDirectory.find((arc) => arc.name === name);
+const findArc = (name: string) => arcCatalog.find((arc) => arc.name === name);
 
-describe('complete Arc directory', () => {
+describe('complete Arc catalog', () => {
   it('contains 47 unique sourced entries', () => {
-    expect(arcDirectory).toHaveLength(47);
-    expect(new Set(arcDirectory.map((arc) => arc.id)).size).toBe(47);
-    expect(new Set(arcDirectory.map((arc) => arc.name)).size).toBe(47);
-    expect(new Set(arcDirectory.map((arc) => arc.image)).size).toBe(47);
+    expect(arcCatalog).toHaveLength(47);
+    expect(new Set(arcCatalog.map((arc) => arc.id)).size).toBe(47);
+    expect(new Set(arcCatalog.map((arc) => arc.name)).size).toBe(47);
+    expect(new Set(arcCatalog.map((arc) => arc.image)).size).toBe(47);
   });
 
   it('keeps source and verification metadata on every Arc', () => {
-    for (const arc of arcDirectory) {
-      expect(arc.sourceId).toBe('prydwen-arcs');
+    for (const arc of arcCatalog) {
+      expect(arcCatalogSourceIds).toContain(arc.sourceId);
       expect(arc.verifiedAt).toBe('2026-08-03');
       expect(arc.baseAtk).toBeGreaterThan(0);
       expect(arc.secondaryValue).toBeGreaterThan(0);
@@ -23,12 +23,17 @@ describe('complete Arc directory', () => {
     }
   });
 
-  it('preserves representative published Arc values', () => {
+  it('uses a current independent source for The Wrong Gate', () => {
     expect(findArc('The Wrong Gate')).toMatchObject({
       rarity: 'S', type: 'Liquid', baseAtk: 570,
       secondaryLabel: 'ATK%', secondaryValue: 30,
+      sourceId: 'gamewith-wrong-gate',
       image: 'https://cdn.prydwen.gg/images/nte/weapons/47.webp',
     });
+    expect(findArc('Blushing Mirage')?.sourceId).toBe('prydwen-arcs');
+  });
+
+  it('preserves representative published Arc values', () => {
     expect(findArc('Blushing Mirage')).toMatchObject({
       rarity: 'S', type: 'Synthesis', baseAtk: 570,
       secondaryLabel: 'CRIT Rate', secondaryValue: 24,
@@ -42,7 +47,7 @@ describe('complete Arc directory', () => {
   });
 
   it('covers every supported Arc type and rarity', () => {
-    expect(new Set(arcDirectory.map((arc) => arc.rarity))).toEqual(new Set(['S', 'A', 'B']));
-    expect(new Set(arcDirectory.map((arc) => arc.type))).toEqual(new Set(['Solid', 'Gas', 'Liquid', 'Plasma', 'Synthesis']));
+    expect(new Set(arcCatalog.map((arc) => arc.rarity))).toEqual(new Set(['S', 'A', 'B']));
+    expect(new Set(arcCatalog.map((arc) => arc.type))).toEqual(new Set(['Solid', 'Gas', 'Liquid', 'Plasma', 'Synthesis']));
   });
 });

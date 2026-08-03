@@ -1,10 +1,11 @@
-import { arcDirectory } from '../../../src/arc-directory';
-import { arcPresets, characterDirectory, iroiProgression } from '../../../src/data';
+import { arcCatalog, arcCatalogSourceIds } from '../../../src/arc-catalog';
+import { arcPresets } from '../../../src/arc-presets';
+import { characterDirectory, iroiProgression } from '../../../src/data';
 import { calculateDamage, calculateTeam, type DamageInput, type TeamMemberInput } from '../../../packages/calculation-core/src';
 
 const MAX_BODY_BYTES = 32_768;
-const FORMULA_VERSION = '0.1';
-const SERVICE_VERSION = '0.2.0';
+const FORMULA_VERSION = '0.2';
+const SERVICE_VERSION = '0.3.0';
 const DATASET_VERIFIED_AT = '2026-08-03';
 
 function corsHeaders(): Record<string, string> {
@@ -101,9 +102,9 @@ export default {
         }, 200, requestId);
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/arcs') {
         response = json({
-          data: arcDirectory,
-          count: arcDirectory.length,
-          sourceId: 'prydwen-arcs',
+          data: arcCatalog,
+          count: arcCatalog.length,
+          sourceIds: arcCatalogSourceIds,
           verifiedAt: DATASET_VERIFIED_AT,
         }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/arc-presets') {
@@ -111,6 +112,7 @@ export default {
           data: arcPresets,
           count: arcPresets.length,
           verifiedAt: DATASET_VERIFIED_AT,
+          formulaVersion: FORMULA_VERSION,
           scope: 'calculator-presets',
         }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/characters') {

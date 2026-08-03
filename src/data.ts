@@ -1,4 +1,4 @@
-import type { ArcBenchmarkScenario, ArcPreset, CharacterEntry, ProgressionStep, SourceEntry } from './types';
+import type { ArcBenchmarkScenario, CharacterEntry, ProgressionStep, SourceEntry } from './types';
 
 export const sources: SourceEntry[] = [
   {
@@ -19,8 +19,8 @@ export const sources: SourceEntry[] = [
     url: 'https://www.prydwen.gg/neverness-to-everness/arcs',
     verifiedAt: '2026-08-03',
     scope: {
-      ru: 'Редкость, тип, базовые характеристики и описания эффектов дуг.',
-      en: 'Arc rarity, type, base stats and passive descriptions.',
+      ru: 'Редкость, тип, базовые характеристики и описания эффектов дуг, кроме записей с отдельно указанным актуальным источником.',
+      en: 'Arc rarity, type, base stats and passive descriptions, except entries with an explicitly listed current source.',
     },
   },
   {
@@ -68,90 +68,6 @@ export const sources: SourceEntry[] = [
     },
   },
 ];
-
-export const arcPresets: ArcPreset[] = [
-  {
-    id: 'wrong-gate-m5', name: 'The Wrong Gate', rarity: 'S', type: 'Liquid', baseAtk: 570,
-    secondaryLabel: 'ATK', secondaryValue: 46, mixing: 5,
-    benchmarkNote: {
-      ru: 'Значение M5 присутствует только в предоставленном расширенном расчёте Rivyn Elowen.',
-      en: 'The M5 value is available only in the supplied extended Rivyn Elowen calculation.',
-    },
-    image: 'https://cdn.prydwen.gg/images/nte/weapons/47.webp', effect: { atkPct: 46, teamDmgBonus: 15 }, sourceId: 'user-rivyn-chart',
-  },
-  {
-    id: 'wrong-gate-m1', name: 'The Wrong Gate', rarity: 'S', type: 'Liquid', baseAtk: 570,
-    secondaryLabel: 'ATK', secondaryValue: 46, mixing: 1, benchmarkPercent: 100,
-    benchmarkNote: {
-      ru: 'Сигнатурная дуга Ирой и базовая точка публичного командного сравнения.',
-      en: 'Iroi signature Arc and the baseline for the public team comparison.',
-    },
-    image: 'https://cdn.prydwen.gg/images/nte/weapons/47.webp', effect: { atkPct: 46, teamDmgBonus: 15 }, sourceId: 'prydwen-iroi',
-  },
-  {
-    id: 'last-rose-m1', name: 'The Last Rose', rarity: 'S', type: 'Liquid', baseAtk: 570,
-    secondaryLabel: 'CRIT Rate', secondaryValue: 24, mixing: 1, benchmarkPercent: 92.97,
-    benchmarkNote: {
-      ru: 'Активный эффект с DoT нереалистично поддерживать на Ирой; в частичной модели он не учитывается.',
-      en: 'Its DoT-based active is unrealistic to maintain on Iroi and is omitted from the partial model.',
-    },
-    image: 'https://cdn.prydwen.gg/images/nte/weapons/8.webp', effect: { critRate: 24 }, sourceId: 'prydwen-iroi',
-  },
-  {
-    id: 'youthful-fantasy-m5', name: 'Youthful Fantasy', rarity: 'S', type: 'Liquid', baseAtk: 570,
-    secondaryLabel: 'ATK', secondaryValue: 30, mixing: 5,
-    benchmarkNote: {
-      ru: 'M5 показана в расширенной таблице Rivyn; публичная таблица Prydwen публикует для этой дуги M1.',
-      en: 'M5 appears in the extended Rivyn table; the public Prydwen table publishes M1 for this Arc.',
-    },
-    image: 'https://cdn.prydwen.gg/images/nte/weapons/4.webp', effect: { atkPct: 30 }, sourceId: 'user-rivyn-chart',
-  },
-  {
-    id: 'youthful-fantasy-m1', name: 'Youthful Fantasy', rarity: 'S', type: 'Liquid', baseAtk: 570,
-    secondaryLabel: 'ATK', secondaryValue: 30, mixing: 1, benchmarkPercent: 92.55,
-    benchmarkNote: {
-      ru: 'Ценность Break зависит от боя; для Ирой дуга в основном работает как 570 ATK + 30% ATK.',
-      en: 'Break value is encounter-dependent; for Iroi it mainly acts as 570 ATK plus 30% ATK.',
-    },
-    image: 'https://cdn.prydwen.gg/images/nte/weapons/4.webp', effect: { atkPct: 30 }, sourceId: 'prydwen-iroi',
-  },
-  {
-    id: 'fluff-fleetness-m1', name: 'Fluff of Fleetness', rarity: 'S', type: 'Liquid', baseAtk: 512,
-    secondaryLabel: 'CRIT DMG', secondaryValue: 44, mixing: 1, benchmarkPercent: 92,
-    benchmarkNote: {
-      ru: 'Низкое время Ирой на поле ухудшает набор стаков активного эффекта.',
-      en: 'Iroi low field time makes the stacking active difficult to realize.',
-    },
-    image: 'https://cdn.prydwen.gg/images/nte/weapons/6.webp', effect: { critDmg: 44 }, sourceId: 'prydwen-iroi',
-  },
-  {
-    id: 'shiny-days-m5', name: 'Shiny Days', rarity: 'A', type: 'Liquid', baseAtk: 475,
-    secondaryLabel: 'ATK', secondaryValue: 25, mixing: 5, benchmarkPercent: 91.88,
-    benchmarkNote: {
-      ru: 'Пассив окна Break трудно реализовать в коротких боях.',
-      en: 'The Break-window passive is difficult to realize in short encounters.',
-    },
-    image: 'https://cdn.prydwen.gg/images/nte/weapons/1.webp', effect: { atkPct: 25 }, sourceId: 'prydwen-iroi',
-  },
-  {
-    id: 'clear-skies-m5', name: 'Clear Skies', rarity: 'A', type: 'Liquid', baseAtk: 475,
-    secondaryLabel: 'ATK', secondaryValue: 25, mixing: 5, benchmarkPercent: 91.63,
-    benchmarkNote: {
-      ru: 'Эффект усиливает не весь профиль урона Ирой; в частичной модели учитывается только подтверждённый ATK.',
-      en: 'Its effect does not cover Iroi full damage profile; the partial model includes only verified ATK.',
-    },
-    image: 'https://cdn.prydwen.gg/images/nte/weapons/5.webp', effect: { atkPct: 25 }, sourceId: 'prydwen-iroi',
-  },
-];
-
-export const customModelArcIds = [
-  'wrong-gate-m1',
-  'last-rose-m1',
-  'youthful-fantasy-m1',
-  'fluff-fleetness-m1',
-  'shiny-days-m5',
-  'clear-skies-m5',
-] as const;
 
 export const arcBenchmarkScenarios: ArcBenchmarkScenario[] = [
   {

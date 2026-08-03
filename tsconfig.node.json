@@ -16,6 +16,8 @@
     "workers",
     "src/data.ts",
     "src/arc-directory.ts",
+    "src/arc-catalog.ts",
+    "src/arc-presets.ts",
     "src/types.ts",
     "packages/calculation-core/src/index.ts"
   ]

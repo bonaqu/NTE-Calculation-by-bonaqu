@@ -7,10 +7,23 @@ Bilingual RU/EN theorycrafting toolkit for **Neverness to Everness** with transp
 ## Included tools
 
 - **Team Calculation** — editable four-slot aggregate rotation model with shared enemy DEF/RES profile.
-- **Arcs Calculation** — separate sourced Prydwen and Rivyn Elowen Iroi benchmarks plus a custom-stat partial model.
+- **Arcs Calculation** — separate sourced Prydwen and Rivyn Elowen Iroi benchmarks plus a custom team model with static and conditional effects separated.
 - **Character Progression** — Iroi ascension inventory planner through the level-80 unlock.
 - **Database & Methodology** — 22-character directory, 47-Arc searchable catalog, formula version and source registry.
 - **Cloudflare API** — versioned JSON datasets and deterministic calculation endpoints.
+
+## Arc model v0.2
+
+The custom Arc comparison ranks by modeled **total team damage**:
+
+```text
+Team DMG = Iroi DMG + Base Ally DMG × (1 + Ally Bonus × Conditional Uptime)
+```
+
+- Arc substats and always-on passives apply at 100%.
+- The uptime control scales explicitly conditional effects only.
+- Ally-only damage bonuses modify ally damage, not the wearer.
+- Effects that cannot be reproduced from the current public sources are omitted and labeled instead of guessed.
 
 ## Production
 
@@ -46,8 +59,8 @@ npm run worker:dev
 
 - `GET /api/v1`
 - `GET /api/v1/health`
-- `GET /api/v1/data/arcs` — complete 47-Arc directory
-- `GET /api/v1/data/arc-presets` — calculator-specific Arc presets
+- `GET /api/v1/data/arcs` — complete 47-Arc catalog with per-entry source IDs
+- `GET /api/v1/data/arc-presets` — calculator-specific modeled Arc presets
 - `GET /api/v1/data/characters`
 - `GET /api/v1/data/progression/iroi`
 - `POST /api/v1/calculate/damage`
@@ -57,12 +70,12 @@ npm run worker:dev
 
 - GitHub Pages deploys from `bonaqu_projects` through `.github/workflows/pages.yml`.
 - Cloudflare Worker `nte-calculation-api` deploys through `.github/workflows/worker.yml` using `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` repository secrets.
-- A release is considered deployed only after the workflow verifies that the public Pages URL is reachable and `/api/v1/health` returns the documented `ok: true` JSON contract.
+- A release is considered deployed only after the workflow verifies the public Pages URL, the health contract, catalog provenance and calculator preset values.
 - Deployment evidence is posted automatically to release-tracking issue #5.
 
 ## Data policy
 
-Verified source data is kept separate from editable assumptions. General Arc catalog entries are not reused as calculator presets unless their behavior is modeled and tested. Unknown mechanics are omitted or marked as partial estimates. Formula and dataset changes must include source metadata and a verification date.
+Verified source data is kept separate from editable assumptions. General Arc catalog entries are not reused as calculator presets unless their behavior is modeled and tested. The Wrong Gate uses a current independent source because the public Prydwen Arc index still exposes that entry as incomplete. Unknown mechanics are omitted or marked as partial estimates. Formula and dataset changes must include source metadata and a verification date.
 
 ## Disclaimer
 

@@ -6,6 +6,21 @@ export interface LocalizedText {
   en: string;
 }
 
+export interface ArcModelModifiers {
+  atkPct?: number;
+  critRate?: number;
+  critDmg?: number;
+  dmgBonus?: number;
+  allyDmgBonus?: number;
+  defIgnore?: number;
+}
+
+export interface ArcModelDefinition {
+  static: ArcModelModifiers;
+  conditional: ArcModelModifiers;
+  trigger: LocalizedText;
+}
+
 export interface ArcPreset {
   id: string;
   name: string;
@@ -18,15 +33,14 @@ export interface ArcPreset {
   benchmarkPercent?: number;
   benchmarkNote: LocalizedText;
   image: string;
-  effect: {
-    atkPct?: number;
-    critRate?: number;
-    critDmg?: number;
-    dmgBonus?: number;
-    teamDmgBonus?: number;
-    defIgnore?: number;
-  };
+  model?: ArcModelDefinition;
+  /** Deprecated compatibility field for the pre-v0.2 dataset. Runtime code must use ModeledArcPreset. */
+  effect?: ArcModelModifiers & { teamDmgBonus?: number };
   sourceId: string;
+}
+
+export interface ModeledArcPreset extends ArcPreset {
+  model: ArcModelDefinition;
 }
 
 export interface ArcBenchmarkRow {
