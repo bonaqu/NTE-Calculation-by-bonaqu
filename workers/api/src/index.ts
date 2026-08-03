@@ -3,13 +3,20 @@ import { arcPresets } from '../../../src/arc-presets';
 import { characterCatalog } from '../../../src/characters';
 import { iroiProgression } from '../../../src/data';
 import { esperCycles } from '../../../src/esper-cycles';
+import {
+  ascensionMaterials,
+  ascensionSteps,
+  bossMaterialIds,
+  characterAscensionProfiles,
+  progressionDatasetSources,
+} from '../../../src/progression-data';
 import { rotationPresets } from '../../../src/rotation-presets';
 import { calculateDamage, calculateTeam, type DamageInput, type TeamMemberInput } from '../../../packages/calculation-core/src';
 
 const MAX_BODY_BYTES = 32_768;
 const FORMULA_VERSION = '0.2';
-const SERVICE_VERSION = '0.5.0';
-const DATASET_VERIFIED_AT = '2026-08-03';
+const SERVICE_VERSION = '0.6.0';
+const DATASET_VERIFIED_AT = '2026-08-04';
 
 function corsHeaders(): Record<string, string> {
   return {
@@ -76,6 +83,7 @@ const endpoints = [
   '/api/v1/data/characters',
   '/api/v1/data/esper-cycles',
   '/api/v1/data/rotation-presets',
+  '/api/v1/data/progression/characters',
   '/api/v1/data/progression/iroi',
   '/api/v1/calculate/damage',
   '/api/v1/calculate/team',
@@ -147,8 +155,22 @@ export default {
           scope: 'sourced-ordered-rotation-presets',
           timingPolicy: 'No unsourced second-by-second duration or DPS claims.',
         }, 200, requestId, 'public, max-age=300');
+      } else if (request.method === 'GET' && url.pathname === '/api/v1/data/progression/characters') {
+        response = json({
+          data: characterAscensionProfiles,
+          count: characterAscensionProfiles.length,
+          steps: ascensionSteps,
+          stepCount: ascensionSteps.length,
+          materials: ascensionMaterials,
+          materialCount: Object.keys(ascensionMaterials).length,
+          bossMaterialCount: bossMaterialIds.length,
+          sources: progressionDatasetSources,
+          verifiedAt: DATASET_VERIFIED_AT,
+          scope: 'released-character-ascension-only',
+          exclusions: ['character-exp', 'skills', 'passives', 'life-skills', 'arcs'],
+        }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/progression/iroi') {
-        response = json({ data: iroiProgression, verifiedAt: DATASET_VERIFIED_AT }, 200, requestId, 'public, max-age=300');
+        response = json({ data: iroiProgression, verifiedAt: DATASET_VERIFIED_AT, deprecatedBy: '/api/v1/data/progression/characters' }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'POST' && url.pathname === '/api/v1/calculate/damage') {
         const input = await parseJson(request);
         response = isDamageInput(input)
