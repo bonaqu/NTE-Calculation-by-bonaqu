@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { CheckCircle2, ExternalLink, Info, SlidersHorizontal } from 'lucide-react';
-import { compareArcs } from '../../packages/calculation-core/src';
-import { arcBenchmarkScenarios, arcPresets, customModelArcIds, sources } from '../data';
+import { compareArcTeams } from '../../packages/calculation-core/src';
+import { arcBenchmarkScenarios, sources } from '../data';
+import { arcPresetSources, arcPresets, arcPresetToModel, customModelArcIds } from '../arc-presets';
 import { useI18n } from '../i18n';
 import { Field, formatNumber, Panel } from '../components/UI';
 import type { ArcBenchmarkRow, ArcPreset } from '../types';
@@ -28,12 +29,12 @@ const labels: Record<'ru' | 'en', Record<ArcStatKey, string>> = {
   ru: {
     baseAtk: 'Базовая ATK Ирой', flatAtk: 'Плоская ATK', atkPercent: 'ATK, %', critRate: 'Крит. шанс, %',
     critDamage: 'Крит. урон, %', damageBonus: 'Бонус урона, %', skillMultiplier: 'Множитель окна, %', hits: 'Попаданий',
-    enemyLevel: 'Уровень врага', resistance: 'Сопротивление врага, %', teamFixed: 'Урон команды без Ирой', passiveUptime: 'Аптайм учтённых эффектов, %',
+    enemyLevel: 'Уровень врага', resistance: 'Сопротивление врага, %', teamFixed: 'Базовый урон союзников', passiveUptime: 'Аптайм условных эффектов, %',
   },
   en: {
     baseAtk: 'Iroi base ATK', flatAtk: 'Flat ATK', atkPercent: 'ATK, %', critRate: 'CRIT Rate, %',
     critDamage: 'CRIT DMG, %', damageBonus: 'DMG Bonus, %', skillMultiplier: 'Window multiplier, %', hits: 'Hits',
-    enemyLevel: 'Enemy level', resistance: 'Enemy RES, %', teamFixed: 'Team damage without Iroi', passiveUptime: 'Modeled effect uptime, %',
+    enemyLevel: 'Enemy level', resistance: 'Enemy RES, %', teamFixed: 'Base ally damage', passiveUptime: 'Conditional effect uptime, %',
   },
 };
 
@@ -51,13 +52,15 @@ export function ArcCalculatorPage() {
   const [stats, setStats] = useState<ArcStats>(initialStats);
 
   const arcMap = useMemo(() => new Map(arcPresets.map((arc) => [arc.id, arc])), []);
-  const sourceMap = useMemo(() => new Map(sources.map((source) => [source.id, source])), []);
+  const sourceMap = useMemo(() => new Map([...sources, ...arcPresetSources].map((source) => [source.id, source])), []);
   const customArcIdSet = useMemo(() => new Set<string>(customModelArcIds), []);
   const modelArcs = useMemo(() => arcPresets.filter((arc) => customArcIdSet.has(arc.id)), [customArcIdSet]);
   const scenario = arcBenchmarkScenarios.find((item) => item.id === scenarioId) ?? initialScenario;
   const scenarioSource = sourceMap.get(scenario.sourceId);
   const tableLabels = {
-    atk: 'ATK',
+    arcAtk: ru ? 'Базовая ATK дуги' : 'Arc base ATK',
+    totalAtk: ru ? 'Итоговая ATK' : 'Total ATK',
+    iroiDamage: ru ? 'Урон Ирой' : 'Iroi DMG',
     teamDamage: ru ? 'Урон команды' : 'Team DMG',
     dps: 'DPS',
     relative: ru ? 'Сравнение' : 'Relative',
@@ -69,22 +72,25 @@ export function ArcCalculatorPage() {
     return arc ? [{ arc, benchmark }] : [];
   }), [arcMap, scenario]);
 
-  const customRows = useMemo(() => compareArcs({
-    characterLevel: 80, baseAtk: stats.baseAtk, flatAtk: stats.flatAtk, atkPercent: stats.atkPercent,
-    teamAtkPercent: 0, skillMultiplier: stats.skillMultiplier, hits: stats.hits, damageBonus: stats.damageBonus,
-    teamDamageBonus: 0, critRate: stats.critRate, critDamage: stats.critDamage,
-    enemy: { level: stats.enemyLevel, resistance: stats.resistance, defenceReduction: 0, resistanceReduction: 0 },
-  }, modelArcs.map((arc) => ({
-    id: arc.id, name: `${arc.name} M${arc.mixing}`, arcAtk: arc.baseAtk,
-    atkPercent: arc.effect.atkPct ?? 0, critRate: arc.effect.critRate ?? 0,
-    critDamage: arc.effect.critDmg ?? 0, damageBonus: arc.effect.dmgBonus ?? 0,
-    teamDamageBonus: arc.effect.teamDmgBonus ?? 0, passiveUptime: stats.passiveUptime,
-  }))), [modelArcs, stats]);
-  const bestCustomTotal = (customRows[0]?.expected ?? 0) + Math.max(0, stats.teamFixed);
-  const customDisplayRows = useMemo(() => customRows.flatMap((row) => {
-    const arc = arcMap.get(row.id);
-    return arc ? [{ arc, percent: bestCustomTotal > 0 ? ((row.expected + Math.max(0, stats.teamFixed)) / bestCustomTotal) * 100 : 0 }] : [];
-  }), [arcMap, bestCustomTotal, customRows, stats.teamFixed]);
+  const customRows = useMemo(() => compareArcTeams({
+    characterLevel: 80,
+    baseAtk: stats.baseAtk,
+    flatAtk: stats.flatAtk,
+    atkPercent: stats.atkPercent,
+    teamAtkPercent: 0,
+    skillMultiplier: stats.skillMultiplier,
+    hits: stats.hits,
+    damageBonus: stats.damageBonus,
+    teamDamageBonus: 0,
+    critRate: stats.critRate,
+    critDamage: stats.critDamage,
+    enemy: {
+      level: stats.enemyLevel,
+      resistance: stats.resistance,
+      defenceReduction: 0,
+      resistanceReduction: 0,
+    },
+  }, modelArcs.map((arc) => arcPresetToModel(arc, stats.passiveUptime)), stats.teamFixed), [modelArcs, stats]);
 
   const updateStat = (key: ArcStatKey, value: number) => setStats((current) => ({ ...current, [key]: value }));
 
@@ -100,7 +106,7 @@ export function ArcCalculatorPage() {
       <div className="scenario-source"><span>{scenarioSource?.publisher} · {ru ? 'проверено' : 'verified'} {scenario.verifiedAt}</span>{scenarioSource?.url ? <a href={scenarioSource.url} target="_blank" rel="noreferrer">{ru ? 'Открыть источник' : 'Open source'} <ExternalLink size={15} /></a> : <span className="muted">{ru ? 'Источник предоставлен владельцем проекта' : 'Source supplied by the project owner'}</span>}</div>
     </Panel> : null}
 
-    {mode === 'custom' ? <Panel className="settings-panel"><div className="panel-title"><SlidersHorizontal size={20} /><div><h2>{ru ? 'Частичная модель персонажа' : 'Partial character model'}</h2><p>{ru ? 'Учитывает базовые характеристики и только явно занесённые эффекты. Это не скрытая ротационная модель Rivyn.' : 'Includes base stats and only explicitly entered effects. It is not Rivyn’s private rotation model.'}</p></div></div><div className="field-grid">
+    {mode === 'custom' ? <Panel className="settings-panel"><div className="panel-title"><SlidersHorizontal size={20} /><div><h2>{ru ? 'Частичная командная модель' : 'Partial team model'}</h2><p>{ru ? 'Постоянные характеристики и пассивы всегда активны. Поле аптайма масштабирует только условные эффекты; бонусы союзникам применяются только к их урону.' : 'Static stats and always-on passives stay active. Uptime scales conditional effects only; ally bonuses affect ally damage only.'}</p></div></div><div className="field-grid">
       {(Object.keys(stats) as ArcStatKey[]).map((key) => <Field key={key} label={labels[locale][key]} type="number" value={stats[key]} min={key === 'passiveUptime' ? 0 : undefined} max={key === 'passiveUptime' ? 100 : undefined} onChange={(event) => updateStat(key, Number(event.target.value))} />)}
     </div></Panel> : null}
 
@@ -108,26 +114,31 @@ export function ArcCalculatorPage() {
       {mode === 'benchmark' ? <div className="calc-table arc-table benchmark-table" role="table"><div className="table-head" role="row"><span>#</span><span>{ru ? 'Дуга' : 'Arc'}</span><span>ATK</span><span>{ru ? 'Урон команды' : 'Team DMG'}</span><span>DPS</span><span>{ru ? 'Сравнение' : 'Relative'}</span><span>{ru ? 'Примечание' : 'Note'}</span></div>
         {benchmarkRows.map(({ arc, benchmark }, index) => <div className={`table-row ${index === 0 ? 'best-row' : ''}`} key={`${scenario.id}-${arc.id}`} role="row">
           <span className="rank">{index + 1}</span><span className="arc-cell"><img src={arc.image} alt={arc.name} /><span><b>{arc.name} <em>M{arc.mixing}</em></b><small>{arc.rarity} · {arc.type} · {arc.secondaryLabel} {arc.secondaryValue}%</small></span></span>
-          <span className="mobile-metric stat-cell" data-label={tableLabels.atk}><b>{arc.baseAtk}</b></span>
+          <span className="mobile-metric stat-cell" data-label={tableLabels.arcAtk}><b>{arc.baseAtk}</b></span>
           <span className="mobile-metric numeric-cell" data-label={tableLabels.teamDamage}><b>{benchmark.teamDamage === undefined ? '—' : formatNumber(benchmark.teamDamage)}</b></span>
           <span className="mobile-metric numeric-cell" data-label={tableLabels.dps}><b>{benchmark.teamDps === undefined ? '—' : formatNumber(benchmark.teamDps)}</b></span>
           <span className="mobile-metric percent-cell" data-label={tableLabels.relative}><b>{benchmark.percent.toFixed(2)}%</b><span><i style={{ width: `${Math.min(100, benchmark.percent)}%` }} /></span></span>
           <span className="mobile-metric note-cell" data-label={tableLabels.note}>{index === 0 ? <CheckCircle2 size={17} /> : <Info size={16} />}<span>{benchmark.note[locale]}<small>{scenarioSource?.publisher} · {scenario.verifiedAt}</small></span></span>
         </div>)}
-      </div> : <div className="calc-table arc-table" role="table"><div className="table-head" role="row"><span>#</span><span>{ru ? 'Дуга' : 'Arc'}</span><span>ATK</span><span>{ru ? 'Сравнение' : 'Relative'}</span><span>{ru ? 'Примечание' : 'Note'}</span></div>
-        {customDisplayRows.map(({ arc, percent }, index) => {
+      </div> : <div className="calc-table arc-table custom-team-table" role="table"><div className="table-head" role="row"><span>#</span><span>{ru ? 'Дуга' : 'Arc'}</span><span>{ru ? 'Итоговая ATK' : 'Total ATK'}</span><span>{ru ? 'Урон Ирой' : 'Iroi DMG'}</span><span>{ru ? 'Урон команды' : 'Team DMG'}</span><span>{ru ? 'Сравнение' : 'Relative'}</span><span>{ru ? 'Примечание' : 'Note'}</span></div>
+        {customRows.map((row, index) => {
+          const arc = arcMap.get(row.id);
+          if (!arc) return null;
           const source = sourceMap.get(arc.sourceId);
+          const percent = row.relative * 100;
           return <div className={`table-row ${index === 0 ? 'best-row' : ''}`} key={arc.id} role="row">
             <span className="rank">{index + 1}</span><span className="arc-cell"><img src={arc.image} alt={arc.name} /><span><b>{arc.name} <em>M{arc.mixing}</em></b><small>{arc.rarity} · {arc.type} · {arc.secondaryLabel} {arc.secondaryValue}%</small></span></span>
-            <span className="mobile-metric stat-cell" data-label={tableLabels.atk}><b>{arc.baseAtk}</b></span>
+            <span className="mobile-metric stat-cell" data-label={tableLabels.totalAtk}><b>{formatNumber(row.totalAtk)}</b></span>
+            <span className="mobile-metric numeric-cell" data-label={tableLabels.iroiDamage}><b>{formatNumber(row.wearerDamage)}</b></span>
+            <span className="mobile-metric numeric-cell team-total-cell" data-label={tableLabels.teamDamage}><b>{formatNumber(row.teamDamage)}</b><small>{ru ? `Союзники: ${formatNumber(row.allyDamage)}` : `Allies: ${formatNumber(row.allyDamage)}`}</small></span>
             <span className="mobile-metric percent-cell" data-label={tableLabels.relative}><b>{percent.toFixed(2)}%</b><span><i style={{ width: `${Math.min(100, percent)}%` }} /></span></span>
-            <span className="mobile-metric note-cell" data-label={tableLabels.note}>{index === 0 ? <CheckCircle2 size={17} /> : <Info size={16} />}<span>{arc.benchmarkNote[locale]}<small>{source?.publisher} · {source?.verifiedAt}</small></span></span>
+            <span className="mobile-metric note-cell" data-label={tableLabels.note}>{index === 0 ? <CheckCircle2 size={17} /> : <Info size={16} />}<span>{arc.benchmarkNote[locale]}<small>{arc.model.trigger[locale]} · {source?.publisher} · {source?.verifiedAt}</small></span></span>
           </div>;
         })}
       </div>}
     </Panel>
 
     {mode === 'benchmark' && scenario.id === 'rivyn-support' ? <div className="disclaimer"><Info size={18} /><span>{ru ? 'Абсолютные значения точно перенесены со скриншота, но исходный калькулятор Rivyn не опубликован. Таблица воспроизводит результат, а не заявляет, что внутренняя формула восстановлена.' : 'Absolute values are transcribed from the screenshot, but Rivyn’s source calculator is not public. This table reproduces the result and does not claim the internal formula has been reconstructed.'}</span></div> : null}
-    {mode === 'custom' ? <div className="disclaimer"><Info size={18} /><span>{ru ? `В относительный результат включён фиксированный урон остальных членов команды: ${formatNumber(stats.teamFixed)}. Неописанные пассивы дуг не выдумываются и поэтому могут изменить реальный порядок.` : `Relative results include ${formatNumber(stats.teamFixed)} fixed damage from the rest of the team. Unspecified Arc passives are not invented and may change the real ordering.`}</span></div> : null}
+    {mode === 'custom' ? <div className="disclaimer"><Info size={18} /><span>{ru ? `Базовый урон союзников: ${formatNumber(stats.teamFixed)}. Постоянные сабстаты и пассивы применяются на 100%; аптайм ${stats.passiveUptime}% влияет только на условную часть. Бонусы союзникам усиливают только их урон, а итоговый рейтинг сортируется по полному урону команды.` : `Base ally damage: ${formatNumber(stats.teamFixed)}. Static substats and always-on passives apply at 100%; the ${stats.passiveUptime}% uptime affects conditional modifiers only. Ally bonuses affect ally damage only, and ranking uses total team damage.`}</span></div> : null}
   </div>;
 }
