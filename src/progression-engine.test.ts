@@ -16,6 +16,29 @@ import {
   totalForCategory,
 } from './progression-engine';
 
+const expectedSourceUpdatedAt: Record<string, string> = {
+  Adler: '2026-07-28',
+  Aurelia: '2026-07-28',
+  Baicang: '2026-07-28',
+  Chaos: '2026-07-28',
+  Chiz: '2026-06-11',
+  Daffodill: '2026-07-28',
+  Edgar: '2026-07-28',
+  Fadia: '2026-07-28',
+  Haniel: '2026-07-28',
+  Hathor: '2026-06-27',
+  Hotori: '2026-07-01',
+  Iroi: '2026-07-27',
+  Jiuyuan: '2026-07-28',
+  Lacrimosa: '2026-07-28',
+  Mint: '2026-07-28',
+  Nanally: '2026-07-31',
+  Sakiri: '2026-07-28',
+  Shinku: '2026-07-31',
+  Skia: '2026-07-28',
+  Zero: '2026-07-28',
+};
+
 describe('roster ascension dataset', () => {
   it('covers all 20 released characters with complete direct sources', () => {
     expect(characterAscensionProfiles).toHaveLength(20);
@@ -23,6 +46,12 @@ describe('roster ascension dataset', () => {
     expect(characterAscensionProfiles.every((profile) => profile.sourceUrl.startsWith('https://www.icy-veins.com/'))).toBe(true);
     expect(characterAscensionProfiles.every((profile) => profile.verifiedAt === '2026-08-04')).toBe(true);
     expect(characterAscensionProfiles.every((profile) => profile.commonMaterials.length === 3)).toBe(true);
+  });
+
+  it('matches the current guide update date for every direct character source', () => {
+    expect(Object.keys(expectedSourceUpdatedAt)).toHaveLength(20);
+    expect(Object.fromEntries(characterAscensionProfiles.map((profile) => [profile.characterName, profile.sourceUpdatedAt])))
+      .toEqual(expectedSourceUpdatedAt);
   });
 
   it('uses the verified six-step cost curve through the level-80 unlock', () => {

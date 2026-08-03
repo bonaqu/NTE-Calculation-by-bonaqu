@@ -65,7 +65,7 @@ jobs:
         id: verify
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
-          EXPECTED_SERVICE_VERSION: '0.6.0'
+          EXPECTED_SERVICE_VERSION: '0.6.1'
           EXPECTED_FORMULA_VERSION: '0.2'
         run: |
           BASE="${DEPLOYMENT_URL%/}"
@@ -109,6 +109,15 @@ jobs:
               common: sum.common + step.commonCount,
             }), { coins: 0, boss: 0, common: 0 });
             const profile = (name) => progression.data.find((item) => item.characterName === name);
+            const expectedDates = {
+              Adler: '2026-07-28', Aurelia: '2026-07-28', Baicang: '2026-07-28', Chaos: '2026-07-28',
+              Chiz: '2026-06-11', Daffodill: '2026-07-28', Edgar: '2026-07-28', Fadia: '2026-07-28',
+              Haniel: '2026-07-28', Hathor: '2026-06-27', Hotori: '2026-07-01', Iroi: '2026-07-27',
+              Jiuyuan: '2026-07-28', Lacrimosa: '2026-07-28', Mint: '2026-07-28', Nanally: '2026-07-31',
+              Sakiri: '2026-07-28', Shinku: '2026-07-31', Skia: '2026-07-28', Zero: '2026-07-28',
+            };
+            const sourceDatesValid = progression.data.length === Object.keys(expectedDates).length
+              && progression.data.every((item) => item.sourceUpdatedAt === expectedDates[item.characterName]);
             const valid = health.ok === true
               && health.version === process.env.EXPECTED_SERVICE_VERSION
               && health.formulaVersion === process.env.EXPECTED_FORMULA_VERSION
@@ -135,6 +144,8 @@ jobs:
               && progression.scope === 'released-character-ascension-only'
               && progression.verifiedAt === '2026-08-04'
               && progression.data.every((item) => item.commonMaterials.length === 3 && item.sourceUrl.startsWith('https://www.icy-veins.com/'))
+              && sourceDatesValid
+              && progression.sources.find((source) => source.publisher === 'Icy Veins')?.updatedAt === '2026-07-27'
               && !progression.data.some((item) => item.characterName === 'Linko' || item.characterName === 'Zankou')
               && profile('Iroi').bossMaterial === 'pageDelusionsShore'
               && profile('Shinku').bossMaterial === 'chargingKnightSparkPlug'
@@ -169,7 +180,7 @@ jobs:
           echo "cycles_url=$CYCLES_URL" >> "$GITHUB_OUTPUT"
           echo "rotations_url=$ROTATIONS_URL" >> "$GITHUB_OUTPUT"
           echo "progression_url=$PROGRESSION_URL" >> "$GITHUB_OUTPUT"
-          echo "API 0.6.0 verified: 47 Arcs, 22 characters, 8 cycles, 2 rotations and 20 progression profiles." >> "$GITHUB_STEP_SUMMARY"
+          echo "API 0.6.1 verified: all 20 progression source dates match the current direct-source fixture." >> "$GITHUB_STEP_SUMMARY"
 
   report:
     if: ${{ always() }}
@@ -194,7 +205,7 @@ jobs:
           - Worker URL: $DEPLOYMENT_URL
           - Health endpoint: $HEALTH_URL
           - Roster ascension dataset: $PROGRESSION_URL
-          - API 0.6.0 and full Arc, character, cycle, rotation and progression contracts: success
+          - API 0.6.1 and exact 20-profile source-date freshness contract: success
           - Workflow evidence: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌
