@@ -7,6 +7,7 @@ on:
       - 'workers/**'
       - 'packages/**'
       - 'src/data.ts'
+      - 'src/arc-directory.ts'
       - 'package.json'
       - '.github/workflows/worker.yml'
   workflow_dispatch:
@@ -27,6 +28,7 @@ jobs:
     outputs:
       deployment_url: ${{ steps.deploy.outputs.deployment-url }}
       health_url: ${{ steps.verify.outputs.health_url }}
+      arcs_url: ${{ steps.verify.outputs.arcs_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -38,6 +40,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Typecheck
         run: npm run typecheck
+      - name: Unit tests
+        run: npm test
       - name: Dry-run bundle
         run: npm run worker:check
       - name: Deploy nte-calculation-api
@@ -49,30 +53,40 @@ jobs:
           packageManager: npm
           wranglerVersion: '4.114.0'
           command: deploy --config workers/api/wrangler.jsonc
-      - name: Verify API health
+      - name: Verify API health and Arc catalog
         id: verify
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         run: |
           test -n "$DEPLOYMENT_URL"
           HEALTH_URL="${DEPLOYMENT_URL%/}/api/v1/health"
+          ARCS_URL="${DEPLOYMENT_URL%/}/api/v1/data/arcs"
           curl --fail --location --retry 8 --retry-delay 5 --retry-all-errors "$HEALTH_URL" | tee /tmp/health.json
+          curl --fail --location --retry 8 --retry-delay 5 --retry-all-errors "$ARCS_URL" | tee /tmp/arcs.json > /dev/null
           node <<'NODE'
           const fs = require('node:fs');
-          const body = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
-          const valid = body.ok === true
-            && body.service === 'nte-calculation-api'
-            && typeof body.version === 'string'
-            && body.version.length > 0
-            && typeof body.formulaVersion === 'string'
-            && body.formulaVersion.length > 0;
-          if (!valid) {
-            console.error('Unexpected health response contract:', body);
+          const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
+          const catalog = JSON.parse(fs.readFileSync('/tmp/arcs.json', 'utf8'));
+          const healthValid = health.ok === true
+            && health.service === 'nte-calculation-api'
+            && typeof health.version === 'string'
+            && health.version.length > 0
+            && typeof health.formulaVersion === 'string'
+            && health.formulaVersion.length > 0;
+          const catalogValid = catalog.count === 47
+            && Array.isArray(catalog.data)
+            && catalog.data.length === 47
+            && catalog.sourceId === 'prydwen-arcs'
+            && typeof catalog.verifiedAt === 'string';
+          if (!healthValid || !catalogValid) {
+            console.error('Unexpected production API contract:', { health, catalogCount: catalog.count, dataLength: catalog.data?.length, sourceId: catalog.sourceId });
             process.exit(1);
           }
           NODE
           echo "health_url=$HEALTH_URL" >> "$GITHUB_OUTPUT"
+          echo "arcs_url=$ARCS_URL" >> "$GITHUB_OUTPUT"
           echo "Cloudflare Worker is healthy: $HEALTH_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Arc catalog verified with 47 entries: $ARCS_URL" >> "$GITHUB_STEP_SUMMARY"
 
   report:
     if: ${{ always() }}
@@ -88,21 +102,23 @@ jobs:
           JOB_RESULT: ${{ needs.deploy.result }}
           DEPLOYMENT_URL: ${{ needs.deploy.outputs.deployment_url }}
           HEALTH_URL: ${{ needs.deploy.outputs.health_url }}
+          ARCS_URL: ${{ needs.deploy.outputs.arcs_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" ]]; then
+          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$ARCS_URL" ]]; then
             BODY="### Cloudflare Worker deployment: successful ✅
 
           - Worker URL: $DEPLOYMENT_URL
           - Health endpoint: $HEALTH_URL
-          - Deploy and JSON health validation: success
+          - Full Arc catalog: $ARCS_URL
+          - Deploy, health and 47-entry catalog validation: success
           - Workflow evidence: $RUN_URL"
           elif [[ -n "$DEPLOYMENT_URL" ]]; then
-            BODY="### Cloudflare Worker health verification: requires attention ❌
+            BODY="### Cloudflare Worker production verification: requires attention ❌
 
           - Worker deployment completed: $DEPLOYMENT_URL
           - Deployment job result: $JOB_RESULT
-          - Health contract or reachability check did not pass
+          - Health or data-contract validation did not pass
           - Workflow diagnostics: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌
