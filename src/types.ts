@@ -15,6 +15,12 @@ export interface ArcModelModifiers {
   defIgnore?: number;
 }
 
+export interface ArcModelDefinition {
+  static: ArcModelModifiers;
+  conditional: ArcModelModifiers;
+  trigger: LocalizedText;
+}
+
 export interface ArcPreset {
   id: string;
   name: string;
@@ -27,12 +33,14 @@ export interface ArcPreset {
   benchmarkPercent?: number;
   benchmarkNote: LocalizedText;
   image: string;
-  model: {
-    static: ArcModelModifiers;
-    conditional: ArcModelModifiers;
-    trigger: LocalizedText;
-  };
+  model?: ArcModelDefinition;
+  /** Deprecated compatibility field for the pre-v0.2 dataset. Runtime code must use ModeledArcPreset. */
+  effect?: ArcModelModifiers & { teamDmgBonus?: number };
   sourceId: string;
+}
+
+export interface ModeledArcPreset extends ArcPreset {
+  model: ArcModelDefinition;
 }
 
 export interface ArcBenchmarkRow {
