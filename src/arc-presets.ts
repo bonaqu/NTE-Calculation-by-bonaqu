@@ -1,5 +1,5 @@
 import type { ArcModelInput, ArcModifierSet } from '../packages/calculation-core/src';
-import type { ArcModelModifiers, ArcPreset, SourceEntry } from './types';
+import type { ArcModelModifiers, ModeledArcPreset, SourceEntry } from './types';
 
 export const arcPresetSources: SourceEntry[] = [
   {
@@ -26,7 +26,7 @@ export const arcPresetSources: SourceEntry[] = [
   },
 ];
 
-export const arcPresets: ArcPreset[] = [
+export const arcPresets: ModeledArcPreset[] = [
   {
     id: 'wrong-gate-m5', name: 'The Wrong Gate', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 5,
@@ -155,7 +155,7 @@ const addModifiers = (target: ArcModifierSet, source: ArcModelModifiers): ArcMod
   allyDamageBonus: target.allyDamageBonus + (source.allyDmgBonus ?? 0),
 });
 
-const staticSecondary = (arc: ArcPreset): ArcModifierSet => {
+const staticSecondary = (arc: ModeledArcPreset): ArcModifierSet => {
   const modifiers = zeroModifiers();
   if (arc.secondaryLabel === 'ATK%') modifiers.atkPercent = arc.secondaryValue;
   if (arc.secondaryLabel === 'CRIT Rate') modifiers.critRate = arc.secondaryValue;
@@ -163,7 +163,7 @@ const staticSecondary = (arc: ArcPreset): ArcModifierSet => {
   return modifiers;
 };
 
-export function arcPresetToModel(arc: ArcPreset, conditionalUptime: number): ArcModelInput {
+export function arcPresetToModel(arc: ModeledArcPreset, conditionalUptime: number): ArcModelInput {
   return {
     id: arc.id,
     name: `${arc.name} M${arc.mixing}`,
