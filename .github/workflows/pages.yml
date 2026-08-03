@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -16,6 +14,8 @@ concurrency:
 
 jobs:
   build:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -41,12 +41,17 @@ jobs:
           path: dist
 
   deploy:
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: build
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy
         id: deployment
@@ -58,3 +63,35 @@ jobs:
           test -n "$PAGE_URL"
           curl --fail --location --retry 8 --retry-delay 5 --retry-all-errors "$PAGE_URL" > /dev/null
           echo "GitHub Pages is reachable: $PAGE_URL" >> "$GITHUB_STEP_SUMMARY"
+
+  report:
+    if: ${{ always() }}
+    permissions:
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [build, deploy]
+    steps:
+      - name: Publish deployment evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ "$DEPLOY_RESULT" == "success" && -n "$PAGE_URL" ]]; then
+            BODY="### GitHub Pages deployment: successful ✅
+
+          - Public URL: $PAGE_URL
+          - Build: $BUILD_RESULT
+          - Deploy and reachability check: $DEPLOY_RESULT
+          - Workflow evidence: $RUN_URL"
+          else
+            BODY="### GitHub Pages deployment: requires attention ❌
+
+          - Build: $BUILD_RESULT
+          - Deploy: $DEPLOY_RESULT
+          - Workflow diagnostics: $RUN_URL"
+          fi
+          gh issue comment 5 --repo "$GITHUB_REPOSITORY" --body "$BODY"
