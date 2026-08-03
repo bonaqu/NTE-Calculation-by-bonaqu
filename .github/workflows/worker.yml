@@ -8,6 +8,8 @@ on:
       - 'packages/**'
       - 'src/data.ts'
       - 'src/arc-directory.ts'
+      - 'src/arc-catalog.ts'
+      - 'src/arc-presets.ts'
       - 'package.json'
       - '.github/workflows/worker.yml'
   workflow_dispatch:
@@ -29,6 +31,7 @@ jobs:
       deployment_url: ${{ steps.deploy.outputs.deployment-url }}
       health_url: ${{ steps.verify.outputs.health_url }}
       arcs_url: ${{ steps.verify.outputs.arcs_url }}
+      presets_url: ${{ steps.verify.outputs.presets_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -57,40 +60,62 @@ jobs:
         id: verify
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
-          EXPECTED_SERVICE_VERSION: '0.2.0'
+          EXPECTED_SERVICE_VERSION: '0.3.0'
+          EXPECTED_FORMULA_VERSION: '0.2'
         run: |
           test -n "$DEPLOYMENT_URL"
           HEALTH_URL="${DEPLOYMENT_URL%/}/api/v1/health"
           ARCS_URL="${DEPLOYMENT_URL%/}/api/v1/data/arcs"
+          PRESETS_URL="${DEPLOYMENT_URL%/}/api/v1/data/arc-presets"
           verified=0
 
           for attempt in $(seq 1 30); do
             echo "Production contract check $attempt/30"
             if curl --fail --silent --show-error --location "$HEALTH_URL" -o /tmp/health.json \
               && curl --fail --silent --show-error --location "$ARCS_URL" -o /tmp/arcs.json \
+              && curl --fail --silent --show-error --location "$PRESETS_URL" -o /tmp/presets.json \
               && node <<'NODE'
           const fs = require('node:fs');
           const expectedVersion = process.env.EXPECTED_SERVICE_VERSION;
+          const expectedFormula = process.env.EXPECTED_FORMULA_VERSION;
           const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
           const catalog = JSON.parse(fs.readFileSync('/tmp/arcs.json', 'utf8'));
+          const presets = JSON.parse(fs.readFileSync('/tmp/presets.json', 'utf8'));
+          const wrongGateM1 = presets.data?.find((arc) => arc.id === 'wrong-gate-m1');
+          const wrongGateM5 = presets.data?.find((arc) => arc.id === 'wrong-gate-m5');
           const healthValid = health.ok === true
             && health.service === 'nte-calculation-api'
             && health.version === expectedVersion
-            && typeof health.formulaVersion === 'string'
-            && health.formulaVersion.length > 0;
+            && health.formulaVersion === expectedFormula;
           const catalogValid = catalog.count === 47
             && Array.isArray(catalog.data)
             && catalog.data.length === 47
-            && catalog.sourceId === 'prydwen-arcs'
+            && Array.isArray(catalog.sourceIds)
+            && catalog.sourceIds.includes('prydwen-arcs')
+            && catalog.sourceIds.includes('gamewith-wrong-gate')
+            && catalog.data.find((arc) => arc.id === 'the-wrong-gate')?.sourceId === 'gamewith-wrong-gate'
             && typeof catalog.verifiedAt === 'string';
-          if (!healthValid || !catalogValid) {
+          const presetsValid = presets.count === 8
+            && Array.isArray(presets.data)
+            && presets.formulaVersion === expectedFormula
+            && wrongGateM1?.secondaryValue === 30
+            && wrongGateM1?.model?.static?.atkPct === 16
+            && wrongGateM1?.model?.conditional?.allyDmgBonus === 15
+            && wrongGateM5?.secondaryValue === 30
+            && wrongGateM5?.model?.static?.atkPct === 32
+            && wrongGateM5?.model?.conditional?.allyDmgBonus === 30;
+          if (!healthValid || !catalogValid || !presetsValid) {
             console.error('Waiting for current production contract:', {
               expectedVersion,
+              expectedFormula,
               observedVersion: health.version,
-              healthOk: health.ok,
+              observedFormula: health.formulaVersion,
               catalogCount: catalog.count,
-              dataLength: catalog.data?.length,
-              sourceId: catalog.sourceId,
+              sourceIds: catalog.sourceIds,
+              wrongGateCatalogSource: catalog.data?.find((arc) => arc.id === 'the-wrong-gate')?.sourceId,
+              presetCount: presets.count,
+              wrongGateM1,
+              wrongGateM5,
             });
             process.exit(1);
           }
@@ -107,14 +132,16 @@ jobs:
             echo "Last health response:" >&2
             cat /tmp/health.json >&2 || true
             echo >&2
-            node -e "try { const d=require('/tmp/arcs.json'); console.error({count:d.count,dataLength:d.data?.length,sourceId:d.sourceId}); } catch (error) { console.error(error.message); }" || true
+            node -e "try { const c=require('/tmp/arcs.json'); const p=require('/tmp/presets.json'); console.error({catalogCount:c.count,sourceIds:c.sourceIds,presetCount:p.count}); } catch (error) { console.error(error.message); }" || true
             exit 1
           fi
 
           echo "health_url=$HEALTH_URL" >> "$GITHUB_OUTPUT"
           echo "arcs_url=$ARCS_URL" >> "$GITHUB_OUTPUT"
-          echo "Cloudflare Worker ${EXPECTED_SERVICE_VERSION} is healthy: $HEALTH_URL" >> "$GITHUB_STEP_SUMMARY"
-          echo "Arc catalog verified with 47 entries: $ARCS_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "presets_url=$PRESETS_URL" >> "$GITHUB_OUTPUT"
+          echo "Cloudflare Worker ${EXPECTED_SERVICE_VERSION} / formula ${EXPECTED_FORMULA_VERSION} is healthy: $HEALTH_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Arc catalog verified with 47 entries and mixed provenance: $ARCS_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Corrected calculator presets verified: $PRESETS_URL" >> "$GITHUB_STEP_SUMMARY"
 
   report:
     if: ${{ always() }}
@@ -131,22 +158,24 @@ jobs:
           DEPLOYMENT_URL: ${{ needs.deploy.outputs.deployment_url }}
           HEALTH_URL: ${{ needs.deploy.outputs.health_url }}
           ARCS_URL: ${{ needs.deploy.outputs.arcs_url }}
+          PRESETS_URL: ${{ needs.deploy.outputs.presets_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$ARCS_URL" ]]; then
+          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$ARCS_URL" && -n "$PRESETS_URL" ]]; then
             BODY="### Cloudflare Worker deployment: successful ✅
 
           - Worker URL: $DEPLOYMENT_URL
           - Health endpoint: $HEALTH_URL
           - Full Arc catalog: $ARCS_URL
-          - API 0.2.0, health and 47-entry catalog validation: success
+          - Corrected Arc presets: $PRESETS_URL
+          - API 0.3.0, formula 0.2, health, provenance and corrected preset validation: success
           - Workflow evidence: $RUN_URL"
           elif [[ -n "$DEPLOYMENT_URL" ]]; then
             BODY="### Cloudflare Worker production verification: requires attention ❌
 
           - Worker deployment completed: $DEPLOYMENT_URL
           - Deployment job result: $JOB_RESULT
-          - Current API version or data-contract validation did not pass within the propagation window
+          - Current API version, provenance or Arc model validation did not pass within the propagation window
           - Workflow diagnostics: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌
