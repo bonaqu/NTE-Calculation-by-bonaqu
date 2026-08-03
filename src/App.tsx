@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { BarChart3, BookOpen, Boxes, ChevronDown, Database, GitBranch, Home, Languages, Menu, Users, X } from 'lucide-react';
+import { BarChart3, BookOpen, Boxes, ChevronDown, Database, GitBranch, Home, Languages, Menu, Route, Users, X } from 'lucide-react';
 import { useI18n } from './i18n';
 import type { RouteKey } from './types';
 import { HomePage } from './pages/HomePage';
 import { TeamCalculatorPage } from './pages/TeamCalculatorPage';
+import { RotationLabPage } from './pages/RotationLabPage';
 import { ArcCalculatorPage } from './pages/ArcCalculatorPage';
 import { ProgressionPage } from './pages/ProgressionPage';
 import { DatabasePage } from './pages/DatabasePage';
 import { MethodologyPage } from './pages/MethodologyPage';
 
-const routes: RouteKey[] = ['home', 'team', 'arcs', 'progression', 'database', 'methodology'];
+const routes: RouteKey[] = ['home', 'team', 'rotations', 'arcs', 'progression', 'database', 'methodology'];
 const routeFromHash = (): RouteKey => {
   const value = location.hash.replace('#/', '') as RouteKey;
   return routes.includes(value) ? value : 'home';
@@ -44,9 +45,15 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
   };
   const nav = [
-    ['home', Home], ['team', Users], ['arcs', BarChart3], ['progression', Boxes], ['database', Database], ['methodology', BookOpen],
+    ['home', Home], ['team', Users], ['rotations', Route], ['arcs', BarChart3], ['progression', Boxes], ['database', Database], ['methodology', BookOpen],
   ] as const;
-  const page = route === 'home' ? <HomePage navigate={navigate} /> : route === 'team' ? <TeamCalculatorPage /> : route === 'arcs' ? <ArcCalculatorPage /> : route === 'progression' ? <ProgressionPage /> : route === 'database' ? <DatabasePage /> : <MethodologyPage />;
+  const page = route === 'home' ? <HomePage navigate={navigate} />
+    : route === 'team' ? <TeamCalculatorPage />
+      : route === 'rotations' ? <RotationLabPage />
+        : route === 'arcs' ? <ArcCalculatorPage />
+          : route === 'progression' ? <ProgressionPage />
+            : route === 'database' ? <DatabasePage />
+              : <MethodologyPage />;
 
   return <div className="app-shell">
     <header className="topbar"><button className="mobile-menu" onClick={() => setMobileOpen((value) => !value)} aria-label={locale === 'ru' ? 'Открыть меню' : 'Open menu'} aria-expanded={mobileOpen}>{mobileOpen ? <X /> : <Menu />}</button><button className="logo" onClick={() => navigate('home')} aria-label="NTE Calculation by bonaqu"><span>N</span><div><b>NTE Calculation</b><small>by bonaqu</small></div></button>
