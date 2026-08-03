@@ -1,8 +1,5 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import { dirname, extname, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+/// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest';
-import * as ts from 'typescript';
 import { arcDirectory } from './arc-directory';
 import { arcPresets } from './arc-presets';
 import { characterCatalog } from './characters';
@@ -47,39 +44,18 @@ function russianRuntimeCorpus(): string[] {
 
 type SourceString = { file: string; line: number; text: string };
 
-function sourceFiles(root: string): string[] {
-  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(root, entry.name);
-    if (entry.isDirectory()) return sourceFiles(path);
-    if (!['.ts', '.tsx'].includes(extname(entry.name)) || entry.name.endsWith('.test.ts')) return [];
-    return [path];
-  });
-}
+const rawSourceModules = import.meta.glob('./**/*.{ts,tsx}', {
+  eager: true,
+  query: '?raw',
+  import: 'default',
+}) as Record<string, string>;
 
 function sourceRussianStrings(): SourceString[] {
-  const root = dirname(fileURLToPath(import.meta.url));
-  return sourceFiles(root).flatMap((file) => {
-    const source = readFileSync(file, 'utf8');
-    const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
-    const found: SourceString[] = [];
-    const push = (node: ts.Node, text: string) => {
-      if (!/[А-Яа-яЁё]/u.test(text)) return;
-      found.push({
-        file: relative(root, file).replaceAll('\\', '/'),
-        line: sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1,
-        text,
-      });
-    };
-    const visit = (node: ts.Node) => {
-      if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) push(node, node.text);
-      if (ts.isTemplateExpression(node)) {
-        push(node.head, node.head.text);
-        for (const span of node.templateSpans) push(span.literal, span.literal.text);
-      }
-      ts.forEachChild(node, visit);
-    };
-    visit(sourceFile);
-    return found;
+  return Object.entries(rawSourceModules).flatMap(([file, source]) => {
+    if (file.endsWith('.test.ts') || file.endsWith('.test.tsx')) return [];
+    return source.split('\n').flatMap((text, index) => /[А-Яа-яЁё]/u.test(text)
+      ? [{ file: file.replace(/^\.\//u, ''), line: index + 1, text }]
+      : []);
   });
 }
 
