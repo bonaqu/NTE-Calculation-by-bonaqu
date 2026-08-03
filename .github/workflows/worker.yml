@@ -7,6 +7,8 @@ on:
       - 'workers/**'
       - 'packages/**'
       - 'src/data.ts'
+      - 'src/characters.ts'
+      - 'src/types.ts'
       - 'src/arc-directory.ts'
       - 'src/arc-catalog.ts'
       - 'src/arc-presets.ts'
@@ -32,6 +34,7 @@ jobs:
       health_url: ${{ steps.verify.outputs.health_url }}
       arcs_url: ${{ steps.verify.outputs.arcs_url }}
       presets_url: ${{ steps.verify.outputs.presets_url }}
+      characters_url: ${{ steps.verify.outputs.characters_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -60,13 +63,14 @@ jobs:
         id: verify
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
-          EXPECTED_SERVICE_VERSION: '0.3.0'
+          EXPECTED_SERVICE_VERSION: '0.4.0'
           EXPECTED_FORMULA_VERSION: '0.2'
         run: |
           test -n "$DEPLOYMENT_URL"
           HEALTH_URL="${DEPLOYMENT_URL%/}/api/v1/health"
           ARCS_URL="${DEPLOYMENT_URL%/}/api/v1/data/arcs"
           PRESETS_URL="${DEPLOYMENT_URL%/}/api/v1/data/arc-presets"
+          CHARACTERS_URL="${DEPLOYMENT_URL%/}/api/v1/data/characters"
           verified=0
 
           for attempt in $(seq 1 30); do
@@ -74,6 +78,7 @@ jobs:
             if curl --fail --silent --show-error --location "$HEALTH_URL" -o /tmp/health.json \
               && curl --fail --silent --show-error --location "$ARCS_URL" -o /tmp/arcs.json \
               && curl --fail --silent --show-error --location "$PRESETS_URL" -o /tmp/presets.json \
+              && curl --fail --silent --show-error --location "$CHARACTERS_URL" -o /tmp/characters.json \
               && node <<'NODE'
           const fs = require('node:fs');
           const expectedVersion = process.env.EXPECTED_SERVICE_VERSION;
@@ -81,6 +86,7 @@ jobs:
           const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
           const catalog = JSON.parse(fs.readFileSync('/tmp/arcs.json', 'utf8'));
           const presets = JSON.parse(fs.readFileSync('/tmp/presets.json', 'utf8'));
+          const characters = JSON.parse(fs.readFileSync('/tmp/characters.json', 'utf8'));
           const wrongGateM1 = presets.data?.find((arc) => arc.id === 'wrong-gate-m1');
           const wrongGateM5 = presets.data?.find((arc) => arc.id === 'wrong-gate-m5');
           const healthValid = health.ok === true
@@ -104,7 +110,21 @@ jobs:
             && wrongGateM5?.secondaryValue === 30
             && wrongGateM5?.model?.static?.atkPct === 32
             && wrongGateM5?.model?.conditional?.allyDmgBonus === 30;
-          if (!healthValid || !catalogValid || !presetsValid) {
+          const upcomingNames = characters.data
+            ?.filter((character) => character.releaseStatus === 'upcoming')
+            .map((character) => character.name)
+            .sort();
+          const charactersValid = characters.count === 22
+            && characters.releasedCount === 20
+            && characters.upcomingCount === 2
+            && characters.scope === 'sourced-character-profiles'
+            && Array.isArray(characters.data)
+            && characters.data.length === 22
+            && JSON.stringify(upcomingNames) === JSON.stringify(['Linko', 'Zankou'])
+            && characters.data.every((character) => typeof character.sourceUrl === 'string' && character.sourceUrl.startsWith('https://'))
+            && characters.data.filter((character) => character.releaseStatus === 'released').every((character) => character.detailsVerified === true && character.role && character.arcType)
+            && characters.data.filter((character) => character.releaseStatus === 'upcoming').every((character) => character.detailsVerified === false && !character.role && !character.arcType);
+          if (!healthValid || !catalogValid || !presetsValid || !charactersValid) {
             console.error('Waiting for current production contract:', {
               expectedVersion,
               expectedFormula,
@@ -114,6 +134,10 @@ jobs:
               sourceIds: catalog.sourceIds,
               wrongGateCatalogSource: catalog.data?.find((arc) => arc.id === 'the-wrong-gate')?.sourceId,
               presetCount: presets.count,
+              characterCount: characters.count,
+              releasedCount: characters.releasedCount,
+              upcomingCount: characters.upcomingCount,
+              upcomingNames,
               wrongGateM1,
               wrongGateM5,
             });
@@ -132,16 +156,18 @@ jobs:
             echo "Last health response:" >&2
             cat /tmp/health.json >&2 || true
             echo >&2
-            node -e "try { const c=require('/tmp/arcs.json'); const p=require('/tmp/presets.json'); console.error({catalogCount:c.count,sourceIds:c.sourceIds,presetCount:p.count}); } catch (error) { console.error(error.message); }" || true
+            node -e "try { const c=require('/tmp/arcs.json'); const p=require('/tmp/presets.json'); const h=require('/tmp/characters.json'); console.error({catalogCount:c.count,sourceIds:c.sourceIds,presetCount:p.count,characterCount:h.count,releasedCount:h.releasedCount,upcomingCount:h.upcomingCount}); } catch (error) { console.error(error.message); }" || true
             exit 1
           fi
 
           echo "health_url=$HEALTH_URL" >> "$GITHUB_OUTPUT"
           echo "arcs_url=$ARCS_URL" >> "$GITHUB_OUTPUT"
           echo "presets_url=$PRESETS_URL" >> "$GITHUB_OUTPUT"
+          echo "characters_url=$CHARACTERS_URL" >> "$GITHUB_OUTPUT"
           echo "Cloudflare Worker ${EXPECTED_SERVICE_VERSION} / formula ${EXPECTED_FORMULA_VERSION} is healthy: $HEALTH_URL" >> "$GITHUB_STEP_SUMMARY"
           echo "Arc catalog verified with 47 entries and mixed provenance: $ARCS_URL" >> "$GITHUB_STEP_SUMMARY"
           echo "Corrected calculator presets verified: $PRESETS_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Character catalog verified with 20 released and 2 upcoming profiles: $CHARACTERS_URL" >> "$GITHUB_STEP_SUMMARY"
 
   report:
     if: ${{ always() }}
@@ -159,23 +185,25 @@ jobs:
           HEALTH_URL: ${{ needs.deploy.outputs.health_url }}
           ARCS_URL: ${{ needs.deploy.outputs.arcs_url }}
           PRESETS_URL: ${{ needs.deploy.outputs.presets_url }}
+          CHARACTERS_URL: ${{ needs.deploy.outputs.characters_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$ARCS_URL" && -n "$PRESETS_URL" ]]; then
+          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$ARCS_URL" && -n "$PRESETS_URL" && -n "$CHARACTERS_URL" ]]; then
             BODY="### Cloudflare Worker deployment: successful ✅
 
           - Worker URL: $DEPLOYMENT_URL
           - Health endpoint: $HEALTH_URL
           - Full Arc catalog: $ARCS_URL
           - Corrected Arc presets: $PRESETS_URL
-          - API 0.3.0, formula 0.2, health, provenance and corrected preset validation: success
+          - Sourced character catalog: $CHARACTERS_URL
+          - API 0.4.0, formula 0.2, Arc provenance, corrected presets and 22-character contract: success
           - Workflow evidence: $RUN_URL"
           elif [[ -n "$DEPLOYMENT_URL" ]]; then
             BODY="### Cloudflare Worker production verification: requires attention ❌
 
           - Worker deployment completed: $DEPLOYMENT_URL
           - Deployment job result: $JOB_RESULT
-          - Current API version, provenance or Arc model validation did not pass within the propagation window
+          - Current API version or dataset validation did not pass within the propagation window
           - Workflow diagnostics: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌

@@ -1,11 +1,12 @@
 import { arcCatalog, arcCatalogSourceIds } from '../../../src/arc-catalog';
 import { arcPresets } from '../../../src/arc-presets';
-import { characterDirectory, iroiProgression } from '../../../src/data';
+import { characterCatalog } from '../../../src/characters';
+import { iroiProgression } from '../../../src/data';
 import { calculateDamage, calculateTeam, type DamageInput, type TeamMemberInput } from '../../../packages/calculation-core/src';
 
 const MAX_BODY_BYTES = 32_768;
 const FORMULA_VERSION = '0.2';
-const SERVICE_VERSION = '0.3.0';
+const SERVICE_VERSION = '0.4.0';
 const DATASET_VERIFIED_AT = '2026-08-03';
 
 function corsHeaders(): Record<string, string> {
@@ -116,7 +117,14 @@ export default {
           scope: 'calculator-presets',
         }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/characters') {
-        response = json({ data: characterDirectory, count: characterDirectory.length, verifiedAt: DATASET_VERIFIED_AT }, 200, requestId, 'public, max-age=300');
+        response = json({
+          data: characterCatalog,
+          count: characterCatalog.length,
+          releasedCount: characterCatalog.filter((character) => character.releaseStatus === 'released').length,
+          upcomingCount: characterCatalog.filter((character) => character.releaseStatus === 'upcoming').length,
+          verifiedAt: DATASET_VERIFIED_AT,
+          scope: 'sourced-character-profiles',
+        }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/progression/iroi') {
         response = json({ data: iroiProgression, verifiedAt: DATASET_VERIFIED_AT }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'POST' && url.pathname === '/api/v1/calculate/damage') {
