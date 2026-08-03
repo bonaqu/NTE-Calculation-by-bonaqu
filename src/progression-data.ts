@@ -148,26 +148,26 @@ function profile(
 }
 
 export const characterAscensionProfiles: CharacterAscensionProfile[] = [
-  profile('Adler', numerals, 'waterMoonPick', '2026-07-07'),
-  profile('Aurelia', delusions, 'nestGuardFragment', '2026-07-07'),
-  profile('Baicang', numerals, 'nestGuardFragment', '2026-06-08'),
+  profile('Adler', numerals, 'waterMoonPick', '2026-07-28'),
+  profile('Aurelia', delusions, 'nestGuardFragment', '2026-07-28'),
+  profile('Baicang', numerals, 'nestGuardFragment', '2026-07-28'),
   profile('Chaos', delusions, 'tearOfTheSea', '2026-07-28'),
   profile('Chiz', whispers, 'tearOfTheSea', '2026-06-11'),
-  profile('Daffodill', delusions, 'chargingKnightSparkPlug', '2026-07-07'),
-  profile('Edgar', whispers, 'colorfulTicketStub', '2026-07-07'),
-  profile('Fadia', silhouettes, 'waterMoonPick', '2026-07-07'),
-  profile('Haniel', numerals, 'nestGuardFragment', '2026-07-07'),
+  profile('Daffodill', delusions, 'chargingKnightSparkPlug', '2026-07-28'),
+  profile('Edgar', whispers, 'colorfulTicketStub', '2026-07-28'),
+  profile('Fadia', silhouettes, 'waterMoonPick', '2026-07-28'),
+  profile('Haniel', numerals, 'nestGuardFragment', '2026-07-28'),
   profile('Hathor', delusions, 'colorfulTicketStub', '2026-06-27'),
   profile('Hotori', whispers, 'confessionalFlowerSeed', '2026-07-01'),
-  profile('Iroi', silhouettes, 'pageDelusionsShore', '2026-07-14'),
-  profile('Jiuyuan', silhouettes, 'tearOfTheSea', '2026-07-07'),
-  profile('Lacrimosa', whispers, 'confessionalFlowerSeed', '2026-07-07'),
-  profile('Mint', silhouettes, 'pageDelusionsShore', '2026-07-07'),
-  profile('Nanally', silhouettes, 'pageDelusionsShore', '2026-07-01'),
-  profile('Sakiri', numerals, 'chargingKnightSparkPlug', '2026-07-07'),
+  profile('Iroi', silhouettes, 'pageDelusionsShore', '2026-07-27'),
+  profile('Jiuyuan', silhouettes, 'tearOfTheSea', '2026-07-28'),
+  profile('Lacrimosa', whispers, 'confessionalFlowerSeed', '2026-07-28'),
+  profile('Mint', silhouettes, 'pageDelusionsShore', '2026-07-28'),
+  profile('Nanally', silhouettes, 'pageDelusionsShore', '2026-07-31'),
+  profile('Sakiri', numerals, 'chargingKnightSparkPlug', '2026-07-28'),
   profile('Shinku', whispers, 'chargingKnightSparkPlug', '2026-07-31'),
-  profile('Skia', delusions, 'confessionalFlowerSeed', '2026-07-07'),
-  profile('Zero', whispers, 'chargingKnightSparkPlug', '2026-07-07'),
+  profile('Skia', delusions, 'confessionalFlowerSeed', '2026-07-28'),
+  profile('Zero', whispers, 'chargingKnightSparkPlug', '2026-07-28'),
 ];
 
 export const characterAscensionByName = new Map(characterAscensionProfiles.map((entry) => [entry.characterName, entry]));
@@ -179,7 +179,7 @@ export const progressionDatasetSources = [
   {
     publisher: 'Icy Veins',
     url: 'https://www.icy-veins.com/neverness-to-everness/iroi-profile-skills',
-    updatedAt: '2026-07-14',
+    updatedAt: '2026-07-27',
     verifiedAt,
     scope: {
       ru: 'Точная стоимость шести этапов возвышения и структура материалов на странице персонажа; эта же кривая сверена по страницам всех 20 доступных персонажей.',
