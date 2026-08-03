@@ -29,6 +29,24 @@ export interface ArcPreset {
   sourceId: string;
 }
 
+export interface ArcBenchmarkRow {
+  arcId: string;
+  percent: number;
+  teamDamage?: number;
+  teamDps?: number;
+  note: LocalizedText;
+}
+
+export interface ArcBenchmarkScenario {
+  id: string;
+  title: LocalizedText;
+  description: LocalizedText;
+  sourceId: string;
+  verifiedAt: string;
+  meta: LocalizedText[];
+  rows: ArcBenchmarkRow[];
+}
+
 export interface SourceEntry {
   id: string;
   title: string;
