@@ -2,15 +2,21 @@
 
 Bilingual RU/EN theorycrafting toolkit for **Neverness to Everness** with transparent formulas, source metadata and explicit model limitations.
 
-> Status: first public calculator foundation. Formula and data revisions are tracked through issues and pull requests.
+> Status: public release with production-verified GitHub Pages and Cloudflare Worker deployments. Formula and data revisions are tracked through issues and pull requests.
 
 ## Included tools
 
 - **Team Calculation** — editable four-slot aggregate rotation model with shared enemy DEF/RES profile.
-- **Arcs Calculation** — sourced Iroi team benchmark plus a separate custom-stat partial model.
+- **Arcs Calculation** — separate sourced Prydwen and Rivyn Elowen Iroi benchmarks plus a custom-stat partial model.
 - **Character Progression** — Iroi ascension inventory planner through the level-80 unlock.
-- **Database & Methodology** — 22-character catalog, Arc presets, formula version and source registry.
-- **Cloudflare API** — versioned JSON data and deterministic calculation endpoints.
+- **Database & Methodology** — 22-character directory, 47-Arc searchable catalog, formula version and source registry.
+- **Cloudflare API** — versioned JSON datasets and deterministic calculation endpoints.
+
+## Production
+
+- Site: `https://bonaqu.github.io/NTE-Calculation-by-bonaqu/`
+- Worker: `https://nte-calculation-api.bonaqu.workers.dev`
+- Health: `https://nte-calculation-api.bonaqu.workers.dev/api/v1/health`
 
 ## Local development
 
@@ -40,7 +46,8 @@ npm run worker:dev
 
 - `GET /api/v1`
 - `GET /api/v1/health`
-- `GET /api/v1/data/arcs`
+- `GET /api/v1/data/arcs` — complete 47-Arc directory
+- `GET /api/v1/data/arc-presets` — calculator-specific Arc presets
 - `GET /api/v1/data/characters`
 - `GET /api/v1/data/progression/iroi`
 - `POST /api/v1/calculate/damage`
@@ -50,11 +57,12 @@ npm run worker:dev
 
 - GitHub Pages deploys from `bonaqu_projects` through `.github/workflows/pages.yml`.
 - Cloudflare Worker `nte-calculation-api` deploys through `.github/workflows/worker.yml` using `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` repository secrets.
-- A release is considered deployed only after the workflow verifies that the public Pages URL is reachable and the Worker returns `status: "ok"` from `/api/v1/health`.
+- A release is considered deployed only after the workflow verifies that the public Pages URL is reachable and `/api/v1/health` returns the documented `ok: true` JSON contract.
+- Deployment evidence is posted automatically to release-tracking issue #5.
 
 ## Data policy
 
-Verified source data is kept separate from editable assumptions. Unknown mechanics are omitted or marked as partial estimates. Formula and dataset changes must include source metadata and a verification date.
+Verified source data is kept separate from editable assumptions. General Arc catalog entries are not reused as calculator presets unless their behavior is modeled and tested. Unknown mechanics are omitted or marked as partial estimates. Formula and dataset changes must include source metadata and a verification date.
 
 ## Disclaimer
 
