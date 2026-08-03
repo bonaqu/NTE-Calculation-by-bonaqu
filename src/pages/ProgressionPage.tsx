@@ -1,5 +1,21 @@
-import { useMemo, useState } from 'react';
-import { Backpack, CheckCircle2, Circle, ExternalLink, Plus, Route, ShieldCheck, Trash2, Users } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Backpack,
+  Check,
+  CheckCircle2,
+  Circle,
+  Copy,
+  Download,
+  ExternalLink,
+  FileUp,
+  Link2,
+  Plus,
+  Route,
+  ShieldCheck,
+  Trash2,
+  Users,
+  X,
+} from 'lucide-react';
 import { characterByName } from '../characters';
 import { QuickStart } from '../components/GuidedHelp';
 import { ResilientImage } from '../components/ResilientImage';
@@ -29,10 +45,23 @@ import {
   usedMaterialIds,
   type RosterProgressionState,
 } from '../progression-engine';
+import {
+  MAX_PROGRESSION_EXPORT_BYTES,
+  PROGRESSION_SHARE_PARAM,
+  applyProgressionShare,
+  buildProgressionShareUrl,
+  parseProgressionPlan,
+  readProgressionShareState,
+  removeProgressionShareParam,
+  serializeProgressionPlan,
+  type DecodedProgressionShare,
+} from '../progression-share';
 
 const STORAGE_KEY = 'nte.progression.roster.v2';
 const LEGACY_COMPLETED_KEY = 'nte.progression.iroi.completed.v1';
 const LEGACY_INVENTORY_KEY = 'nte.progression.iroi.inventory.v1';
+
+type TransferStatus = 'idle' | 'copied' | 'exported' | 'applied' | 'imported' | 'invalid' | 'failed';
 
 function readInitialState(): RosterProgressionState {
   const fallback = defaultRosterProgressionState();
@@ -48,14 +77,69 @@ function readInitialState(): RosterProgressionState {
   }
 }
 
+async function copyText(value: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return;
+    } catch {
+      // Restricted contexts can deny Clipboard API access; use the fallback below.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = value;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  textarea.style.pointerEvents = 'none';
+  document.body.append(textarea);
+  textarea.select();
+  const copied = document.execCommand('copy');
+  textarea.remove();
+  if (!copied) throw new Error('COPY_FAILED');
+}
+
+function downloadJson(content: string): void {
+  const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+  const href = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = href;
+  anchor.download = `nte-progression-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(href);
+}
+
 export function ProgressionPage() {
   const { locale } = useI18n();
   const ru = locale === 'ru';
   const initialState = useMemo(readInitialState, []);
+  const [initialShare] = useState(() => ({
+    present: new URLSearchParams(window.location.search).has(PROGRESSION_SHARE_PARAM),
+    decoded: readProgressionShareState(window.location.search),
+  }));
   const [state, setState] = useLocalStorage<RosterProgressionState>(STORAGE_KEY, initialState, {
     normalize: normalizeRosterProgressionState,
   });
   const [characterToAdd, setCharacterToAdd] = useState('Shinku');
+  const [includeInventory, setIncludeInventory] = useState(false);
+  const [sharedPlan, setSharedPlan] = useState<DecodedProgressionShare | null>(initialShare.decoded);
+  const [transferStatus, setTransferStatus] = useState<TransferStatus>('idle');
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!initialShare.present) return;
+    window.history.replaceState(window.history.state, '', removeProgressionShareParam(window.location.href));
+    if (!initialShare.decoded) setTransferStatus('invalid');
+  }, [initialShare]);
+
+  useEffect(() => {
+    if (transferStatus === 'idle') return undefined;
+    const timeout = window.setTimeout(() => setTransferStatus('idle'), 3_000);
+    return () => window.clearTimeout(timeout);
+  }, [transferStatus]);
 
   const selectedNames = useMemo(() => new Set(state.entries.map((entry) => entry.characterName)), [state.entries]);
   const addableProfiles = useMemo(
@@ -73,6 +157,7 @@ export function ProgressionPage() {
   const activeCommonIds = commonMaterialIds.filter((id) => required[id] > 0);
   const completedAscensions = state.entries.reduce((sum, entry) => sum + entry.completedSteps, 0);
   const totalAscensions = state.entries.length * ascensionSteps.length;
+  const sharedCompleted = sharedPlan?.state.entries.reduce((sum, entry) => sum + entry.completedSteps, 0) ?? 0;
 
   const addCharacter = () => {
     if (selectedNames.has(characterToAdd) || !characterAscensionByName.has(characterToAdd)) return;
@@ -101,10 +186,68 @@ export function ProgressionPage() {
     inventory: { ...current.inventory, [id]: Math.max(0, Math.floor(Number.isFinite(value) ? value : 0)) },
   }));
 
-  const resetPlan = () => setState(defaultRosterProgressionState());
+  const resetPlan = () => {
+    setState(defaultRosterProgressionState());
+    setTransferStatus('idle');
+  };
+
+  const copyShareLink = async () => {
+    try {
+      await copyText(buildProgressionShareUrl(state, window.location.href, includeInventory));
+      setTransferStatus('copied');
+    } catch {
+      setTransferStatus('failed');
+    }
+  };
+
+  const exportPlan = () => {
+    try {
+      downloadJson(serializeProgressionPlan(state));
+      setTransferStatus('exported');
+    } catch {
+      setTransferStatus('failed');
+    }
+  };
+
+  const importPlan = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      if (file.size > MAX_PROGRESSION_EXPORT_BYTES) throw new Error('FILE_TOO_LARGE');
+      const imported = parseProgressionPlan(await file.text());
+      if (!imported) throw new Error('INVALID_FILE');
+      setState(imported);
+      setTransferStatus('imported');
+    } catch {
+      setTransferStatus('invalid');
+    }
+  };
+
+  const applySharedPlan = () => {
+    if (!sharedPlan) return;
+    setState((current) => applyProgressionShare(current, sharedPlan));
+    setSharedPlan(null);
+    setTransferStatus('applied');
+  };
+
+  const transferMessage = {
+    idle: '',
+    copied: ru
+      ? `Ссылка скопирована. ${includeInventory ? 'Инвентарь включён.' : 'Инвентарь не включён.'}`
+      : `Link copied. Inventory ${includeInventory ? 'included.' : 'not included.'}`,
+    exported: ru ? 'Резервная копия JSON скачана.' : 'JSON backup downloaded.',
+    applied: ru ? 'Общий план применён.' : 'Shared plan applied.',
+    imported: ru ? 'План из JSON успешно импортирован.' : 'JSON plan imported successfully.',
+    invalid: ru ? 'Не удалось прочитать план: ссылка или файл повреждены либо имеют неподдерживаемый формат.' : 'Could not read the plan: the link or file is damaged or unsupported.',
+    failed: ru ? 'Не удалось выполнить действие в этом браузере.' : 'The action could not be completed in this browser.',
+  }[transferStatus];
 
   return <div className="page calc-page roster-progression-page">
     <header className="page-heading"><div><span>{ru ? 'ПЛАН ПРОКАЧКИ' : 'ROSTER PROGRESSION'}</span><h1>{ru ? 'Планировщик возвышения команды' : 'Roster ascension planner'}</h1><p>{ru ? 'Добавь нескольких персонажей, отметь уже оплаченные возвышения и введи общий инвентарь. Сайт объединит одинаковые материалы и покажет, что действительно осталось фармить до открытия 80 уровня.' : 'Add several characters, mark paid ascensions and enter one shared inventory. The planner combines matching materials and shows what is still required to unlock level 80.'}</p></div><button className="button ghost" onClick={resetPlan}><Trash2 size={16} /> {ru ? 'Сбросить план' : 'Reset plan'}</button></header>
+
+    {sharedPlan ? <Panel className="progression-share-preview">
+      <div className="progression-share-preview-copy"><Link2 size={22} /><div><h2>{ru ? 'Получен общий план' : 'Shared plan received'}</h2><p>{ru ? `${sharedPlan.state.entries.length} персонажей · ${sharedCompleted} оплаченных возвышений. ${sharedPlan.includesInventory ? 'Автор включил свой инвентарь — он заменит текущий.' : 'Инвентарь не передан — твои текущие значения сохранятся.'}` : `${sharedPlan.state.entries.length} characters · ${sharedCompleted} paid ascensions. ${sharedPlan.includesInventory ? 'The sender included inventory, which will replace yours.' : 'Inventory was not shared, so your current values will be preserved.'}`}</p></div></div>
+      <div className="progression-share-preview-actions"><button className="button primary" type="button" onClick={applySharedPlan}><Check size={17} /> {ru ? 'Применить план' : 'Apply plan'}</button><button className="button ghost" type="button" onClick={() => setSharedPlan(null)}><X size={17} /> {ru ? 'Отклонить' : 'Dismiss'}</button></div>
+    </Panel> : null}
 
     <QuickStart title={ru ? 'Как составить план' : 'How to build a plan'} steps={ru ? [
       'Добавь всех персонажей, которых собираешься поднять. Будущие Линко и Занкоу не показываются до публикации их материалов.',
@@ -124,6 +267,15 @@ export function ProgressionPage() {
       <Metric label={ru ? 'Не хватает монет' : 'Coins missing'} value={formatNumber(shortages.beetleCoin)} />
       <Metric label={ru ? 'Не хватает босс-дропа' : 'Boss drops missing'} value={formatNumber(totalForCategory(shortages, 'boss'))} />
     </div>
+
+    <Panel className="progression-transfer-panel">
+      <div className="panel-title"><Link2 size={20} /><div><h2>{ru ? 'Передать или сохранить план' : 'Share or back up the plan'}</h2><p>{ru ? 'Ссылка предназначена для быстрой передачи, JSON — для полной резервной копии.' : 'Use a link for quick sharing and JSON for a complete backup.'}</p></div></div>
+      <div className="progression-transfer-controls">
+        <label className="progression-inventory-toggle"><input type="checkbox" checked={includeInventory} onChange={(event) => setIncludeInventory(event.target.checked)} /><span><b>{ru ? 'Включить инвентарь в ссылку' : 'Include inventory in link'}</b><small>{ru ? 'По умолчанию ссылка передаёт только персонажей и этапы.' : 'By default, the link contains characters and breakpoints only.'}</small></span></label>
+        <div className="progression-transfer-buttons"><button className="button" type="button" onClick={copyShareLink}>{transferStatus === 'copied' ? <Check size={16} /> : <Copy size={16} />} {ru ? 'Копировать ссылку' : 'Copy link'}</button><button className="button ghost" type="button" onClick={exportPlan}><Download size={16} /> {ru ? 'Скачать JSON' : 'Download JSON'}</button><button className="button ghost" type="button" onClick={() => importInputRef.current?.click()}><FileUp size={16} /> {ru ? 'Импортировать JSON' : 'Import JSON'}</button><input ref={importInputRef} className="progression-file-input" type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importPlan(file); }} /></div>
+      </div>
+      <div className={`progression-transfer-status ${transferStatus}`} role="status" aria-live="polite">{transferMessage}</div>
+    </Panel>
 
     <Panel className="progression-add-panel">
       <div className="panel-title"><Users size={20} /><div><h2>{ru ? 'Добавить персонажа' : 'Add a character'}</h2><p>{ru ? 'Доступны 20 выпущенных персонажей с проверенными материалами.' : 'All 20 released characters with verified materials are available.'}</p></div></div>

@@ -9,7 +9,7 @@ Bilingual RU/EN theorycrafting toolkit for **Neverness to Everness** with transp
 - **Team Calculation** — guided four-character selection, simplified quick inputs, exact advanced breakdown and a shared enemy DEF/RES profile.
 - **Rotation Lab** — source-backed Shinku Charge and Hathor Hypercarry action order, persistent training checklists, team transfer and an attribute-driven Esper Cycle explorer.
 - **Arcs Calculation** — separate sourced Prydwen and Rivyn Elowen Iroi benchmarks plus a custom team model with static and conditional effects separated.
-- **Roster Progression** — multi-character ascension plan for all 20 released characters with separate paid breakpoints, one shared inventory pool, aggregate shortages and boss-farming routes.
+- **Roster Progression** — multi-character ascension plan for all 20 released characters with separate paid breakpoints, one shared inventory pool, aggregate shortages, boss-farming routes, compact share links and JSON backup/import.
 - **Character Database** — 22 sourced profiles with rarity, attribute, role, compatible Arc type, release status and direct provenance. Twenty released profiles are complete; Linko and Zankou keep unannounced role/Arc fields explicitly unknown.
 - **Arc Database & Methodology** — complete 47-Arc searchable catalog, formula version and source registry.
 - **Cloudflare API** — versioned JSON datasets and deterministic calculation endpoints.
@@ -30,6 +30,9 @@ The progression planner models the six character ascensions paid at levels 20, 3
 - Linko and Zankou are excluded until released progression data is public.
 - Character EXP, abilities, passives, Life Skills and Arc costs are intentionally excluded instead of being approximated.
 - The previous Iroi-only local planner state migrates into the new roster model.
+- Share links omit inventory by default. Inventory is included only through an explicit opt-in.
+- Opening a shared URL shows an Apply/Dismiss preview instead of silently overwriting local state.
+- JSON export is a full local backup. Imported files are size-limited, versioned and normalized before they can replace saved state.
 
 ## Rotation data policy
 
