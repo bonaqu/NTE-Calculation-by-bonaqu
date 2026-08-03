@@ -9,6 +9,7 @@ import './resilient-images.css';
 import './guided-ux.css';
 import './database.css';
 import './character-catalog.css';
+import './team-input.css';
 import './imageFallbackRuntime';
 
 createRoot(document.getElementById('root')!).render(<StrictMode><I18nProvider><App /></I18nProvider></StrictMode>);
