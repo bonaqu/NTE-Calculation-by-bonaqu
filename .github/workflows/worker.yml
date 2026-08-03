@@ -12,6 +12,8 @@ on:
       - 'src/arc-directory.ts'
       - 'src/arc-catalog.ts'
       - 'src/arc-presets.ts'
+      - 'src/esper-cycles.ts'
+      - 'src/rotation-presets.ts'
       - 'package.json'
       - '.github/workflows/worker.yml'
   workflow_dispatch:
@@ -35,6 +37,8 @@ jobs:
       arcs_url: ${{ steps.verify.outputs.arcs_url }}
       presets_url: ${{ steps.verify.outputs.presets_url }}
       characters_url: ${{ steps.verify.outputs.characters_url }}
+      cycles_url: ${{ steps.verify.outputs.cycles_url }}
+      rotations_url: ${{ steps.verify.outputs.rotations_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -63,7 +67,7 @@ jobs:
         id: verify
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
-          EXPECTED_SERVICE_VERSION: '0.4.0'
+          EXPECTED_SERVICE_VERSION: '0.5.0'
           EXPECTED_FORMULA_VERSION: '0.2'
         run: |
           test -n "$DEPLOYMENT_URL"
@@ -71,6 +75,8 @@ jobs:
           ARCS_URL="${DEPLOYMENT_URL%/}/api/v1/data/arcs"
           PRESETS_URL="${DEPLOYMENT_URL%/}/api/v1/data/arc-presets"
           CHARACTERS_URL="${DEPLOYMENT_URL%/}/api/v1/data/characters"
+          CYCLES_URL="${DEPLOYMENT_URL%/}/api/v1/data/esper-cycles"
+          ROTATIONS_URL="${DEPLOYMENT_URL%/}/api/v1/data/rotation-presets"
           verified=0
 
           for attempt in $(seq 1 30); do
@@ -79,6 +85,8 @@ jobs:
               && curl --fail --silent --show-error --location "$ARCS_URL" -o /tmp/arcs.json \
               && curl --fail --silent --show-error --location "$PRESETS_URL" -o /tmp/presets.json \
               && curl --fail --silent --show-error --location "$CHARACTERS_URL" -o /tmp/characters.json \
+              && curl --fail --silent --show-error --location "$CYCLES_URL" -o /tmp/cycles.json \
+              && curl --fail --silent --show-error --location "$ROTATIONS_URL" -o /tmp/rotations.json \
               && node <<'NODE'
           const fs = require('node:fs');
           const expectedVersion = process.env.EXPECTED_SERVICE_VERSION;
@@ -87,6 +95,8 @@ jobs:
           const catalog = JSON.parse(fs.readFileSync('/tmp/arcs.json', 'utf8'));
           const presets = JSON.parse(fs.readFileSync('/tmp/presets.json', 'utf8'));
           const characters = JSON.parse(fs.readFileSync('/tmp/characters.json', 'utf8'));
+          const cycles = JSON.parse(fs.readFileSync('/tmp/cycles.json', 'utf8'));
+          const rotations = JSON.parse(fs.readFileSync('/tmp/rotations.json', 'utf8'));
           const wrongGateM1 = presets.data?.find((arc) => arc.id === 'wrong-gate-m1');
           const wrongGateM5 = presets.data?.find((arc) => arc.id === 'wrong-gate-m5');
           const healthValid = health.ok === true
@@ -124,22 +134,42 @@ jobs:
             && characters.data.every((character) => typeof character.sourceUrl === 'string' && character.sourceUrl.startsWith('https://'))
             && characters.data.filter((character) => character.releaseStatus === 'released').every((character) => character.detailsVerified === true && character.role && character.arcType)
             && characters.data.filter((character) => character.releaseStatus === 'upcoming').every((character) => character.detailsVerified === false && !character.role && !character.arcType);
-          if (!healthValid || !catalogValid || !presetsValid || !charactersValid) {
+          const cycleIds = cycles.data?.map((cycle) => cycle.id).sort();
+          const cyclesValid = cycles.count === 8
+            && cycles.pairCount === 6
+            && cycles.tripleCount === 2
+            && cycles.scope === 'sourced-esper-cycle-definitions'
+            && Array.isArray(cycles.data)
+            && cycles.data.length === 8
+            && JSON.stringify(cycleIds) === JSON.stringify(['blossom', 'charge', 'discord', 'hexed', 'nova', 'remora', 'scorch', 'stain'])
+            && cycles.data.every((cycle) => cycle.sourceUrl === 'https://www.prydwen.gg/neverness-to-everness/guides/esper-cycles');
+          const shinku = rotations.data?.find((preset) => preset.id === 'shinku-charge');
+          const hathor = rotations.data?.find((preset) => preset.id === 'hathor-hyper');
+          const rotationsValid = rotations.count === 2
+            && rotations.stepCount === 19
+            && rotations.scope === 'sourced-ordered-rotation-presets'
+            && Array.isArray(rotations.data)
+            && rotations.data.length === 2
+            && JSON.stringify(shinku?.team) === JSON.stringify(['Shinku', 'Hathor', 'Zero', 'Nanally'])
+            && JSON.stringify(hathor?.team) === JSON.stringify(['Hathor', 'Jiuyuan', 'Zero', 'Haniel'])
+            && shinku?.steps?.length === 8
+            && hathor?.steps?.length === 11
+            && rotations.data.every((preset) => preset.sourceUrl?.startsWith('https://www.prydwen.gg/') && preset.timingPolicy?.ru && preset.timingPolicy?.en);
+          if (!healthValid || !catalogValid || !presetsValid || !charactersValid || !cyclesValid || !rotationsValid) {
             console.error('Waiting for current production contract:', {
               expectedVersion,
               expectedFormula,
               observedVersion: health.version,
               observedFormula: health.formulaVersion,
               catalogCount: catalog.count,
-              sourceIds: catalog.sourceIds,
-              wrongGateCatalogSource: catalog.data?.find((arc) => arc.id === 'the-wrong-gate')?.sourceId,
               presetCount: presets.count,
               characterCount: characters.count,
-              releasedCount: characters.releasedCount,
-              upcomingCount: characters.upcomingCount,
-              upcomingNames,
-              wrongGateM1,
-              wrongGateM5,
+              cycleCount: cycles.count,
+              cycleIds,
+              rotationCount: rotations.count,
+              rotationStepCount: rotations.stepCount,
+              shinkuTeam: shinku?.team,
+              hathorTeam: hathor?.team,
             });
             process.exit(1);
           }
@@ -156,7 +186,7 @@ jobs:
             echo "Last health response:" >&2
             cat /tmp/health.json >&2 || true
             echo >&2
-            node -e "try { const c=require('/tmp/arcs.json'); const p=require('/tmp/presets.json'); const h=require('/tmp/characters.json'); console.error({catalogCount:c.count,sourceIds:c.sourceIds,presetCount:p.count,characterCount:h.count,releasedCount:h.releasedCount,upcomingCount:h.upcomingCount}); } catch (error) { console.error(error.message); }" || true
+            node -e "try { const c=require('/tmp/arcs.json'); const p=require('/tmp/presets.json'); const h=require('/tmp/characters.json'); const e=require('/tmp/cycles.json'); const r=require('/tmp/rotations.json'); console.error({catalogCount:c.count,presetCount:p.count,characterCount:h.count,cycleCount:e.count,rotationCount:r.count,rotationStepCount:r.stepCount}); } catch (error) { console.error(error.message); }" || true
             exit 1
           fi
 
@@ -164,10 +194,14 @@ jobs:
           echo "arcs_url=$ARCS_URL" >> "$GITHUB_OUTPUT"
           echo "presets_url=$PRESETS_URL" >> "$GITHUB_OUTPUT"
           echo "characters_url=$CHARACTERS_URL" >> "$GITHUB_OUTPUT"
+          echo "cycles_url=$CYCLES_URL" >> "$GITHUB_OUTPUT"
+          echo "rotations_url=$ROTATIONS_URL" >> "$GITHUB_OUTPUT"
           echo "Cloudflare Worker ${EXPECTED_SERVICE_VERSION} / formula ${EXPECTED_FORMULA_VERSION} is healthy: $HEALTH_URL" >> "$GITHUB_STEP_SUMMARY"
           echo "Arc catalog verified with 47 entries and mixed provenance: $ARCS_URL" >> "$GITHUB_STEP_SUMMARY"
           echo "Corrected calculator presets verified: $PRESETS_URL" >> "$GITHUB_STEP_SUMMARY"
           echo "Character catalog verified with 20 released and 2 upcoming profiles: $CHARACTERS_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Esper Cycle definitions verified with 6 pair and 2 triple reactions: $CYCLES_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Two sourced rotation presets with 19 total steps verified: $ROTATIONS_URL" >> "$GITHUB_STEP_SUMMARY"
 
   report:
     if: ${{ always() }}
@@ -186,9 +220,11 @@ jobs:
           ARCS_URL: ${{ needs.deploy.outputs.arcs_url }}
           PRESETS_URL: ${{ needs.deploy.outputs.presets_url }}
           CHARACTERS_URL: ${{ needs.deploy.outputs.characters_url }}
+          CYCLES_URL: ${{ needs.deploy.outputs.cycles_url }}
+          ROTATIONS_URL: ${{ needs.deploy.outputs.rotations_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$ARCS_URL" && -n "$PRESETS_URL" && -n "$CHARACTERS_URL" ]]; then
+          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$ARCS_URL" && -n "$PRESETS_URL" && -n "$CHARACTERS_URL" && -n "$CYCLES_URL" && -n "$ROTATIONS_URL" ]]; then
             BODY="### Cloudflare Worker deployment: successful ✅
 
           - Worker URL: $DEPLOYMENT_URL
@@ -196,7 +232,9 @@ jobs:
           - Full Arc catalog: $ARCS_URL
           - Corrected Arc presets: $PRESETS_URL
           - Sourced character catalog: $CHARACTERS_URL
-          - API 0.4.0, formula 0.2, Arc provenance, corrected presets and 22-character contract: success
+          - Esper Cycle definitions: $CYCLES_URL
+          - Source-backed rotation presets: $ROTATIONS_URL
+          - API 0.5.0, formula 0.2, Arc, character, cycle and rotation contracts: success
           - Workflow evidence: $RUN_URL"
           elif [[ -n "$DEPLOYMENT_URL" ]]; then
             BODY="### Cloudflare Worker production verification: requires attention ❌
