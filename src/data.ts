@@ -1,4 +1,4 @@
-import type { ArcPreset, CharacterEntry, ProgressionStep, SourceEntry } from './types';
+import type { ArcBenchmarkScenario, ArcPreset, CharacterEntry, ProgressionStep, SourceEntry } from './types';
 
 export const sources: SourceEntry[] = [
   {
@@ -8,8 +8,8 @@ export const sources: SourceEntry[] = [
     url: 'https://www.prydwen.gg/neverness-to-everness/characters/iroi',
     verifiedAt: '2026-08-03',
     scope: {
-      ru: 'Набор Ирой, рекомендации и командные проценты дуг для патча 1.2.',
-      en: 'Iroi kit, build notes and team Arc benchmark percentages for patch 1.2.',
+      ru: 'Набор Ирой, рекомендации и публичные командные проценты дуг для патча 1.2.',
+      en: 'Iroi kit, build notes and public team Arc benchmark percentages for patch 1.2.',
     },
   },
   {
@@ -63,8 +63,8 @@ export const sources: SourceEntry[] = [
     url: '',
     verifiedAt: '2026-08-03',
     scope: {
-      ru: 'Бенчмарк The Wrong Gate M5 и визуальный референс; публичный калькулятор-источник не найден.',
-      en: 'The Wrong Gate M5 benchmark and visual reference; no public source calculator was located.',
+      ru: 'Полная таблица Support Calc Only со значениями урона, DPS и условиями со скриншота; публичный исходный калькулятор не найден.',
+      en: 'Complete Support Calc Only table with damage, DPS and scenario conditions from the screenshot; no public source calculator was located.',
     },
   },
 ];
@@ -72,10 +72,10 @@ export const sources: SourceEntry[] = [
 export const arcPresets: ArcPreset[] = [
   {
     id: 'wrong-gate-m5', name: 'The Wrong Gate', rarity: 'S', type: 'Liquid', baseAtk: 570,
-    secondaryLabel: 'ATK', secondaryValue: 46, mixing: 5, benchmarkPercent: 107.77,
+    secondaryLabel: 'ATK', secondaryValue: 46, mixing: 5,
     benchmarkNote: {
-      ru: 'Значение M5 взято с предоставленного скриншота расчёта Rivyn Elowen.',
-      en: 'M5 value comes from the user-provided Rivyn Elowen calculation screenshot.',
+      ru: 'Значение M5 присутствует только в предоставленном расширенном расчёте Rivyn Elowen.',
+      en: 'The M5 value is available only in the supplied extended Rivyn Elowen calculation.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/47.webp', effect: { atkPct: 46, teamDmgBonus: 15 }, sourceId: 'user-rivyn-chart',
   },
@@ -83,8 +83,8 @@ export const arcPresets: ArcPreset[] = [
     id: 'wrong-gate-m1', name: 'The Wrong Gate', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK', secondaryValue: 46, mixing: 1, benchmarkPercent: 100,
     benchmarkNote: {
-      ru: 'Сигнатурная дуга Ирой и базовая точка командного сравнения.',
-      en: 'Iroi signature Arc and the baseline for the team comparison.',
+      ru: 'Сигнатурная дуга Ирой и базовая точка публичного командного сравнения.',
+      en: 'Iroi signature Arc and the baseline for the public team comparison.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/47.webp', effect: { atkPct: 46, teamDmgBonus: 15 }, sourceId: 'prydwen-iroi',
   },
@@ -96,6 +96,15 @@ export const arcPresets: ArcPreset[] = [
       en: 'Its DoT-based active is unrealistic to maintain on Iroi and is omitted from the partial model.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/8.webp', effect: { critRate: 24 }, sourceId: 'prydwen-iroi',
+  },
+  {
+    id: 'youthful-fantasy-m5', name: 'Youthful Fantasy', rarity: 'S', type: 'Liquid', baseAtk: 570,
+    secondaryLabel: 'ATK', secondaryValue: 30, mixing: 5,
+    benchmarkNote: {
+      ru: 'M5 показана в расширенной таблице Rivyn; публичная таблица Prydwen публикует для этой дуги M1.',
+      en: 'M5 appears in the extended Rivyn table; the public Prydwen table publishes M1 for this Arc.',
+    },
+    image: 'https://cdn.prydwen.gg/images/nte/weapons/4.webp', effect: { atkPct: 30 }, sourceId: 'user-rivyn-chart',
   },
   {
     id: 'youthful-fantasy-m1', name: 'Youthful Fantasy', rarity: 'S', type: 'Liquid', baseAtk: 570,
@@ -132,6 +141,67 @@ export const arcPresets: ArcPreset[] = [
       en: 'Its effect does not cover Iroi full damage profile; the partial model includes only verified ATK.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/5.webp', effect: { atkPct: 25 }, sourceId: 'prydwen-iroi',
+  },
+];
+
+export const customModelArcIds = [
+  'wrong-gate-m1',
+  'last-rose-m1',
+  'youthful-fantasy-m1',
+  'fluff-fleetness-m1',
+  'shiny-days-m5',
+  'clear-skies-m5',
+] as const;
+
+export const arcBenchmarkScenarios: ArcBenchmarkScenario[] = [
+  {
+    id: 'prydwen-public',
+    title: { ru: 'Prydwen · публичный бенчмарк патча 1.2', en: 'Prydwen · public Patch 1.2 benchmark' },
+    description: {
+      ru: 'Опубликованный порядок лучших дуг Ирой. Prydwen показывает относительный командный результат, но не публикует в таблице абсолютный урон и DPS.',
+      en: 'Published Iroi Arc ranking. Prydwen exposes relative team performance but does not publish absolute damage or DPS in the table.',
+    },
+    sourceId: 'prydwen-iroi',
+    verifiedAt: '2026-08-03',
+    meta: [
+      { ru: 'Персонаж: Ирой · роль поддержки', en: 'Character: Iroi · support role' },
+      { ru: 'Версия гайда: Patch 1.2', en: 'Guide version: Patch 1.2' },
+      { ru: 'База сравнения: The Wrong Gate M1 = 100%', en: 'Baseline: The Wrong Gate M1 = 100%' },
+    ],
+    rows: [
+      { arcId: 'wrong-gate-m1', percent: 100, note: { ru: 'Сигнатурная дуга и публичная база сравнения.', en: 'Signature Arc and public comparison baseline.' } },
+      { arcId: 'last-rose-m1', percent: 92.97, note: { ru: 'Активный DoT-эффект на Ирой нереалистично поддерживать.', en: 'The active DoT effect is unrealistic to maintain on Iroi.' } },
+      { arcId: 'youthful-fantasy-m1', percent: 92.55, note: { ru: 'В основном работает как 570 Base ATK + 30% ATK.', en: 'Mainly functions as 570 Base ATK plus 30% ATK.' } },
+      { arcId: 'fluff-fleetness-m1', percent: 92, note: { ru: 'Низкое время на поле мешает набору стаков.', en: 'Low field time makes stacking difficult.' } },
+      { arcId: 'shiny-days-m5', percent: 91.88, note: { ru: 'Break-окно сложно реализовать до гибели цели.', en: 'The Break window is difficult to realize before the target dies.' } },
+      { arcId: 'clear-skies-m5', percent: 91.63, note: { ru: 'Бафф покрывает не весь профиль урона Ирой.', en: 'The buff does not cover Iroi full damage profile.' } },
+    ],
+  },
+  {
+    id: 'rivyn-support',
+    title: { ru: 'Rivyn Elowen · Support Calc Only', en: 'Rivyn Elowen · Support Calc Only' },
+    description: {
+      ru: 'Расширенная таблица с предоставленного скриншота. Она содержит абсолютный командный урон и DPS, но исходный публичный калькулятор и воспроизводимая модель не найдены.',
+      en: 'Extended table from the supplied screenshot. It includes absolute team damage and DPS, but no public source calculator or reproducible model was found.',
+    },
+    sourceId: 'user-rivyn-chart',
+    verifiedAt: '2026-08-03',
+    meta: [
+      { ru: 'Команда: Ирой MC (Day Off) + Shinku (Blushing Mirage) + Hathor (Raging Flames)', en: 'Team: Iroi MC (Day Off) + Shinku (Blushing Mirage) + Hathor (Raging Flames)' },
+      { ru: 'Speedy Hedgehog · Cycle Intensity · 22 эффективных сабстата', en: 'Speedy Hedgehog · Cycle Intensity · 22 effective substats' },
+      { ru: 'Босс Lv82 · одна цель · 1032 DEF · All-Type RES 20% · 35 секунд', en: 'Boss Lv82 · single target · 1032 DEF · All-Type RES 20% · 35 seconds' },
+      { ru: 'Вклад Ирой в урон команды: 10,51% без Break DMG', en: 'Iroi team damage contribution: 10.51% excluding Break DMG' },
+    ],
+    rows: [
+      { arcId: 'wrong-gate-m5', percent: 107.77, teamDamage: 2_912_618, teamDps: 83_218, note: { ru: 'Максимальное смешение сигнатурной дуги.', en: 'Maximum mixing of the signature Arc.' } },
+      { arcId: 'wrong-gate-m1', percent: 100, teamDamage: 2_702_636, teamDps: 77_218, note: { ru: 'Baseline расширенного расчёта.', en: 'Baseline of the extended calculation.' } },
+      { arcId: 'last-rose-m1', percent: 92.97, teamDamage: 2_512_743, teamDps: 71_793, note: { ru: 'Custom uptime: 3 секунды после применения Skill.', en: 'Custom uptime: 3 seconds after casting Skill.' } },
+      { arcId: 'youthful-fantasy-m5', percent: 92.63, teamDamage: 2_503_523, teamDps: 71_529, note: { ru: 'Активный эффект не учитывается.', en: 'Assumes no active use.' } },
+      { arcId: 'youthful-fantasy-m1', percent: 92.55, teamDamage: 2_501_294, teamDps: 71_466, note: { ru: 'Активный эффект не учитывается.', en: 'Assumes no active use.' } },
+      { arcId: 'shiny-days-m5', percent: 92.36, teamDamage: 2_496_268, teamDps: 71_322, note: { ru: 'Большинство боссов погибает до Break.', en: 'Most bosses are dead before they break.' } },
+      { arcId: 'fluff-fleetness-m1', percent: 92.30, teamDamage: 2_494_516, teamDps: 71_272, note: { ru: 'Аптайм отсутствует: Ирой почти всегда вне поля.', en: 'No uptime because Iroi is nearly always off-field.' } },
+      { arcId: 'clear-skies-m5', percent: 92.12, teamDamage: 2_489_582, teamDps: 71_151, note: { ru: 'Значение из предоставленной таблицы.', en: 'Value from the supplied table.' } },
+    ],
   },
 ];
 
