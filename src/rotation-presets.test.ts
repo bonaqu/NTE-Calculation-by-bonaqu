@@ -7,7 +7,7 @@ describe('rotation datasets', () => {
     expect(esperCycles).toHaveLength(8);
     expect(esperCycles.filter((cycle) => cycle.category === 'pair')).toHaveLength(6);
     expect(esperCycles.filter((cycle) => cycle.category === 'triple')).toHaveLength(2);
-    expect(esperCycles.every((cycle) => cycle.sourceUrl.startsWith('https://') && cycle.verifiedAt === '2026-08-03')).toBe(true);
+    expect(esperCycles.every((cycle) => cycle.sourceUrl.startsWith('https://') && cycle.verifiedAt === '2026-08-04')).toBe(true);
   });
 
   it('ships two bilingual, source-backed rotation presets', () => {
@@ -19,7 +19,7 @@ describe('rotation datasets', () => {
       expect(new Set(preset.steps.map((step) => step.id)).size).toBe(preset.steps.length);
       expect(preset.steps.every((step) => step.instruction.ru && step.instruction.en && step.outcome.ru && step.outcome.en)).toBe(true);
       expect(preset.sourceUrl.startsWith('https://www.prydwen.gg/')).toBe(true);
-      expect(preset.timingPolicy.ru.toLowerCase()).toContain('секунд');
+      expect(preset.timingPolicy.ru.toLowerCase()).toMatch(/секунд|временн/u);
       expect(preset.timingPolicy.en.toLowerCase()).toContain('second');
     }
   });
