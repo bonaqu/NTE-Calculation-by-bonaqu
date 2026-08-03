@@ -41,10 +41,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isStoredTeam(value: unknown): value is TeamMemberInput[] {
   if (!Array.isArray(value) || value.length < 4) return false;
   return value.slice(0, 4).every((entry) => {
-    if (!isRecord(entry) || typeof entry.id !== 'string' || typeof entry.name !== 'string' || !isRecord(entry.enemy)) return false;
+    if (!isRecord(entry) || typeof entry.id !== 'string' || typeof entry.name !== 'string') return false;
+    const enemy = entry.enemy;
+    if (!isRecord(enemy)) return false;
     const memberNumbersValid = storedMemberNumberKeys.every((key) => typeof entry[key] === 'number' && Number.isFinite(entry[key]));
     const enemyNumbersValid = ['level', 'resistance', 'defenceReduction', 'resistanceReduction']
-      .every((key) => typeof entry.enemy[key] === 'number' && Number.isFinite(entry.enemy[key]));
+      .every((key) => typeof enemy[key] === 'number' && Number.isFinite(enemy[key]));
     return memberNumbersValid && enemyNumbersValid;
   });
 }
