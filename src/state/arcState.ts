@@ -133,7 +133,8 @@ export function decodeArcShareState(
   try {
     const payload = JSON.parse(fromBase64Url(encoded)) as unknown;
     if (!isRecord(payload) || payload.v !== 1 || !Array.isArray(payload.x) || payload.x.length !== arcStatKeys.length) return null;
-    const statsObject = Object.fromEntries(arcStatKeys.map((key, index) => [key, payload.x[index]]));
+    const values: unknown[] = payload.x;
+    const statsObject = Object.fromEntries(arcStatKeys.map((key, index) => [key, values[index]]));
     return normalizeArcCalculatorState({
       version: 1,
       mode: payload.m,
