@@ -19,7 +19,7 @@ describe('rotation datasets', () => {
       expect(new Set(preset.steps.map((step) => step.id)).size).toBe(preset.steps.length);
       expect(preset.steps.every((step) => step.instruction.ru && step.instruction.en && step.outcome.ru && step.outcome.en)).toBe(true);
       expect(preset.sourceUrl.startsWith('https://www.prydwen.gg/')).toBe(true);
-      expect(preset.timingPolicy.ru).toContain('секунд');
+      expect(preset.timingPolicy.ru.toLowerCase()).toContain('секунд');
       expect(preset.timingPolicy.en.toLowerCase()).toContain('second');
     }
   });
