@@ -75,12 +75,11 @@ describe('progression share links', () => {
     expect(removeProgressionShareParam(url)).toBe('/tool/?theme=dark#/progression');
   });
 
-  it('rejects malformed, unknown-index and oversized payloads', () => {
+  it('rejects malformed, duplicate, out-of-range and oversized payloads', () => {
     expect(decodeProgressionShareState('not-base64')).toBeNull();
-    expect(decodeProgressionShareState(btoa(JSON.stringify({ v: 1, e: [[999, 2]] })))).toEqual({
-      state: { version: 2, entries: [], inventory: emptyAscensionInventory() },
-      includesInventory: false,
-    });
+    expect(decodeProgressionShareState(btoa(JSON.stringify({ v: 1, e: [[999, 2]] })))).toBeNull();
+    expect(decodeProgressionShareState(btoa(JSON.stringify({ v: 1, e: [[0, 1], [0, 2]] })))).toBeNull();
+    expect(decodeProgressionShareState(btoa(JSON.stringify({ v: 1, e: [[0, 7]] })))).toBeNull();
     expect(decodeProgressionShareState('a'.repeat(8_193))).toBeNull();
   });
 });
@@ -95,7 +94,8 @@ describe('progression JSON import and export', () => {
 
   it('rejects malformed, wrong-format and oversized imports', () => {
     expect(parseProgressionPlan('{broken')).toBeNull();
-    expect(parseProgressionPlan(JSON.stringify({ format: 'other', version: 1, state: sampleState() }))).toBeNull();
+    expect(parseProgressionPlan(JSON.stringify({ format: 'other', version: 1, exportedAt: '2026-08-04', state: sampleState() }))).toBeNull();
+    expect(parseProgressionPlan(JSON.stringify({ format: 'nte-roster-progression', version: 1, state: sampleState() }))).toBeNull();
     expect(parseProgressionPlan('x'.repeat(MAX_PROGRESSION_EXPORT_BYTES + 1))).toBeNull();
   });
 });
