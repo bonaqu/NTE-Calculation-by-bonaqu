@@ -1,0 +1,10 @@
+.resilient-image{position:relative;display:inline-grid;place-items:center;overflow:hidden;background:radial-gradient(circle,rgba(88,230,205,.12),rgba(255,255,255,.035));border:1px solid var(--line);color:rgba(88,230,205,.72);font-weight:900;line-height:1}
+.resilient-image-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;letter-spacing:.04em}
+.resilient-image>img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:contain;background:inherit}
+.arc-result-image{width:54px;height:54px;flex:0 0 54px;border-radius:12px}
+.character-result-image{width:58px;height:58px;border-radius:14px}
+.runtime-image-fallback{display:grid;place-items:center;overflow:hidden;border:1px solid var(--line);background:radial-gradient(circle,rgba(88,230,205,.13),rgba(255,255,255,.035));color:rgba(88,230,205,.72);font-weight:950;letter-spacing:.04em;line-height:1}
+.arc-cell>.runtime-image-fallback{width:54px;height:54px;flex:0 0 54px;border-radius:12px;font-size:12px}
+.database-grid article>.runtime-image-fallback{width:58px;height:58px;border-radius:14px;font-size:13px}
+.hero-art>.runtime-image-fallback{position:relative;z-index:1;width:min(96%,720px);height:min(100%,690px);border:0;background:radial-gradient(circle at 50% 48%,rgba(88,230,205,.19),rgba(88,230,205,.04) 46%,transparent 67%);color:rgba(88,230,205,.4);font-size:clamp(110px,15vw,220px);letter-spacing:-.08em;filter:drop-shadow(0 30px 35px rgba(0,0,0,.28));transform:translateY(20px)}
+@media(max-width:620px){.arc-result-image{width:54px;height:54px;flex-basis:54px}.hero-art>.runtime-image-fallback{width:115%;max-width:none;font-size:130px}}
