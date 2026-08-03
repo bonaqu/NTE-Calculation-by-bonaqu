@@ -14,7 +14,7 @@ describe('complete Arc catalog', () => {
   it('keeps source and verification metadata on every Arc', () => {
     for (const arc of arcCatalog) {
       expect(arcCatalogSourceIds).toContain(arc.sourceId);
-      expect(arc.verifiedAt).toBe('2026-08-03');
+      expect(arc.verifiedAt).toBe('2026-08-04');
       expect(arc.baseAtk).toBeGreaterThan(0);
       expect(arc.secondaryValue).toBeGreaterThan(0);
       expect(arc.effect.ru.length).toBeGreaterThan(20);
