@@ -89,7 +89,7 @@ const statRussian: Record<string, string> = {
   'HP%': 'HP',
   'CRIT Rate': 'Крит. шанс',
   'CRIT DMG': 'Крит. урон',
-  'Break Intensity': 'Сила пробития',
+  'Break Intensity': 'Интенсивность сломления',
   'Charge Efficiency': 'Эффективность зарядки',
   'DMG Bonus': 'Бонус урона',
 };
@@ -111,10 +111,12 @@ const attributeRussian: Record<string, string> = {
   Lakshana: 'Лакшана',
   Chaos: 'Хаос',
   Incantation: 'Заклинание',
+  Psyche: 'Психика',
 };
 
 const roleRussian: Record<string, string> = {
   Damage: 'Урон',
+  Buff: 'Усиление',
   Survival: 'Выживаемость',
   Support: 'Поддержка',
 };
