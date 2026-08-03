@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BarChart3, BookOpen, Boxes, ChevronDown, Database, Github, Home, Languages, Menu, Users, X } from 'lucide-react';
+import { BarChart3, BookOpen, Boxes, ChevronDown, Database, GitBranch, Home, Languages, Menu, Users, X } from 'lucide-react';
 import { useI18n } from './i18n';
 import type { RouteKey } from './types';
 import { HomePage } from './pages/HomePage';
@@ -51,7 +51,7 @@ export default function App() {
   return <div className="app-shell">
     <header className="topbar"><button className="mobile-menu" onClick={() => setMobileOpen((value) => !value)} aria-label={locale === 'ru' ? 'Открыть меню' : 'Open menu'} aria-expanded={mobileOpen}>{mobileOpen ? <X /> : <Menu />}</button><button className="logo" onClick={() => navigate('home')} aria-label="NTE Calculation by bonaqu"><span>N</span><div><b>NTE Calculation</b><small>by bonaqu</small></div></button>
       <nav className={mobileOpen ? 'open' : ''} aria-label={locale === 'ru' ? 'Основная навигация' : 'Primary navigation'}>{nav.map(([key, Icon]) => <button key={key} className={route === key ? 'active' : ''} aria-current={route === key ? 'page' : undefined} onClick={() => navigate(key)}><Icon size={17} />{t.nav[key]}</button>)}</nav>
-      <div className="header-actions"><a className="icon-button" href="https://github.com/bonaqu/NTE-Calculation-by-bonaqu" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={20} /></a><div className="language" ref={langRef}><button className="language-button" onClick={() => setLangOpen((value) => !value)} aria-haspopup="menu" aria-expanded={langOpen}><Languages size={18} /><span>{locale === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}</span><ChevronDown size={15} /></button>{langOpen ? <div className="language-menu" role="menu"><button role="menuitem" onClick={() => { setLocale('ru'); setLangOpen(false); }}>🇷🇺 <span>Русский</span><small>RU</small></button><button role="menuitem" onClick={() => { setLocale('en'); setLangOpen(false); }}>🇬🇧 <span>English</span><small>EN</small></button></div> : null}</div></div>
+      <div className="header-actions"><a className="icon-button" href="https://github.com/bonaqu/NTE-Calculation-by-bonaqu" target="_blank" rel="noreferrer" aria-label="GitHub"><GitBranch size={20} /></a><div className="language" ref={langRef}><button className="language-button" onClick={() => setLangOpen((value) => !value)} aria-haspopup="menu" aria-expanded={langOpen}><Languages size={18} /><span>{locale === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}</span><ChevronDown size={15} /></button>{langOpen ? <div className="language-menu" role="menu"><button role="menuitem" onClick={() => { setLocale('ru'); setLangOpen(false); }}>🇷🇺 <span>Русский</span><small>RU</small></button><button role="menuitem" onClick={() => { setLocale('en'); setLangOpen(false); }}>🇬🇧 <span>English</span><small>EN</small></button></div> : null}</div></div>
     </header>
     <main>{page}</main>
     <footer><span>NTE Calculation by bonaqu</span><span>{locale === 'ru' ? 'Фанатский open-source проект · Не связан с Hotta Studio' : 'Fan-made open-source project · Not affiliated with Hotta Studio'}</span></footer>
