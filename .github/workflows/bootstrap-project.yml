@@ -4,7 +4,7 @@ on:
   push:
     branches: [feat/production-foundation]
     paths:
-      - '.bootstrap/project.tar.gz.b64'
+      - '.bootstrap/project.tar.gz.b64.part-05'
 
 permissions:
   contents: write
@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
       - name: Expand reviewed project archive
         run: |
-          base64 --decode .bootstrap/project.tar.gz.b64 > /tmp/project.tar.gz
+          cat .bootstrap/project.tar.gz.b64.part-* | base64 --decode > /tmp/project.tar.gz
           echo "cb8b88870a46a6548c27e80ea44ecfae21d7d551f5c07bd3dd9c4f16b7279c96  /tmp/project.tar.gz" | sha256sum --check
           tar -xzf /tmp/project.tar.gz
           rm -rf .bootstrap .github/workflows/bootstrap-project.yml
