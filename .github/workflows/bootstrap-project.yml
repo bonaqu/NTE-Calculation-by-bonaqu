@@ -21,7 +21,7 @@ jobs:
       - name: Expand reviewed project archive
         run: |
           base64 --decode .bootstrap/project.tar.gz.b64 > /tmp/project.tar.gz
-          echo "c7a7409d670528f21e7d52ee7256f5c283253a0938b8e34f54999e1d8e60a04a  /tmp/project.tar.gz" | sha256sum --check
+          echo "cb8b88870a46a6548c27e80ea44ecfae21d7d551f5c07bd3dd9c4f16b7279c96  /tmp/project.tar.gz" | sha256sum --check
           tar -xzf /tmp/project.tar.gz
           rm -rf .bootstrap .github/workflows/bootstrap-project.yml
       - name: Commit project tree
