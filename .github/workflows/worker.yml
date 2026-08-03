@@ -53,24 +53,29 @@ jobs:
           packageManager: npm
           wranglerVersion: '4.114.0'
           command: deploy --config workers/api/wrangler.jsonc
-      - name: Verify API health and Arc catalog
+      - name: Wait for API version propagation and verify data
         id: verify
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+          EXPECTED_SERVICE_VERSION: '0.2.0'
         run: |
           test -n "$DEPLOYMENT_URL"
           HEALTH_URL="${DEPLOYMENT_URL%/}/api/v1/health"
           ARCS_URL="${DEPLOYMENT_URL%/}/api/v1/data/arcs"
-          curl --fail --location --retry 8 --retry-delay 5 --retry-all-errors "$HEALTH_URL" | tee /tmp/health.json
-          curl --fail --location --retry 8 --retry-delay 5 --retry-all-errors "$ARCS_URL" | tee /tmp/arcs.json > /dev/null
-          node <<'NODE'
+          verified=0
+
+          for attempt in $(seq 1 30); do
+            echo "Production contract check $attempt/30"
+            if curl --fail --silent --show-error --location "$HEALTH_URL" -o /tmp/health.json \
+              && curl --fail --silent --show-error --location "$ARCS_URL" -o /tmp/arcs.json \
+              && node <<'NODE'
           const fs = require('node:fs');
+          const expectedVersion = process.env.EXPECTED_SERVICE_VERSION;
           const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
           const catalog = JSON.parse(fs.readFileSync('/tmp/arcs.json', 'utf8'));
           const healthValid = health.ok === true
             && health.service === 'nte-calculation-api'
-            && typeof health.version === 'string'
-            && health.version.length > 0
+            && health.version === expectedVersion
             && typeof health.formulaVersion === 'string'
             && health.formulaVersion.length > 0;
           const catalogValid = catalog.count === 47
@@ -79,13 +84,36 @@ jobs:
             && catalog.sourceId === 'prydwen-arcs'
             && typeof catalog.verifiedAt === 'string';
           if (!healthValid || !catalogValid) {
-            console.error('Unexpected production API contract:', { health, catalogCount: catalog.count, dataLength: catalog.data?.length, sourceId: catalog.sourceId });
+            console.error('Waiting for current production contract:', {
+              expectedVersion,
+              observedVersion: health.version,
+              healthOk: health.ok,
+              catalogCount: catalog.count,
+              dataLength: catalog.data?.length,
+              sourceId: catalog.sourceId,
+            });
             process.exit(1);
           }
           NODE
+            then
+              verified=1
+              break
+            fi
+            sleep 5
+          done
+
+          if [[ "$verified" != "1" ]]; then
+            echo "Expected Worker contract did not propagate within 150 seconds." >&2
+            echo "Last health response:" >&2
+            cat /tmp/health.json >&2 || true
+            echo >&2
+            node -e "try { const d=require('/tmp/arcs.json'); console.error({count:d.count,dataLength:d.data?.length,sourceId:d.sourceId}); } catch (error) { console.error(error.message); }" || true
+            exit 1
+          fi
+
           echo "health_url=$HEALTH_URL" >> "$GITHUB_OUTPUT"
           echo "arcs_url=$ARCS_URL" >> "$GITHUB_OUTPUT"
-          echo "Cloudflare Worker is healthy: $HEALTH_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Cloudflare Worker ${EXPECTED_SERVICE_VERSION} is healthy: $HEALTH_URL" >> "$GITHUB_STEP_SUMMARY"
           echo "Arc catalog verified with 47 entries: $ARCS_URL" >> "$GITHUB_STEP_SUMMARY"
 
   report:
@@ -111,14 +139,14 @@ jobs:
           - Worker URL: $DEPLOYMENT_URL
           - Health endpoint: $HEALTH_URL
           - Full Arc catalog: $ARCS_URL
-          - Deploy, health and 47-entry catalog validation: success
+          - API 0.2.0, health and 47-entry catalog validation: success
           - Workflow evidence: $RUN_URL"
           elif [[ -n "$DEPLOYMENT_URL" ]]; then
             BODY="### Cloudflare Worker production verification: requires attention ❌
 
           - Worker deployment completed: $DEPLOYMENT_URL
           - Deployment job result: $JOB_RESULT
-          - Health or data-contract validation did not pass
+          - Current API version or data-contract validation did not pass within the propagation window
           - Workflow diagnostics: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌
