@@ -54,6 +54,6 @@ export default function App() {
       <div className="header-actions"><a className="icon-button" href="https://github.com/bonaqu/NTE-Calculation-by-bonaqu" target="_blank" rel="noreferrer" aria-label="GitHub"><GitBranch size={20} /></a><div className="language" ref={langRef}><button className="language-button" onClick={() => setLangOpen((value) => !value)} aria-haspopup="menu" aria-expanded={langOpen}><Languages size={18} /><span>{locale === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}</span><ChevronDown size={15} /></button>{langOpen ? <div className="language-menu" role="menu"><button role="menuitem" onClick={() => { setLocale('ru'); setLangOpen(false); }}>🇷🇺 <span>Русский</span><small>RU</small></button><button role="menuitem" onClick={() => { setLocale('en'); setLangOpen(false); }}>🇬🇧 <span>English</span><small>EN</small></button></div> : null}</div></div>
     </header>
     <main>{page}</main>
-    <footer><span>NTE Calculation by bonaqu</span><span>{locale === 'ru' ? 'Фанатский open-source проект · Не связан с Hotta Studio' : 'Fan-made open-source project · Not affiliated with Hotta Studio'}</span></footer>
+    <footer><span>NTE Calculation by bonaqu</span><span>{locale === 'ru' ? 'Фанатский проект с открытым исходным кодом · Не связан с Hotta Studio' : 'Fan-made open-source project · Not affiliated with Hotta Studio'}</span></footer>
   </div>;
 }
