@@ -21,18 +21,35 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
         with:
           node-version: 24
-      - run: npm install
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
       - name: Dry-run bundle
         run: npm run worker:check
       - name: Deploy nte-calculation-api
+        id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: npm
+          wranglerVersion: '4.114.0'
           command: deploy --config workers/api/wrangler.jsonc
+      - name: Verify API health
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          test -n "$DEPLOYMENT_URL"
+          HEALTH_URL="${DEPLOYMENT_URL%/}/api/v1/health"
+          curl --fail --location --retry 8 --retry-delay 5 --retry-all-errors "$HEALTH_URL" | tee /tmp/health.json
+          node -e "const fs=require('fs'); const body=JSON.parse(fs.readFileSync('/tmp/health.json','utf8')); if (body.status !== 'ok') throw new Error('Unexpected health response');"
+          echo "Cloudflare Worker is healthy: $HEALTH_URL" >> "$GITHUB_STEP_SUMMARY"
