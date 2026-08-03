@@ -6,8 +6,8 @@ export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) 
   const { locale } = useI18n();
   const ru = locale === 'ru';
   const tools = [
-    { route: 'team' as const, icon: Users, title: ru ? 'TEAM CALCULATION' : 'TEAM CALCULATION', text: ru ? 'Собери ротацию из четырёх персонажей, учти баффы, защиту и сопротивление цели.' : 'Model a four-character rotation with buffs, defence and target resistance.' },
-    { route: 'arcs' as const, icon: BarChart3, title: ru ? 'ARCS CALCULATION' : 'ARCS CALCULATION', text: ru ? 'Сравни дуги по проверенному бенчмарку и по своей конфигурации статов.' : 'Compare Arcs using a verified benchmark and your own stat model.' },
+    { route: 'team' as const, icon: Users, title: 'TEAM CALCULATION', text: ru ? 'Собери ротацию из четырёх персонажей, учти баффы, защиту и сопротивление цели.' : 'Model a four-character rotation with buffs, defence and target resistance.' },
+    { route: 'arcs' as const, icon: BarChart3, title: 'ARCS CALCULATION', text: ru ? 'Сравни дуги по раздельным исходным бенчмаркам и по своей конфигурации статов.' : 'Compare Arcs using separate sourced benchmarks and your own stat model.' },
     { route: 'progression' as const, icon: Boxes, title: ru ? 'ПРОКАЧКА' : 'PROGRESSION', text: ru ? 'Посчитай оставшиеся материалы с учётом уже накопленного инвентаря.' : 'Calculate remaining materials using your current inventory.' },
   ];
   return <div className="page home-page">
@@ -21,7 +21,7 @@ export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) 
           <button className="button ghost" onClick={() => navigate('methodology')}>{ru ? 'Как считаем' : 'How calculations work'}</button>
         </div>
         <div className="trust-row">
-          <span><ShieldCheck size={17} /> {ru ? 'Источники у каждого пресета' : 'Source metadata per preset'}</span>
+          <span><ShieldCheck size={17} /> {ru ? 'Источники у каждого сценария' : 'Source metadata per scenario'}</span>
           <span><Languages size={17} /> RU / EN</span>
           <span><Sparkles size={17} /> {ru ? 'Сохраняет настройки локально' : 'Local state persistence'}</span>
         </div>
@@ -30,10 +30,10 @@ export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) 
         <div className="orb orb-a" /><div className="orb orb-b" />
         <img src="https://cdn.prydwen.gg/images/nte/characters/iroi_full.webp" alt="Iroi" />
         <div className="hero-data-card">
-          <small>{ru ? 'Ирой · дуги · патч 1.2' : 'Iroi · Arcs · Patch 1.2'}</small>
+          <small>{ru ? 'Ирой · два исходных сценария' : 'Iroi · two sourced scenarios'}</small>
           <strong>The Wrong Gate</strong>
-          <div><span>M1</span><b>100.00%</b></div>
-          <div><span>M5</span><b>107.77%</b></div>
+          <div><span>Prydwen M1</span><b>100.00%</b></div>
+          <div><span>Rivyn M5</span><b>107.77%</b></div>
         </div>
       </div>
     </section>
