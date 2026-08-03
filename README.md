@@ -2,6 +2,8 @@
 
 Bilingual RU/EN theorycrafting toolkit for **Neverness to Everness** with transparent formulas, source metadata and explicit model limitations.
 
+> Status: first public calculator foundation. Formula and data revisions are tracked through issues and pull requests.
+
 ## Included tools
 
 - **Team Calculation** — editable four-slot aggregate rotation model with shared enemy DEF/RES profile.
