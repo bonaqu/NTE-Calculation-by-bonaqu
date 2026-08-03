@@ -50,6 +50,7 @@ npm run worker:dev
 
 - GitHub Pages deploys from `bonaqu_projects` through `.github/workflows/pages.yml`.
 - Cloudflare Worker `nte-calculation-api` deploys through `.github/workflows/worker.yml` using `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` repository secrets.
+- A release is considered deployed only after the workflow verifies that the public Pages URL is reachable and the Worker returns `status: "ok"` from `/api/v1/health`.
 
 ## Data policy
 
