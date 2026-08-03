@@ -1,4 +1,4 @@
-import { ascensionMaterialIds, characterAscensionProfiles } from './progression-data';
+import { ascensionMaterialIds, ascensionSteps, characterAscensionProfiles } from './progression-data';
 import {
   emptyAscensionInventory,
   normalizeRosterProgressionState,
@@ -46,7 +46,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isTuple(value: unknown): value is [number, number] {
   return Array.isArray(value)
     && value.length === 2
-    && value.every((item) => typeof item === 'number' && Number.isInteger(item));
+    && value.every((item) => typeof item === 'number' && Number.isSafeInteger(item));
+}
+
+function hasUniqueIndices(values: Array<[number, number]>): boolean {
+  return new Set(values.map(([index]) => index)).size === values.length;
 }
 
 function byteLength(value: string): number {
@@ -86,21 +90,33 @@ export function decodeProgressionShareState(encoded: string | null): DecodedProg
     const payload = JSON.parse(fromBase64Url(encoded)) as unknown;
     if (!isRecord(payload) || payload.v !== 1 || !Array.isArray(payload.e)) return null;
     if (payload.e.length > characterAscensionProfiles.length || !payload.e.every(isTuple)) return null;
-    if (payload.i !== undefined && (!Array.isArray(payload.i) || payload.i.length > ascensionMaterialIds.length || !payload.i.every(isTuple))) return null;
 
-    const entries = payload.e.flatMap((tuple) => {
-      const [index, completedSteps] = tuple;
-      const profile = characterAscensionProfiles[index];
-      return profile ? [{ characterName: profile.characterName, completedSteps }] : [];
-    });
+    const entryTuples = payload.e as Array<[number, number]>;
+    if (!hasUniqueIndices(entryTuples)
+      || entryTuples.some(([index, steps]) => index < 0
+        || index >= characterAscensionProfiles.length
+        || steps < 0
+        || steps > ascensionSteps.length)) return null;
+
+    if (payload.i !== undefined && (!Array.isArray(payload.i)
+      || payload.i.length > ascensionMaterialIds.length
+      || !payload.i.every(isTuple))) return null;
+
+    const inventoryTuples = Array.isArray(payload.i) ? payload.i as Array<[number, number]> : undefined;
+    if (inventoryTuples && (!hasUniqueIndices(inventoryTuples)
+      || inventoryTuples.some(([index, value]) => index < 0
+        || index >= ascensionMaterialIds.length
+        || value < 0))) return null;
+
+    const entries = entryTuples.map(([index, completedSteps]) => ({
+      characterName: characterAscensionProfiles[index]!.characterName,
+      completedSteps,
+    }));
     const inventory = emptyAscensionInventory();
-    const includesInventory = Array.isArray(payload.i);
+    const includesInventory = inventoryTuples !== undefined;
 
-    if (includesInventory) {
-      for (const [index, value] of payload.i as Array<[number, number]>) {
-        const id = ascensionMaterialIds[index];
-        if (id) inventory[id] = value;
-      }
+    if (inventoryTuples) {
+      for (const [index, value] of inventoryTuples) inventory[ascensionMaterialIds[index]!] = value;
     }
 
     const state = normalizeRosterProgressionState({ version: 2, entries, inventory });
@@ -163,6 +179,7 @@ export function parseProgressionPlan(text: string): RosterProgressionState | nul
     if (!isRecord(envelope)
       || envelope.format !== PROGRESSION_EXPORT_FORMAT
       || envelope.version !== 1
+      || typeof envelope.exportedAt !== 'string'
       || !isRecord(envelope.state)) return null;
     return normalizeRosterProgressionState(envelope.state);
   } catch {
