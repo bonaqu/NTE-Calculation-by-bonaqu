@@ -38,8 +38,8 @@ export const esperCycles: EsperCycleDefinition[] = [
     attributes: ['Anima', 'Incantation'],
     durationSeconds: 12,
     effect: {
-      ru: 'Через 12 секунд наносит дополнительный последующий урон, зависящий от полученного целью урона Анимы и Заклинания.',
-      en: 'After a 12-second collection window, deals additional follow-up damage based on Anima and Incantation damage taken by the target.',
+      ru: 'В течение 12 секунд учитывает полученный целью урон Анимы и Заклинания, после чего наносит дополнительный последующий урон.',
+      en: 'Records Anima and Incantation damage taken by the target for 12 seconds, then deals additional follow-up damage.',
     },
   }),
   cycle({
