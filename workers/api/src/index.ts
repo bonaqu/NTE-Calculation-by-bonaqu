@@ -1,9 +1,11 @@
+import { arcDirectory } from '../../../src/arc-directory';
 import { arcPresets, characterDirectory, iroiProgression } from '../../../src/data';
 import { calculateDamage, calculateTeam, type DamageInput, type TeamMemberInput } from '../../../packages/calculation-core/src';
 
 const MAX_BODY_BYTES = 32_768;
 const FORMULA_VERSION = '0.1';
-const SERVICE_VERSION = '0.1.0';
+const SERVICE_VERSION = '0.2.0';
+const DATASET_VERIFIED_AT = '2026-08-03';
 
 function corsHeaders(): Record<string, string> {
   return {
@@ -57,8 +59,21 @@ function isDamageInput(value: unknown): value is DamageInput {
 function isTeamMember(value: unknown): value is TeamMemberInput {
   if (!isDamageInput(value)) return false;
   const record = value as unknown as Record<string, unknown>;
-  return typeof record.id === 'string' && typeof record.name === 'string' && typeof record.actionsPerRotation === 'number' && Number.isFinite(record.actionsPerRotation);
+  return typeof record.id === 'string'
+    && typeof record.name === 'string'
+    && typeof record.actionsPerRotation === 'number'
+    && Number.isFinite(record.actionsPerRotation);
 }
+
+const endpoints = [
+  '/api/v1/health',
+  '/api/v1/data/arcs',
+  '/api/v1/data/arc-presets',
+  '/api/v1/data/characters',
+  '/api/v1/data/progression/iroi',
+  '/api/v1/calculate/damage',
+  '/api/v1/calculate/team',
+];
 
 export default {
   async fetch(request: Request): Promise<Response> {
@@ -70,15 +85,38 @@ export default {
     try {
       let response: Response;
       if (request.method === 'GET' && url.pathname === '/api/v1') {
-        response = json({ service: 'nte-calculation-api', version: SERVICE_VERSION, formulaVersion: FORMULA_VERSION, endpoints: ['/api/v1/health', '/api/v1/data/arcs', '/api/v1/data/characters', '/api/v1/data/progression/iroi', '/api/v1/calculate/damage', '/api/v1/calculate/team'] }, 200, requestId, 'public, max-age=300');
+        response = json({
+          service: 'nte-calculation-api',
+          version: SERVICE_VERSION,
+          formulaVersion: FORMULA_VERSION,
+          datasetVerifiedAt: DATASET_VERIFIED_AT,
+          endpoints,
+        }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'GET' && url.pathname === '/api/v1/health') {
-        response = json({ ok: true, service: 'nte-calculation-api', version: SERVICE_VERSION, formulaVersion: FORMULA_VERSION }, 200, requestId);
+        response = json({
+          ok: true,
+          service: 'nte-calculation-api',
+          version: SERVICE_VERSION,
+          formulaVersion: FORMULA_VERSION,
+        }, 200, requestId);
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/arcs') {
-        response = json({ data: arcPresets, verifiedAt: '2026-08-03' }, 200, requestId, 'public, max-age=300');
+        response = json({
+          data: arcDirectory,
+          count: arcDirectory.length,
+          sourceId: 'prydwen-arcs',
+          verifiedAt: DATASET_VERIFIED_AT,
+        }, 200, requestId, 'public, max-age=300');
+      } else if (request.method === 'GET' && url.pathname === '/api/v1/data/arc-presets') {
+        response = json({
+          data: arcPresets,
+          count: arcPresets.length,
+          verifiedAt: DATASET_VERIFIED_AT,
+          scope: 'calculator-presets',
+        }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/characters') {
-        response = json({ data: characterDirectory, verifiedAt: '2026-08-03' }, 200, requestId, 'public, max-age=300');
+        response = json({ data: characterDirectory, count: characterDirectory.length, verifiedAt: DATASET_VERIFIED_AT }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/progression/iroi') {
-        response = json({ data: iroiProgression, verifiedAt: '2026-08-03' }, 200, requestId, 'public, max-age=300');
+        response = json({ data: iroiProgression, verifiedAt: DATASET_VERIFIED_AT }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'POST' && url.pathname === '/api/v1/calculate/damage') {
         const input = await parseJson(request);
         response = isDamageInput(input)
@@ -86,7 +124,13 @@ export default {
           : json({ error: 'INVALID_DAMAGE_INPUT', requestId }, 400, requestId);
       } else if (request.method === 'POST' && url.pathname === '/api/v1/calculate/team') {
         const input = await parseJson(request);
-        if (!isRecord(input) || !Array.isArray(input.members) || !input.members.every(isTeamMember) || input.members.length < 1 || input.members.length > 4 || typeof input.duration !== 'number' || !Number.isFinite(input.duration)) {
+        if (!isRecord(input)
+          || !Array.isArray(input.members)
+          || !input.members.every(isTeamMember)
+          || input.members.length < 1
+          || input.members.length > 4
+          || typeof input.duration !== 'number'
+          || !Number.isFinite(input.duration)) {
           response = json({ error: 'INVALID_TEAM_INPUT', requestId }, 400, requestId);
         } else {
           response = json({ result: calculateTeam(input.members, input.duration), formulaVersion: FORMULA_VERSION }, 200, requestId);
