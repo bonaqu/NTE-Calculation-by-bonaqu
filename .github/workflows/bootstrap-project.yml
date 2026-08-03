@@ -4,7 +4,7 @@ on:
   push:
     branches: [feat/production-foundation]
     paths:
-      - '.bootstrap/project.tar.gz.b64.part-05'
+      - '.bootstrap/retrigger'
 
 permissions:
   contents: write
