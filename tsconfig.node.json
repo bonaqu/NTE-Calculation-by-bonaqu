@@ -15,6 +15,7 @@
     "vitest.config.ts",
     "workers",
     "src/data.ts",
+    "src/arc-directory.ts",
     "src/types.ts",
     "packages/calculation-core/src/index.ts"
   ]
