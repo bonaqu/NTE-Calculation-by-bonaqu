@@ -20,8 +20,13 @@ concurrency:
 
 jobs:
   deploy:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      deployment_url: ${{ steps.deploy.outputs.deployment-url }}
+      health_url: ${{ steps.verify.outputs.health_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -45,6 +50,7 @@ jobs:
           wranglerVersion: '4.114.0'
           command: deploy --config workers/api/wrangler.jsonc
       - name: Verify API health
+        id: verify
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         run: |
@@ -52,4 +58,36 @@ jobs:
           HEALTH_URL="${DEPLOYMENT_URL%/}/api/v1/health"
           curl --fail --location --retry 8 --retry-delay 5 --retry-all-errors "$HEALTH_URL" | tee /tmp/health.json
           node -e "const fs=require('fs'); const body=JSON.parse(fs.readFileSync('/tmp/health.json','utf8')); if (body.status !== 'ok') throw new Error('Unexpected health response');"
+          echo "health_url=$HEALTH_URL" >> "$GITHUB_OUTPUT"
           echo "Cloudflare Worker is healthy: $HEALTH_URL" >> "$GITHUB_STEP_SUMMARY"
+
+  report:
+    if: ${{ always() }}
+    permissions:
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: deploy
+    steps:
+      - name: Publish deployment evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          DEPLOYMENT_URL: ${{ needs.deploy.outputs.deployment_url }}
+          HEALTH_URL: ${{ needs.deploy.outputs.health_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ "$DEPLOY_RESULT" == "success" && -n "$HEALTH_URL" ]]; then
+            BODY="### Cloudflare Worker deployment: successful ✅
+
+          - Worker URL: $DEPLOYMENT_URL
+          - Health endpoint: $HEALTH_URL
+          - Deploy and JSON health validation: $DEPLOY_RESULT
+          - Workflow evidence: $RUN_URL"
+          else
+            BODY="### Cloudflare Worker deployment: requires attention ❌
+
+          - Deploy: $DEPLOY_RESULT
+          - Workflow diagnostics: $RUN_URL"
+          fi
+          gh issue comment 5 --repo "$GITHUB_REPOSITORY" --body "$BODY"
