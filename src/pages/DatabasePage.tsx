@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
-import { BookOpenText, CheckCircle2, ChevronDown, Search, ShieldQuestion } from 'lucide-react';
+import { BookOpenText, CheckCircle2, ChevronDown, ExternalLink, Search } from 'lucide-react';
 import { type ArcDirectoryRarity, type ArcDirectoryType } from '../arc-directory';
 import { arcCatalog } from '../arc-catalog';
 import { arcPresetSources } from '../arc-presets';
-import { characterDirectory, sources } from '../data';
+import { characterCatalog } from '../characters';
+import { sources } from '../data';
 import { useI18n } from '../i18n';
 import { Panel } from '../components/UI';
 import { QuickStart } from '../components/GuidedHelp';
+import { ResilientImage } from '../components/ResilientImage';
+import type { CharacterAttribute, CharacterRarity, CharacterReleaseStatus, CharacterRole } from '../types';
 import {
   localizedArcName,
   localizedArcType,
@@ -18,6 +21,10 @@ import {
 
 const rarities: ArcDirectoryRarity[] = ['S', 'A', 'B'];
 const arcTypes: ArcDirectoryType[] = ['Solid', 'Gas', 'Liquid', 'Plasma', 'Synthesis'];
+const characterRarities: CharacterRarity[] = ['S', 'A'];
+const characterAttributes: CharacterAttribute[] = ['Anima', 'Chaos', 'Cosmos', 'Incantation', 'Lakshana', 'Psyche'];
+const characterRoles: CharacterRole[] = ['Damage', 'Buff', 'Survival'];
+const characterStatuses: CharacterReleaseStatus[] = ['released', 'upcoming'];
 
 export function DatabasePage() {
   const { locale } = useI18n();
@@ -26,22 +33,36 @@ export function DatabasePage() {
   const [tab, setTab] = useState<'characters' | 'arcs'>('characters');
   const [rarity, setRarity] = useState<ArcDirectoryRarity | 'all'>('all');
   const [arcType, setArcType] = useState<ArcDirectoryType | 'all'>('all');
+  const [characterRarity, setCharacterRarity] = useState<CharacterRarity | 'all'>('all');
+  const [characterAttribute, setCharacterAttribute] = useState<CharacterAttribute | 'all'>('all');
+  const [characterRole, setCharacterRole] = useState<CharacterRole | 'all'>('all');
+  const [characterArcType, setCharacterArcType] = useState<ArcDirectoryType | 'all'>('all');
+  const [characterStatus, setCharacterStatus] = useState<CharacterReleaseStatus | 'all'>('all');
   const normalizedQuery = query.trim().toLowerCase();
   const sourceMap = useMemo(() => new Map([...sources, ...arcPresetSources].map((source) => [source.id, source])), []);
 
-  const characters = useMemo(() => characterDirectory.filter((row) => {
+  const characters = useMemo(() => characterCatalog.filter((row) => {
     const searchable = [
       row.name,
       localizedCharacterName(row.name, 'ru'),
-      row.attribute ?? '',
+      row.attribute,
       localizedAttribute(row.attribute, 'ru'),
       row.role ?? '',
       localizedRole(row.role, 'ru'),
       row.arcType ?? '',
       localizedArcType(row.arcType ?? '', 'ru'),
+      row.summary.ru,
+      row.summary.en,
+      row.rarity,
+      row.releaseVersion ?? '',
     ].join(' ').toLowerCase();
-    return searchable.includes(normalizedQuery);
-  }), [normalizedQuery]);
+    return searchable.includes(normalizedQuery)
+      && (characterRarity === 'all' || row.rarity === characterRarity)
+      && (characterAttribute === 'all' || row.attribute === characterAttribute)
+      && (characterRole === 'all' || row.role === characterRole)
+      && (characterArcType === 'all' || row.arcType === characterArcType)
+      && (characterStatus === 'all' || row.releaseStatus === characterStatus);
+  }), [characterArcType, characterAttribute, characterRarity, characterRole, characterStatus, normalizedQuery]);
 
   const arcs = useMemo(() => arcCatalog.filter((row) => {
     const searchable = [
@@ -63,26 +84,53 @@ export function DatabasePage() {
     setArcType('all');
   };
 
+  const resetCharacterFilters = () => {
+    setCharacterRarity('all');
+    setCharacterAttribute('all');
+    setCharacterRole('all');
+    setCharacterArcType('all');
+    setCharacterStatus('all');
+  };
+
+  const showCompatibleArcs = (compatibleType: ArcDirectoryType) => {
+    setTab('arcs');
+    setQuery('');
+    setRarity('all');
+    setArcType(compatibleType);
+    requestAnimationFrame(() => document.querySelector('.database-toolbar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+
+  const hasCharacterFilters = characterRarity !== 'all' || characterAttribute !== 'all' || characterRole !== 'all' || characterArcType !== 'all' || characterStatus !== 'all';
+
   return <div className="page calc-page database-page">
-    <header className="page-heading"><div><span>{ru ? 'БАЗА ДАННЫХ' : 'DATABASE'}</span><h1>{ru ? 'Персонажи и дуги NTE' : 'NTE database'}</h1><p>{ru ? 'Ищи по русскому или английскому названию, фильтруй дуги и открывай карточки с характеристиками, эффектами и источниками.' : '22 characters and the complete published 47-Arc catalog with search, filters, stats, effects and source metadata.'}</p></div></header>
+    <header className="page-heading"><div><span>{ru ? 'БАЗА ДАННЫХ' : 'DATABASE'}</span><h1>{ru ? 'Персонажи и дуги NTE' : 'NTE database'}</h1><p>{ru ? 'Найди персонажа, проверь его роль и тип дуги, а затем сразу открой совместимое оружие. Поиск понимает русские и английские названия.' : 'Find a character, verify their role and Arc type, then open compatible weapons. Search works with both localized and canonical names.'}</p></div></header>
 
     <QuickStart title={ru ? 'Как пользоваться базой' : 'How to use the database'} steps={ru ? [
-      'Переключись между персонажами и дугами.',
-      'Введи русское или английское название в поиск.',
-      'Открой карточку дуги, чтобы увидеть эффект M1–M5 и источник данных.',
+      'Открой вкладку персонажей и отфильтруй список по роли, атрибуту или редкости.',
+      'Нажми «Показать совместимые дуги» — база сама переключится на подходящий тип оружия.',
+      'Раскрой карточку дуги, чтобы увидеть характеристики, эффект от M1 до M5 и источник.',
     ] : [
-      'Switch between characters and Arcs.',
-      'Search by name, type, role or effect.',
-      'Open an Arc card to view its M1–M5 effect and source.',
+      'Open Characters and filter by role, attribute or rarity.',
+      'Select “Show compatible Arcs” to switch to matching weapons automatically.',
+      'Open an Arc card to view stats, its M1–M5 effect and source.',
     ]} />
 
     <div className="database-toolbar">
       <div className="segmented" role="tablist" aria-label={ru ? 'Раздел базы данных' : 'Database section'}>
-        <button role="tab" aria-selected={tab === 'characters'} className={tab === 'characters' ? 'active' : ''} onClick={() => setTab('characters')}>{ru ? `Персонажи · ${characterDirectory.length}` : `Characters · ${characterDirectory.length}`}</button>
+        <button role="tab" aria-selected={tab === 'characters'} className={tab === 'characters' ? 'active' : ''} onClick={() => setTab('characters')}>{ru ? `Персонажи · ${characterCatalog.length}` : `Characters · ${characterCatalog.length}`}</button>
         <button role="tab" aria-selected={tab === 'arcs'} className={tab === 'arcs' ? 'active' : ''} onClick={() => setTab('arcs')}>{ru ? `Дуги · ${arcCatalog.length}` : `Arcs · ${arcCatalog.length}`}</button>
       </div>
-      <label className="search-field"><Search size={18} /><span className="sr-only">{ru ? 'Поиск' : 'Search'}</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tab === 'arcs' ? (ru ? 'Название на русском или английском, тип, эффект…' : 'Name, type, effect…') : (ru ? 'Имя на русском или английском, роль, атрибут…' : 'Name, role, attribute…')} /></label>
+      <label className="search-field"><Search size={18} /><span className="sr-only">{ru ? 'Поиск' : 'Search'}</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tab === 'arcs' ? (ru ? 'Название на русском или английском, тип, эффект…' : 'Name, type, effect…') : (ru ? 'Имя, роль, атрибут, описание…' : 'Name, role, attribute, summary…')} /></label>
     </div>
+
+    {tab === 'characters' ? <div className="character-filter-panel" aria-label={ru ? 'Фильтры персонажей' : 'Character filters'}>
+      <label><span>{ru ? 'Редкость' : 'Rarity'}</span><select value={characterRarity} onChange={(event) => setCharacterRarity(event.target.value as CharacterRarity | 'all')}><option value="all">{ru ? 'Все' : 'All'}</option>{characterRarities.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+      <label><span>{ru ? 'Атрибут' : 'Attribute'}</span><select value={characterAttribute} onChange={(event) => setCharacterAttribute(event.target.value as CharacterAttribute | 'all')}><option value="all">{ru ? 'Все' : 'All'}</option>{characterAttributes.map((value) => <option key={value} value={value}>{localizedAttribute(value, locale)}</option>)}</select></label>
+      <label><span>{ru ? 'Роль' : 'Role'}</span><select value={characterRole} onChange={(event) => setCharacterRole(event.target.value as CharacterRole | 'all')}><option value="all">{ru ? 'Все' : 'All'}</option>{characterRoles.map((value) => <option key={value} value={value}>{localizedRole(value, locale)}</option>)}</select></label>
+      <label><span>{ru ? 'Тип дуги' : 'Arc type'}</span><select value={characterArcType} onChange={(event) => setCharacterArcType(event.target.value as ArcDirectoryType | 'all')}><option value="all">{ru ? 'Все' : 'All'}</option>{arcTypes.map((value) => <option key={value} value={value}>{localizedArcType(value, locale)}</option>)}</select></label>
+      <label><span>{ru ? 'Статус' : 'Status'}</span><select value={characterStatus} onChange={(event) => setCharacterStatus(event.target.value as CharacterReleaseStatus | 'all')}><option value="all">{ru ? 'Все' : 'All'}</option>{characterStatuses.map((value) => <option key={value} value={value}>{value === 'released' ? (ru ? 'Доступен' : 'Released') : (ru ? 'Ожидается' : 'Upcoming')}</option>)}</select></label>
+      <div className="character-filter-result"><b>{characters.length}</b><span>{ru ? 'найдено' : 'shown'}</span>{hasCharacterFilters ? <button onClick={resetCharacterFilters}>{ru ? 'Сбросить' : 'Reset'}</button> : null}</div>
+    </div> : null}
 
     {tab === 'arcs' ? <div className="arc-filter-panel" aria-label={ru ? 'Фильтры дуг' : 'Arc filters'}>
       <div className="filter-group"><span>{ru ? 'Редкость' : 'Rarity'}</span><div><button className={rarity === 'all' ? 'active' : ''} aria-pressed={rarity === 'all'} onClick={() => setRarity('all')}>{ru ? 'Все' : 'All'}</button>{rarities.map((value) => <button key={value} className={rarity === value ? 'active' : ''} aria-pressed={rarity === value} onClick={() => setRarity(value)}>{value}</button>)}</div></div>
@@ -90,13 +138,28 @@ export function DatabasePage() {
       <div className="filter-result"><b>{arcs.length}</b><span>{ru ? 'найдено' : 'shown'}</span>{(rarity !== 'all' || arcType !== 'all') ? <button onClick={resetArcFilters}>{ru ? 'Сбросить фильтры' : 'Reset filters'}</button> : null}</div>
     </div> : null}
 
-    {tab === 'characters' ? <Panel className="database-grid character-database">{characters.map((character) => {
-      const displayName = localizedCharacterName(character.name, locale);
-      const details = character.detailsVerified
-        ? `${localizedAttribute(character.attribute, locale)} · ${localizedRole(character.role, locale)}`
-        : (ru ? 'Расширенные данные ещё не проверены' : 'Detailed fields not yet verified');
-      return <article key={character.name}>{character.image ? <img src={character.image} alt={displayName} /> : <div className="avatar-placeholder">{displayName.slice(0, 2)}</div>}<h2>{displayName}</h2>{ru ? <small>{character.name}</small> : null}<p>{details}</p><span className={character.detailsVerified ? '' : 'pending-data'}>{character.detailsVerified ? localizedArcType(character.arcType ?? '', locale) : <><ShieldQuestion size={13} /> {ru ? 'Только имя в каталоге' : 'Catalog only'}</>}</span></article>;
-    })}</Panel> : null}
+    {tab === 'characters' ? <>
+      {characters.length > 0 ? <section className="character-directory-grid" aria-live="polite">{characters.map((character) => {
+        const displayName = localizedCharacterName(character.name, locale);
+        return <article className={`character-directory-card rarity-${character.rarity.toLowerCase()} ${character.releaseStatus}`} key={character.id}>
+          <div className="character-card-top">
+            <ResilientImage src={character.image} alt={displayName} wrapperClassName="character-card-image" loading="lazy" />
+            <div className="character-card-heading"><div className="character-badges"><span className="character-rarity">{character.rarity}</span><span className={`release-badge ${character.releaseStatus}`}>{character.releaseStatus === 'released' ? (ru ? 'Доступен' : 'Released') : `${ru ? 'Версия' : 'Version'} ${character.releaseVersion ?? '?'}`}</span></div><h2>{displayName}</h2>{ru ? <small>{character.name}</small> : null}</div>
+          </div>
+          <dl className="character-facts">
+            <div><dt>{ru ? 'Атрибут' : 'Attribute'}</dt><dd>{localizedAttribute(character.attribute, locale)}</dd></div>
+            <div><dt>{ru ? 'Роль' : 'Role'}</dt><dd>{character.role ? localizedRole(character.role, locale) : (ru ? 'Ещё не объявлена' : 'Not announced')}</dd></div>
+            <div><dt>{ru ? 'Тип дуги' : 'Arc type'}</dt><dd>{character.arcType ? localizedArcType(character.arcType, locale) : (ru ? 'Ещё не объявлен' : 'Not announced')}</dd></div>
+          </dl>
+          <p className="character-summary">{character.summary[locale]}</p>
+          <div className="character-card-actions">
+            {character.arcType ? <button className="button ghost compact-button" type="button" onClick={() => showCompatibleArcs(character.arcType!)}>{ru ? 'Показать совместимые дуги' : 'Show compatible Arcs'}</button> : <span className="character-unknown-note">{ru ? 'Совместимые дуги появятся после объявления типа.' : 'Compatible Arcs will appear after the type is announced.'}</span>}
+            <a href={character.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Источник' : 'Source'} <ExternalLink size={14} /></a>
+          </div>
+          <small className="character-source-meta">{character.sourcePublisher} · {ru ? 'проверено' : 'verified'} {character.verifiedAt}</small>
+        </article>;
+      })}</section> : <Panel className="empty-database"><Search size={24} /><h2>{ru ? 'Персонажи не найдены' : 'No characters found'}</h2><p>{ru ? 'Измени запрос или сбрось фильтры.' : 'Change the query or reset the filters.'}</p><button className="button ghost" onClick={() => { setQuery(''); resetCharacterFilters(); }}>{ru ? 'Очистить поиск и фильтры' : 'Reset'}</button></Panel>}
+    </> : null}
 
     {tab === 'arcs' ? <>
       {arcs.length > 0 ? <section className="arc-directory-grid" aria-live="polite">{arcs.map((arc) => {
