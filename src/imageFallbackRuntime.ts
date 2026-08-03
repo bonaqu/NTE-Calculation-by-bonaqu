@@ -11,11 +11,9 @@ function imageLabel(image: HTMLImageElement): string {
 export function replaceFailedImage(image: HTMLImageElement): void {
   if (image.hasAttribute(APPLIED_ATTRIBUTE)) return;
   image.setAttribute(APPLIED_ATTRIBUTE, 'true');
+  image.hidden = true;
 
-  if (image.closest('.arc-directory-art')) {
-    image.hidden = true;
-    return;
-  }
+  if (image.closest('.arc-directory-art')) return;
 
   const label = imageLabel(image);
   const fallback = document.createElement('span');
@@ -24,7 +22,7 @@ export function replaceFailedImage(image: HTMLImageElement): void {
   fallback.setAttribute('role', 'img');
   fallback.setAttribute('aria-label', label);
   fallback.setAttribute('data-image-source-failed', 'true');
-  image.replaceWith(fallback);
+  image.insertAdjacentElement('beforebegin', fallback);
 }
 
 export function installImageFallbackRuntime(): () => void {
