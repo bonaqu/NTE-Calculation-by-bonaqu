@@ -57,7 +57,20 @@ jobs:
           test -n "$DEPLOYMENT_URL"
           HEALTH_URL="${DEPLOYMENT_URL%/}/api/v1/health"
           curl --fail --location --retry 8 --retry-delay 5 --retry-all-errors "$HEALTH_URL" | tee /tmp/health.json
-          node -e "const fs=require('fs'); const body=JSON.parse(fs.readFileSync('/tmp/health.json','utf8')); if (body.status !== 'ok') throw new Error('Unexpected health response');"
+          node <<'NODE'
+          const fs = require('node:fs');
+          const body = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
+          const valid = body.ok === true
+            && body.service === 'nte-calculation-api'
+            && typeof body.version === 'string'
+            && body.version.length > 0
+            && typeof body.formulaVersion === 'string'
+            && body.formulaVersion.length > 0;
+          if (!valid) {
+            console.error('Unexpected health response contract:', body);
+            process.exit(1);
+          }
+          NODE
           echo "health_url=$HEALTH_URL" >> "$GITHUB_OUTPUT"
           echo "Cloudflare Worker is healthy: $HEALTH_URL" >> "$GITHUB_STEP_SUMMARY"
 
@@ -72,22 +85,30 @@ jobs:
       - name: Publish deployment evidence
         env:
           GH_TOKEN: ${{ github.token }}
-          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          JOB_RESULT: ${{ needs.deploy.result }}
           DEPLOYMENT_URL: ${{ needs.deploy.outputs.deployment_url }}
           HEALTH_URL: ${{ needs.deploy.outputs.health_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [[ "$DEPLOY_RESULT" == "success" && -n "$HEALTH_URL" ]]; then
+          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" ]]; then
             BODY="### Cloudflare Worker deployment: successful ✅
 
           - Worker URL: $DEPLOYMENT_URL
           - Health endpoint: $HEALTH_URL
-          - Deploy and JSON health validation: $DEPLOY_RESULT
+          - Deploy and JSON health validation: success
           - Workflow evidence: $RUN_URL"
+          elif [[ -n "$DEPLOYMENT_URL" ]]; then
+            BODY="### Cloudflare Worker health verification: requires attention ❌
+
+          - Worker deployment completed: $DEPLOYMENT_URL
+          - Deployment job result: $JOB_RESULT
+          - Health contract or reachability check did not pass
+          - Workflow diagnostics: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌
 
-          - Deploy: $DEPLOY_RESULT
+          - Deployment job result: $JOB_RESULT
+          - No deployment URL was produced
           - Workflow diagnostics: $RUN_URL"
           fi
           gh issue comment 5 --repo "$GITHUB_REPOSITORY" --body "$BODY"
