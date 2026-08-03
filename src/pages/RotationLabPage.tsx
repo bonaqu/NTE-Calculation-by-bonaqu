@@ -26,11 +26,11 @@ const storedMemberNumberKeys: Array<keyof TeamMemberInput> = [
 const actionLabels: Record<RotationActionKind, { ru: string; en: string }> = {
   prepare: { ru: 'подготовка', en: 'prepare' },
   swap: { ru: 'переключение', en: 'swap' },
-  ultimate: { ru: 'ультимейт', en: 'ultimate' },
+  ultimate: { ru: 'сверхспособность', en: 'ultimate' },
   skill: { ru: 'навык', en: 'skill' },
-  redirect: { ru: 'перенаправленный навык', en: 'redirect skill' },
+  redirect: { ru: 'навык перенаправления', en: 'redirect skill' },
   basic: { ru: 'базовые атаки', en: 'basic attacks' },
-  cycle: { ru: 'Esper Cycle', en: 'Esper Cycle' },
+  cycle: { ru: 'цикл эспера', en: 'Esper Cycle' },
   recovery: { ru: 'восстановление', en: 'recovery' },
 };
 
@@ -108,12 +108,12 @@ export function RotationLabPage() {
   };
 
   return <div className="page calc-page rotation-page">
-    <header className="page-heading"><div><span>{ru ? 'ЛАБОРАТОРИЯ РОТАЦИЙ' : 'ROTATION LAB'}</span><h1>{ru ? 'Ротации и Esper Cycle без догадок' : 'Sourced rotations and Esper Cycles'}</h1><p>{ru ? 'Тренируй подтверждённый порядок действий, проверяй доступные реакции команды и переноси состав в калькулятор. Точные секунды не выдумываются там, где источник их не публикует.' : 'Practice sourced action order, inspect the reactions your team can form, and transfer the composition into the calculator. Exact seconds are never invented when the source does not publish them.'}</p></div></header>
+    <header className="page-heading"><div><span>{ru ? 'ЛАБОРАТОРИЯ РОТАЦИЙ' : 'ROTATION LAB'}</span><h1>{ru ? 'Ротации и циклы эсперов без догадок' : 'Sourced rotations and Esper Cycles'}</h1><p>{ru ? 'Тренируй подтверждённый порядок действий, проверяй доступные реакции команды и переноси состав в калькулятор. Точные секунды не выдумываются там, где источник их не публикует.' : 'Practice sourced action order, inspect the reactions your team can form, and transfer the composition into the calculator. Exact seconds are never invented when the source does not publish them.'}</p></div></header>
 
     <QuickStart title={ru ? 'Как пользоваться' : 'How to use it'} steps={ru ? [
       'Выбери готовую ротацию и ознакомься с командой, цепочкой реакций и ограничениями источника.',
       'Отмечай выполненные действия как тренировочный чек-лист — прогресс сохранится в браузере.',
-      'Ниже собери любую четвёрку и проверь, какие парные и тройные Esper Cycle она действительно может запустить.',
+      'Ниже собери любую четвёрку и проверь, какие парные и тройные циклы эсперов она действительно может запустить.',
     ] : [
       'Choose a sourced preset and review the team, reaction chain and source limitations.',
       'Use the steps as a training checklist; progress is stored in the browser.',
@@ -124,10 +124,10 @@ export function RotationLabPage() {
       {rotationPresets.map((entry) => <button key={entry.id} role="tab" aria-selected={preset.id === entry.id} className={preset.id === entry.id ? 'active' : ''} onClick={() => setPresetId(entry.id)}><Route size={18} /><span><b>{entry.title[locale]}</b><small>{entry.team.map((name) => localizedCharacterName(name, locale)).join(' · ')}</small></span></button>)}
     </div>
 
-    <div className="summary-strip rotation-summary"><Metric label={ru ? 'Персонажей' : 'Characters'} value={preset.team.length} /><Metric label={ru ? 'Шагов' : 'Steps'} value={preset.steps.length} /><Metric label={ru ? 'Esper Cycle в плане' : 'Planned Cycles'} value={preset.cyclePlan.length} /><Metric label={ru ? 'Прогресс тренировки' : 'Training progress'} value={`${completedCount}/${preset.steps.length}`} note={`${completionPercent}%`} /></div>
+    <div className="summary-strip rotation-summary"><Metric label={ru ? 'Персонажей' : 'Characters'} value={preset.team.length} /><Metric label={ru ? 'Шагов' : 'Steps'} value={preset.steps.length} /><Metric label={ru ? 'Реакций в плане' : 'Planned Cycles'} value={preset.cyclePlan.length} /><Metric label={ru ? 'Прогресс тренировки' : 'Training progress'} value={`${completedCount}/${preset.steps.length}`} note={`${completionPercent}%`} /></div>
 
     <Panel className="rotation-overview">
-      <div className="rotation-overview-copy"><span>{ru ? 'ПОДТВЕРЖДЁННЫЙ ПРЕСЕТ' : 'SOURCED PRESET'}</span><h2>{preset.title[locale]}</h2><p>{preset.description[locale]}</p><div className="rotation-actions"><button className="button primary" onClick={() => applyTeam(preset.team)}><Users size={17} /> {ru ? 'Перенести состав в калькулятор' : 'Apply team to calculator'} <ArrowRight size={17} /></button><button className="button ghost" onClick={resetProgress}><RefreshCcw size={16} /> {ru ? 'Сбросить отметки' : 'Reset checklist'}</button></div>{transferError ? <p className="transfer-error" role="alert">{ru ? 'Браузер запретил запись в локальное хранилище. Состав не был изменён.' : 'The browser blocked local storage. The team was not changed.'}</p> : null}</div>
+      <div className="rotation-overview-copy"><span>{ru ? 'ПРОВЕРЕННАЯ РОТАЦИЯ' : 'SOURCED PRESET'}</span><h2>{preset.title[locale]}</h2><p>{preset.description[locale]}</p><div className="rotation-actions"><button className="button primary" onClick={() => applyTeam(preset.team)}><Users size={17} /> {ru ? 'Перенести состав в калькулятор' : 'Apply team to calculator'} <ArrowRight size={17} /></button><button className="button ghost" onClick={resetProgress}><RefreshCcw size={16} /> {ru ? 'Сбросить отметки' : 'Reset checklist'}</button></div>{transferError ? <p className="transfer-error" role="alert">{ru ? 'Браузер запретил запись в локальное хранилище. Состав не был изменён.' : 'The browser blocked local storage. The team was not changed.'}</p> : null}</div>
       <div className="rotation-source-card"><ShieldCheck size={22} /><div><b>{preset.sourcePublisher}</b><span>{ru ? 'Гайд обновлён' : 'Guide updated'}: {preset.sourceUpdatedAt}</span><span>{ru ? 'Проверено для проекта' : 'Verified for project'}: {preset.verifiedAt}</span></div><a href={preset.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Открыть исходный гайд' : 'Open source guide'} <ExternalLink size={14} /></a><p>{preset.timingPolicy[locale]}</p></div>
     </Panel>
 
@@ -137,13 +137,13 @@ export function RotationLabPage() {
       return <article key={name} className="rotation-character-card"><span className="rotation-slot">{index + 1}</span><ResilientImage src={character?.image} alt={displayName} wrapperClassName="rotation-character-art" loading="lazy" /><div><h2>{displayName}</h2>{ru ? <small>{name}</small> : null}<p>{localizedAttribute(character?.attribute, locale)} · {localizedRole(character?.role, locale)}</p><span>{localizedArcType(character?.arcType ?? '', locale)}</span></div></article>;
     })}</section>
 
-    <Panel className="cycle-chain-panel"><div className="panel-title"><GitCompareArrows size={21} /><div><h2>{ru ? 'Цепочка Esper Cycle' : 'Esper Cycle chain'}</h2><p>{ru ? 'Это логический порядок реакций из гайда, а не шкала времени.' : 'This is the sourced logical order, not a timing bar.'}</p></div></div><div className="cycle-chain">{preset.cyclePlan.map((cycleId, index) => {
+    <Panel className="cycle-chain-panel"><div className="panel-title"><GitCompareArrows size={21} /><div><h2>{ru ? 'Цепочка циклов эспера' : 'Esper Cycle chain'}</h2><p>{ru ? 'Это логический порядок реакций из гайда, а не шкала времени.' : 'This is the sourced logical order, not a timing bar.'}</p></div></div><div className="cycle-chain">{preset.cyclePlan.map((cycleId, index) => {
       const cycle = esperCycleById.get(cycleId);
       return <div className={`cycle-node ${cycle?.category ?? ''}`} key={`${cycleId}-${index}`}><span>{index + 1}</span><div><b>{localizedCycleName(cycleId, locale)}</b><small>{cycle?.attributes.map((attribute) => localizedAttribute(attribute, locale)).join(' + ')}</small></div>{cycle?.durationSeconds ? <em>{cycle.durationSeconds} {ru ? 'сек' : 's'}</em> : <em>{ru ? 'условие' : 'trigger'}</em>}</div>;
     })}</div></Panel>
 
     <section className="rotation-workflow" aria-label={ru ? 'Шаги ротации' : 'Rotation steps'}>
-      <div className="rotation-workflow-heading"><div><ListChecks size={22} /><span><h2>{ru ? 'Тренировочный чек-лист' : 'Training checklist'}</h2><p>{ru ? 'Отметки сохраняются отдельно для каждой ротации.' : 'Progress is saved separately for every preset.'}</p></span></div><div className="rotation-progress-bar" aria-label={`${completedCount}/${preset.steps.length}`}><i style={{ width: `${completionPercent}%` }} /></div></div>
+      <div className="rotation-workflow-heading"><div><ListChecks size={22} /><span><h2>{ru ? 'Тренировочный чек-лист' : 'Training checklist'}</h2><p>{ru ? 'Отметки сохраняются отдельно для каждой готовой ротации.' : 'Progress is saved separately for every preset.'}</p></span></div><div className="rotation-progress-bar" aria-label={`${completedCount}/${preset.steps.length}`}><i style={{ width: `${completionPercent}%` }} /></div></div>
       {phases.map((phase) => {
         const phaseSteps = preset.steps.filter((step) => step.phase === phase);
         return <section className={`rotation-phase phase-${phase}`} key={phase}><header><span>{phaseTitle[phase]}</span><small>{phaseSteps.length} {ru ? 'шаг.' : 'steps'}</small></header><div>{phaseSteps.map((step) => {
@@ -157,7 +157,7 @@ export function RotationLabPage() {
     <Panel className="rotation-assumptions"><div className="panel-title"><ShieldCheck size={21} /><div><h2>{ru ? 'Условия и ограничения' : 'Assumptions and limitations'}</h2><p>{ru ? 'То, что необходимо знать до сравнения результата с боем.' : 'What must be understood before comparing the checklist with actual combat.'}</p></div></div><div>{preset.assumptions.map((assumption, index) => <p key={index}><span>{index + 1}</span>{assumption[locale]}</p>)}</div></Panel>
 
     <section className="cycle-explorer">
-      <header className="page-heading compact-heading"><div><span>{ru ? 'КОНСТРУКТОР РЕАКЦИЙ' : 'CYCLE EXPLORER'}</span><h2>{ru ? 'Что может запустить твоя команда' : 'What your team can actually trigger'}</h2><p>{ru ? 'Выбери четырёх разных персонажей. Доступные реакции выводятся только из их проверенных атрибутов — роли, дуги и предполагаемый стиль игры не влияют на результат.' : 'Choose four different characters. Available reactions are derived only from verified attributes; roles, Arcs and assumed playstyle do not change the result.'}</p></div><button className="button ghost" onClick={() => setExplorerTeam([...preset.team])}>{ru ? 'Взять текущий пресет' : 'Use current preset'}</button></header>
+      <header className="page-heading compact-heading"><div><span>{ru ? 'КОНСТРУКТОР РЕАКЦИЙ' : 'CYCLE EXPLORER'}</span><h2>{ru ? 'Что может запустить твоя команда' : 'What your team can actually trigger'}</h2><p>{ru ? 'Выбери четырёх разных персонажей. Доступные реакции выводятся только из их проверенных атрибутов — роли, дуги и предполагаемый стиль игры не влияют на результат.' : 'Choose four different characters. Available reactions are derived only from verified attributes; roles, Arcs and assumed playstyle do not change the result.'}</p></div><button className="button ghost" onClick={() => setExplorerTeam([...preset.team])}>{ru ? 'Взять текущую ротацию' : 'Use current preset'}</button></header>
 
       <div className="explorer-layout"><Panel className="explorer-team"><div className="explorer-select-grid">{explorerTeam.map((name, index) => {
         const character = characterByName.get(name);

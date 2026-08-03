@@ -3,7 +3,7 @@ import type { EsperCycleDefinition, EsperCycleId, Locale } from './types';
 const sourcePublisher = 'Prydwen Institute';
 const sourceUrl = 'https://www.prydwen.gg/neverness-to-everness/guides/esper-cycles';
 const sourceUpdatedAt = '2026-04-23';
-const verifiedAt = '2026-08-03';
+const verifiedAt = '2026-08-04';
 
 function cycle(definition: Omit<EsperCycleDefinition, 'sourcePublisher' | 'sourceUrl' | 'sourceUpdatedAt' | 'verifiedAt'>): EsperCycleDefinition {
   return { ...definition, sourcePublisher, sourceUrl, sourceUpdatedAt, verifiedAt };
@@ -38,7 +38,7 @@ export const esperCycles: EsperCycleDefinition[] = [
     attributes: ['Anima', 'Incantation'],
     durationSeconds: 12,
     effect: {
-      ru: 'В течение 12 секунд учитывает полученный целью урон Анимы и Заклинания, после чего наносит дополнительный последующий урон.',
+      ru: 'В течение 12 секунд учитывает полученный целью урон Анимы и Чар, после чего наносит дополнительный последующий урон.',
       en: 'Records Anima and Incantation damage taken by the target for 12 seconds, then deals additional follow-up damage.',
     },
   }),
@@ -49,7 +49,7 @@ export const esperCycles: EsperCycleDefinition[] = [
     attributes: ['Chaos', 'Psyche'],
     durationSeconds: 5,
     effect: {
-      ru: 'Накладывает Нову на 5 секунд. Когда эффект заканчивается, цель получает большой ментальный урон.',
+      ru: 'Накладывает Нову на 5 секунд. Когда эффект заканчивается, цель получает большой урон Психики.',
       en: 'Applies Nova for 5 seconds. When it expires, the target takes a large instance of Mental damage.',
     },
   }),
@@ -82,7 +82,7 @@ export const esperCycles: EsperCycleDefinition[] = [
     attributes: ['Anima', 'Cosmos', 'Lakshana'],
     derivedFrom: ['blossom', 'remora'],
     effect: {
-      ru: 'Когда лепестки Цветения попадают по цели с Реморой, активный персонаж получает 10 дополнительной энергии ультимейта.',
+      ru: 'Когда лепестки Цветения попадают по цели с Реморой, активный персонаж получает 10 дополнительной энергии сверхспособности.',
       en: 'When Blossom pistils hit a target affected by Remora, the active character gains 10 additional Ultimate Energy.',
     },
   }),

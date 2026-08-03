@@ -8,7 +8,7 @@ export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) 
   const ru = locale === 'ru';
   const tools = [
     { route: 'team' as const, icon: Users, title: ru ? 'РАСЧЁТ КОМАНДЫ' : 'TEAM CALCULATION', text: ru ? 'Укажи характеристики четырёх персонажей и сразу увидь вклад каждого в общий урон.' : 'Model a four-character rotation with buffs, defence and target resistance.' },
-    { route: 'rotations' as const, icon: Route, title: ru ? 'РОТАЦИИ И РЕАКЦИИ' : 'ROTATION LAB', text: ru ? 'Тренируй подтверждённые ротации и проверяй, какие Esper Cycle доступны выбранной четвёрке.' : 'Practice sourced rotations and derive the Esper Cycles available to any four-character team.' },
+    { route: 'rotations' as const, icon: Route, title: ru ? 'РОТАЦИИ И РЕАКЦИИ' : 'ROTATION LAB', text: ru ? 'Тренируй подтверждённые ротации и проверяй, какие циклы эсперов доступны выбранной четвёрке.' : 'Practice sourced rotations and derive the Esper Cycles available to any four-character team.' },
     { route: 'arcs' as const, icon: BarChart3, title: ru ? 'СРАВНЕНИЕ ДУГ' : 'ARCS CALCULATION', text: ru ? 'Открой готовые сравнения или введи свои характеристики — результат пересчитается автоматически.' : 'Compare Arcs using separate sourced benchmarks and your own stat model.' },
     { route: 'progression' as const, icon: Boxes, title: ru ? 'ПЛАН ПРОКАЧКИ' : 'ROSTER PROGRESSION', text: ru ? 'Добавь несколько персонажей, укажи общий инвентарь и получи суммарный маршрут фарма до ур. 80.' : 'Plan several characters at once with shared inventory and an aggregate farming route to Lv. 80.' },
   ];

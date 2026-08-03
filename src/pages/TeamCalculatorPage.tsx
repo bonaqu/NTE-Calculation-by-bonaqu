@@ -105,7 +105,7 @@ export function TeamCalculatorPage() {
       <aside><Panel className="sticky-results"><div className="panel-title"><Gauge size={20} /><div><h2>{ru ? 'Кто сколько урона вносит' : 'Rotation contribution'}</h2><p>{ru ? 'Урон уже учитывает среднее значение критических попаданий.' : 'Expected damage with averaged crit.'}</p></div></div><div className="contribution-list">{result.members.map((member) => <div key={member.id}><span><b>{localizedCharacterName(member.name, locale)}</b><small>{formatNumber(member.rotationDamage)}</small></span><strong>{(member.share * 100).toFixed(1)}%</strong><i><u style={{ width: `${member.share * 100}%` }} /></i></div>)}</div><Field label={ru ? 'Длительность всей ротации, сек' : 'Rotation duration, sec'} type="number" min="1" value={duration} onChange={(event) => setDuration(Number(event.target.value))} /><h3 className="subsection-label">{ru ? 'Характеристики врага' : 'Enemy profile'}</h3><div className="enemy-grid">{enemyFields.map((key) => <Field key={key} label={labels[locale][key]} type="number" value={enemy[key]} onChange={(event) => updateEnemy(key, Number(event.target.value))} />)}</div><FieldHelp title={ru ? 'Что означают основные поля?' : 'What do the main fields mean?'} terms={ru ? [
         { term: 'Итоговая ATK', description: 'Готовое значение атаки после дуги, процентов и плоских прибавок. Его можно взять из экрана характеристик.' },
         { term: 'Общий бонус урона', description: 'Сумма личного бонуса урона и бонусов, которые этому персонажу даёт команда.' },
-        { term: 'Окно урона', description: 'Один выбранный фрагмент ротации: навык, ультимейт или связка атак.' },
+        { term: 'Окно урона', description: 'Один выбранный фрагмент ротации: навык, сверхспособность или связка атак.' },
         { term: 'Множитель окна', description: 'Сумма процентов урона всех попаданий внутри выбранного окна.' },
         { term: 'Повторы окна', description: 'Сколько раз это окно успевает произойти за одну полную ротацию.' },
         { term: 'DPS', description: 'Средний урон в секунду: общий урон делится на длительность ротации.' },
@@ -116,7 +116,7 @@ export function TeamCalculatorPage() {
         { term: 'Window multiplier', description: 'The combined damage percentage of all hits in that window.' },
         { term: 'Window repeats', description: 'How many times the window occurs during one rotation.' },
         { term: 'DPS', description: 'Average damage per second: total damage divided by duration.' },
-      ]} /><div className="model-note"><Users size={18} />{ru ? 'Пассивы, реакции и точный таймлайн пока задаются общими бонусами, поэтому результат остаётся оценкой.' : 'Passives, reactions and timeline are represented through explicit aggregate bonuses.'}</div></Panel></aside>
+      ]} /><div className="model-note"><Users size={18} />{ru ? 'Пассивные эффекты, реакции и точная временная шкала пока задаются общими бонусами, поэтому результат остаётся оценкой.' : 'Passives, reactions and timeline are represented through explicit aggregate bonuses.'}</div></Panel></aside>
     </div>
   </div>;
 }
