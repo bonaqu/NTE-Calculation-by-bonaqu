@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, Boxes, Languages, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, BarChart3, Boxes, Languages, Route, ShieldCheck, Sparkles, Users } from 'lucide-react';
 import type { RouteKey } from '../types';
 import { useI18n } from '../i18n';
 import { localizedArcName } from '../gameTerms';
@@ -8,6 +8,7 @@ export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) 
   const ru = locale === 'ru';
   const tools = [
     { route: 'team' as const, icon: Users, title: ru ? 'РАСЧЁТ КОМАНДЫ' : 'TEAM CALCULATION', text: ru ? 'Укажи характеристики четырёх персонажей и сразу увидь вклад каждого в общий урон.' : 'Model a four-character rotation with buffs, defence and target resistance.' },
+    { route: 'rotations' as const, icon: Route, title: ru ? 'РОТАЦИИ И РЕАКЦИИ' : 'ROTATION LAB', text: ru ? 'Тренируй подтверждённые ротации и проверяй, какие Esper Cycle доступны выбранной четвёрке.' : 'Practice sourced rotations and derive the Esper Cycles available to any four-character team.' },
     { route: 'arcs' as const, icon: BarChart3, title: ru ? 'СРАВНЕНИЕ ДУГ' : 'ARCS CALCULATION', text: ru ? 'Открой готовые сравнения или введи свои характеристики — результат пересчитается автоматически.' : 'Compare Arcs using separate sourced benchmarks and your own stat model.' },
     { route: 'progression' as const, icon: Boxes, title: ru ? 'ПЛАН ПРОКАЧКИ' : 'PROGRESSION', text: ru ? 'Отметь уже пройденный этап и введи свой инвентарь, чтобы получить точный остаток материалов.' : 'Calculate remaining materials using your current inventory.' },
   ];
@@ -20,7 +21,7 @@ export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) 
         <h1>{ru ? 'Понятные расчёты NTE без ручных таблиц.' : 'Theorycrafting without spreadsheet sorcery.'}</h1>
         <p>{ru ? 'Выбирай готовый сценарий или вводи свои данные. Формулы, ограничения и источники всегда показаны рядом с результатом.' : 'Fast Neverness to Everness calculators with transparent formulas, versioned data and explicit assumptions.'}</p>
         <div className="hero-actions">
-          <button className="button primary" onClick={() => navigate('arcs')}>{ru ? 'Сравнить дуги Ирой' : 'Compare Iroi Arcs'} <ArrowRight size={18} /></button>
+          <button className="button primary" onClick={() => navigate('rotations')}>{ru ? 'Открыть ротации' : 'Open Rotation Lab'} <ArrowRight size={18} /></button>
           <button className="button ghost" onClick={() => navigate('methodology')}>{ru ? 'Как устроены расчёты' : 'How calculations work'}</button>
         </div>
         <div className="trust-row">

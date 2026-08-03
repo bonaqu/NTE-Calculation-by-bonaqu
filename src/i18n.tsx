@@ -2,17 +2,17 @@ import { createContext, useContext, useEffect, useMemo, useState, type PropsWith
 import type { Locale } from './types';
 
 type Translation = {
-  nav: Record<'home' | 'team' | 'arcs' | 'progression' | 'database' | 'methodology', string>;
+  nav: Record<'home' | 'team' | 'rotations' | 'arcs' | 'progression' | 'database' | 'methodology', string>;
   common: Record<'calculate' | 'reset' | 'source' | 'verified' | 'estimate' | 'openSource', string>;
 };
 
 const dictionary: Record<Locale, Translation> = {
   ru: {
-    nav: { home: 'Главная', team: 'Команда', arcs: 'Дуги', progression: 'Прокачка', database: 'База', methodology: 'Методика' },
+    nav: { home: 'Главная', team: 'Команда', rotations: 'Ротации', arcs: 'Дуги', progression: 'Прокачка', database: 'База', methodology: 'Методика' },
     common: { calculate: 'Рассчитать', reset: 'Сбросить', source: 'Источник', verified: 'Проверено', estimate: 'Модельная оценка', openSource: 'Открыть источник' },
   },
   en: {
-    nav: { home: 'Home', team: 'Team', arcs: 'Arcs', progression: 'Progression', database: 'Database', methodology: 'Methodology' },
+    nav: { home: 'Home', team: 'Team', rotations: 'Rotations', arcs: 'Arcs', progression: 'Progression', database: 'Database', methodology: 'Methodology' },
     common: { calculate: 'Calculate', reset: 'Reset', source: 'Source', verified: 'Verified', estimate: 'Model estimate', openSource: 'Open source' },
   },
 };

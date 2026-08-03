@@ -1,5 +1,5 @@
 export type Locale = 'ru' | 'en';
-export type RouteKey = 'home' | 'team' | 'arcs' | 'progression' | 'database' | 'methodology';
+export type RouteKey = 'home' | 'team' | 'rotations' | 'arcs' | 'progression' | 'database' | 'methodology';
 
 export interface LocalizedText {
   ru: string;
@@ -110,4 +110,50 @@ export interface CharacterProfile {
   sourceUrl: string;
   verifiedAt: string;
   detailsVerified: boolean;
+}
+
+export type EsperCycleId = 'blossom' | 'remora' | 'hexed' | 'nova' | 'scorch' | 'stain' | 'charge' | 'discord';
+export type EsperCycleCategory = 'pair' | 'triple';
+
+export interface EsperCycleDefinition {
+  id: EsperCycleId;
+  name: LocalizedText;
+  category: EsperCycleCategory;
+  attributes: CharacterAttribute[];
+  durationSeconds?: number;
+  effect: LocalizedText;
+  derivedFrom?: EsperCycleId[];
+  sourcePublisher: string;
+  sourceUrl: string;
+  sourceUpdatedAt: string;
+  verifiedAt: string;
+}
+
+export type RotationPhase = 'setup' | 'burst' | 'recovery';
+export type RotationActionKind = 'prepare' | 'swap' | 'ultimate' | 'skill' | 'redirect' | 'basic' | 'cycle' | 'recovery';
+
+export interface RotationStep {
+  id: string;
+  actor: string;
+  phase: RotationPhase;
+  action: RotationActionKind;
+  instruction: LocalizedText;
+  outcome: LocalizedText;
+  cycle?: EsperCycleId;
+  optional?: boolean;
+}
+
+export interface RotationPreset {
+  id: string;
+  title: LocalizedText;
+  description: LocalizedText;
+  team: string[];
+  cyclePlan: EsperCycleId[];
+  assumptions: LocalizedText[];
+  steps: RotationStep[];
+  sourcePublisher: string;
+  sourceUrl: string;
+  sourceUpdatedAt: string;
+  verifiedAt: string;
+  timingPolicy: LocalizedText;
 }

@@ -10,6 +10,8 @@ import './guided-ux.css';
 import './database.css';
 import './character-catalog.css';
 import './team-input.css';
+import './home-tools.css';
+import './rotation-lab.css';
 import './imageFallbackRuntime';
 
 createRoot(document.getElementById('root')!).render(<StrictMode><I18nProvider><App /></I18nProvider></StrictMode>);

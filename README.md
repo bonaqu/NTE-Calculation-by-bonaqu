@@ -6,7 +6,8 @@ Bilingual RU/EN theorycrafting toolkit for **Neverness to Everness** with transp
 
 ## Included tools
 
-- **Team Calculation** — guided four-character selection, editable aggregate rotation values and a shared enemy DEF/RES profile.
+- **Team Calculation** — guided four-character selection, simplified quick inputs, exact advanced breakdown and a shared enemy DEF/RES profile.
+- **Rotation Lab** — source-backed Shinku Charge and Hathor Hypercarry action order, persistent training checklists, team transfer and an attribute-driven Esper Cycle explorer.
 - **Arcs Calculation** — separate sourced Prydwen and Rivyn Elowen Iroi benchmarks plus a custom team model with static and conditional effects separated.
 - **Character Progression** — Iroi ascension inventory planner through the level-80 unlock.
 - **Character Database** — 22 sourced profiles with rarity, attribute, role, compatible Arc type, release status and direct provenance. Twenty released profiles are complete; Linko and Zankou keep unannounced role/Arc fields explicitly unknown.
@@ -18,6 +19,15 @@ Bilingual RU/EN theorycrafting toolkit for **Neverness to Everness** with transp
 When RU is selected, Russian labels and project/community translations are primary. Canonical English character, Arc and material names remain visible as secondary reference text. Common abbreviations such as `ATK`, `DEF`, `HP`, `CRIT`, `DPS`, `MAX` and `MIN` stay unchanged.
 
 The database searches both Russian and English names. Character cards can open the compatible Arc type directly, while the team calculator prevents accidental duplicate character selection and keeps canonical names stable across language changes.
+
+## Rotation data policy
+
+Rotation presets describe **sourced action order and conditions**, not invented frame data. The current release includes:
+
+- Shinku Charge — Shinku / Hathor / Zero / Nanally;
+- Hathor Hypercarry — Hathor / Jiuyuan / Zero / Haniel.
+
+Every preset stores its direct guide URL, guide update date and project verification date. Exact animation durations, swap delays and DPS are not presented when the source does not publish a reproducible second-by-second model. The Cycle explorer derives reactions only from verified character attributes and the sourced six pair plus two triple Esper Cycle definitions.
 
 ## Arc model v0.2
 
@@ -35,6 +45,7 @@ Team DMG = Iroi DMG + Base Ally DMG × (1 + Ally Bonus × Conditional Uptime)
 ## Production
 
 - Site: `https://bonaqu.github.io/NTE-Calculation-by-bonaqu/`
+- Rotation Lab: `https://bonaqu.github.io/NTE-Calculation-by-bonaqu/#/rotations`
 - Worker: `https://nte-calculation-api.bonaqu.workers.dev`
 - Health: `https://nte-calculation-api.bonaqu.workers.dev/api/v1/health`
 
@@ -69,6 +80,8 @@ npm run worker:dev
 - `GET /api/v1/data/arcs` — complete 47-Arc catalog with per-entry source IDs
 - `GET /api/v1/data/arc-presets` — calculator-specific modeled Arc presets
 - `GET /api/v1/data/characters` — 22 sourced character profiles with released/upcoming counts
+- `GET /api/v1/data/esper-cycles` — six sourced pair reactions and two sourced triple reactions
+- `GET /api/v1/data/rotation-presets` — source-backed ordered rotation presets with bilingual steps and timing limitations
 - `GET /api/v1/data/progression/iroi`
 - `POST /api/v1/calculate/damage`
 - `POST /api/v1/calculate/team`
@@ -77,12 +90,12 @@ npm run worker:dev
 
 - GitHub Pages deploys from `bonaqu_projects` through `.github/workflows/pages.yml`.
 - Cloudflare Worker `nte-calculation-api` deploys through `.github/workflows/worker.yml` using `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` repository secrets.
-- A release is considered deployed only after the workflow verifies the public Pages URL, API version, Arc provenance, calculator preset values and the 22-character data contract.
+- A release is considered deployed only after the workflow verifies the public Pages URL, API version, Arc provenance, calculator preset values, 22-character contract, eight Esper Cycle definitions and the two rotation presets.
 - Deployment evidence is posted automatically to release-tracking issue #5.
 
 ## Data policy
 
-Verified source data is kept separate from editable assumptions. General Arc catalog entries are not reused as calculator presets unless their behavior is modeled and tested. The Wrong Gate uses a current independent source because the public Prydwen Arc index still exposes that entry as incomplete. Released character profiles require a direct source and verified rarity, attribute, role and Arc compatibility. Upcoming characters preserve unknown fields instead of filling them with guesses. Formula and dataset changes must include source metadata and a verification date.
+Verified source data is kept separate from editable assumptions. General Arc catalog entries are not reused as calculator presets unless their behavior is modeled and tested. The Wrong Gate uses a current independent source because the public Prydwen Arc index still exposes that entry as incomplete. Released character profiles require a direct source and verified rarity, attribute, role and Arc compatibility. Upcoming characters preserve unknown fields instead of filling them with guesses. Rotation steps preserve sourced order while unsupported timing and damage values stay explicitly unknown. Formula and dataset changes must include source metadata and a verification date.
 
 ## Disclaimer
 

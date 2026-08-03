@@ -20,6 +20,8 @@
     "src/arc-directory.ts",
     "src/arc-catalog.ts",
     "src/arc-presets.ts",
+    "src/esper-cycles.ts",
+    "src/rotation-presets.ts",
     "src/types.ts",
     "packages/calculation-core/src/index.ts"
   ]
