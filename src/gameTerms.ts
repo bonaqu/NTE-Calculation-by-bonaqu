@@ -23,7 +23,7 @@ export const arcRussianNames: Record<string, string> = {
   'Fluff of Fleetness': 'Пух стремительности',
   'Fluff of Fortitude': 'Пух стойкости',
   "Good Boy's Grand Adventure": 'Большое приключение хорошего мальчика',
-  "Hethereau's Keeper": 'Хранитель Этеро',
+  "Hethereau's Keeper": 'Хранитель Хетерео',
   'Marching Beyond Time': 'Шествие сквозь время',
   'Mind Royale': 'Королевская игра разума',
   'Oraora!': 'Ора-ора!',
