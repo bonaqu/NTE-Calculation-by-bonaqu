@@ -79,11 +79,35 @@ export interface ProgressionStep {
   chaos: number;
 }
 
+/** Legacy minimal directory entry kept for compatibility with early data fixtures. */
 export interface CharacterEntry {
   name: string;
   attribute?: string;
   role?: string;
   arcType?: string;
   image?: string;
+  detailsVerified: boolean;
+}
+
+export type CharacterRarity = 'S' | 'A';
+export type CharacterAttribute = 'Anima' | 'Chaos' | 'Cosmos' | 'Incantation' | 'Lakshana' | 'Psyche';
+export type CharacterRole = 'Damage' | 'Buff' | 'Survival';
+export type CharacterArcType = ArcPreset['type'];
+export type CharacterReleaseStatus = 'released' | 'upcoming';
+
+export interface CharacterProfile {
+  id: string;
+  name: string;
+  rarity: CharacterRarity;
+  attribute: CharacterAttribute;
+  role?: CharacterRole;
+  arcType?: CharacterArcType;
+  releaseStatus: CharacterReleaseStatus;
+  releaseVersion?: string;
+  image: string;
+  summary: LocalizedText;
+  sourcePublisher: string;
+  sourceUrl: string;
+  verifiedAt: string;
   detailsVerified: boolean;
 }
