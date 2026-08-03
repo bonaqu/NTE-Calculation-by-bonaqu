@@ -1,23 +1,28 @@
 name: Bootstrap project tree
 
 on:
-  push:
-    branches: [feat/production-foundation]
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+    branches: [bonaqu_projects]
     paths:
-      - '.bootstrap/retrigger'
+      - '.bootstrap/**'
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   expand:
-    if: github.actor != 'github-actions[bot]'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feat/production-foundation'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Expand reviewed project archive
         run: |
           cat .bootstrap/project.tar.gz.b64.part-* | base64 --decode > /tmp/project.tar.gz
@@ -30,4 +35,4 @@ jobs:
           git config user.email "48132049+bonaqu@users.noreply.github.com"
           git add --all
           git commit -m "feat: build production NTE calculation toolkit"
-          git push
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
