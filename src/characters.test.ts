@@ -16,7 +16,7 @@ describe('verified character catalog', () => {
       expect(character.image).toMatch(/^https:\/\/cdn\.prydwen\.gg\/images\/nte\/characters\/.+_card\.webp$/);
       expect(character.sourceUrl).toMatch(/^https:\/\//);
       expect(character.sourcePublisher.length).toBeGreaterThan(2);
-      expect(character.verifiedAt).toBe('2026-08-03');
+      expect(character.verifiedAt).toBe('2026-08-04');
       expect(character.summary.ru.length).toBeGreaterThan(25);
       expect(character.summary.en.length).toBeGreaterThan(25);
     }
@@ -42,7 +42,9 @@ describe('verified character catalog', () => {
   it('normalizes canonical and Russian names without guessing unknown input', () => {
     expect(canonicalCharacterName('Shinku')).toBe('Shinku');
     expect(canonicalCharacterName('Синку')).toBe('Shinku');
+    expect(canonicalCharacterName('Шинку')).toBe('Shinku');
     expect(canonicalCharacterName('Оценщик')).toBe('Zero');
+    expect(canonicalCharacterName('Зеро')).toBe('Zero');
     expect(canonicalCharacterName('Unknown')).toBeNull();
   });
 });
