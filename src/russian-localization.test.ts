@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest';
-import { arcDirectory } from './arc-directory';
+import { arcCatalog } from './arc-catalog';
 import { arcPresets } from './arc-presets';
 import { characterCatalog } from './characters';
 import { arcBenchmarkScenarios } from './data';
@@ -32,7 +32,7 @@ function russianRuntimeCorpus(): string[] {
     ...Object.values(characterRussianNames),
     ...Object.values(arcRussianNames),
     ...characterCatalog.map((character) => character.summary.ru),
-    ...arcDirectory.map((arc) => arc.effect.ru),
+    ...arcCatalog.map((arc) => arc.effect.ru),
     ...presetText,
     ...scenarioText,
     ...esperCycles.flatMap((cycle) => [cycle.name.ru, cycle.effect.ru]),
@@ -89,6 +89,14 @@ describe('Russian localization regression contract', () => {
   it('does not expose deprecated or untranslated terminology in primary RU data', () => {
     const corpus = russianRuntimeCorpus().join('\n');
     for (const pattern of forbiddenPrimaryTerms) expect(corpus).not.toMatch(pattern);
+  });
+
+  it('keeps polished Russian Arc grammar in the public catalog', () => {
+    const byName = new Map(arcCatalog.map((arc) => [arc.name, arc.effect.ru]));
+    expect(byName.get('Clear Skies')).toContain('урон Анимы');
+    expect(byName.get('Reality Refuge')).toContain('урон Анимы');
+    expect(byName.get('The Wrong Gate')).toContain('урон Анимы');
+    expect(byName.get('Time Bandit')).toContain('который способен');
   });
 
   it('keeps Russian primary display labels free of canonical English names', () => {
