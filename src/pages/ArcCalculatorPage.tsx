@@ -56,6 +56,13 @@ export function ArcCalculatorPage() {
   const modelArcs = useMemo(() => arcPresets.filter((arc) => customArcIdSet.has(arc.id)), [customArcIdSet]);
   const scenario = arcBenchmarkScenarios.find((item) => item.id === scenarioId) ?? initialScenario;
   const scenarioSource = sourceMap.get(scenario.sourceId);
+  const tableLabels = {
+    atk: 'ATK',
+    teamDamage: ru ? 'Урон команды' : 'Team DMG',
+    dps: 'DPS',
+    relative: ru ? 'Сравнение' : 'Relative',
+    note: ru ? 'Примечание' : 'Note',
+  };
 
   const benchmarkRows = useMemo(() => scenario.rows.flatMap<BenchmarkDisplayRow>((benchmark) => {
     const arc = arcMap.get(benchmark.arcId);
@@ -101,17 +108,20 @@ export function ArcCalculatorPage() {
       {mode === 'benchmark' ? <div className="calc-table arc-table benchmark-table" role="table"><div className="table-head" role="row"><span>#</span><span>{ru ? 'Дуга' : 'Arc'}</span><span>ATK</span><span>{ru ? 'Урон команды' : 'Team DMG'}</span><span>DPS</span><span>{ru ? 'Сравнение' : 'Relative'}</span><span>{ru ? 'Примечание' : 'Note'}</span></div>
         {benchmarkRows.map(({ arc, benchmark }, index) => <div className={`table-row ${index === 0 ? 'best-row' : ''}`} key={`${scenario.id}-${arc.id}`} role="row">
           <span className="rank">{index + 1}</span><span className="arc-cell"><img src={arc.image} alt={arc.name} /><span><b>{arc.name} <em>M{arc.mixing}</em></b><small>{arc.rarity} · {arc.type} · {arc.secondaryLabel} {arc.secondaryValue}%</small></span></span>
-          <span>{arc.baseAtk}</span><span className="numeric-cell">{benchmark.teamDamage === undefined ? '—' : formatNumber(benchmark.teamDamage)}</span><span className="numeric-cell">{benchmark.teamDps === undefined ? '—' : formatNumber(benchmark.teamDps)}</span>
-          <span className="percent-cell"><b>{benchmark.percent.toFixed(2)}%</b><span><i style={{ width: `${Math.min(100, benchmark.percent)}%` }} /></span></span>
-          <span className="note-cell">{index === 0 ? <CheckCircle2 size={17} /> : <Info size={16} />}<span>{benchmark.note[locale]}<small>{scenarioSource?.publisher} · {scenario.verifiedAt}</small></span></span>
+          <span className="mobile-metric stat-cell" data-label={tableLabels.atk}><b>{arc.baseAtk}</b></span>
+          <span className="mobile-metric numeric-cell" data-label={tableLabels.teamDamage}><b>{benchmark.teamDamage === undefined ? '—' : formatNumber(benchmark.teamDamage)}</b></span>
+          <span className="mobile-metric numeric-cell" data-label={tableLabels.dps}><b>{benchmark.teamDps === undefined ? '—' : formatNumber(benchmark.teamDps)}</b></span>
+          <span className="mobile-metric percent-cell" data-label={tableLabels.relative}><b>{benchmark.percent.toFixed(2)}%</b><span><i style={{ width: `${Math.min(100, benchmark.percent)}%` }} /></span></span>
+          <span className="mobile-metric note-cell" data-label={tableLabels.note}>{index === 0 ? <CheckCircle2 size={17} /> : <Info size={16} />}<span>{benchmark.note[locale]}<small>{scenarioSource?.publisher} · {scenario.verifiedAt}</small></span></span>
         </div>)}
       </div> : <div className="calc-table arc-table" role="table"><div className="table-head" role="row"><span>#</span><span>{ru ? 'Дуга' : 'Arc'}</span><span>ATK</span><span>{ru ? 'Сравнение' : 'Relative'}</span><span>{ru ? 'Примечание' : 'Note'}</span></div>
         {customDisplayRows.map(({ arc, percent }, index) => {
           const source = sourceMap.get(arc.sourceId);
           return <div className={`table-row ${index === 0 ? 'best-row' : ''}`} key={arc.id} role="row">
             <span className="rank">{index + 1}</span><span className="arc-cell"><img src={arc.image} alt={arc.name} /><span><b>{arc.name} <em>M{arc.mixing}</em></b><small>{arc.rarity} · {arc.type} · {arc.secondaryLabel} {arc.secondaryValue}%</small></span></span>
-            <span>{arc.baseAtk}</span><span className="percent-cell"><b>{percent.toFixed(2)}%</b><span><i style={{ width: `${Math.min(100, percent)}%` }} /></span></span>
-            <span className="note-cell">{index === 0 ? <CheckCircle2 size={17} /> : <Info size={16} />}<span>{arc.benchmarkNote[locale]}<small>{source?.publisher} · {source?.verifiedAt}</small></span></span>
+            <span className="mobile-metric stat-cell" data-label={tableLabels.atk}><b>{arc.baseAtk}</b></span>
+            <span className="mobile-metric percent-cell" data-label={tableLabels.relative}><b>{percent.toFixed(2)}%</b><span><i style={{ width: `${Math.min(100, percent)}%` }} /></span></span>
+            <span className="mobile-metric note-cell" data-label={tableLabels.note}>{index === 0 ? <CheckCircle2 size={17} /> : <Info size={16} />}<span>{arc.benchmarkNote[locale]}<small>{source?.publisher} · {source?.verifiedAt}</small></span></span>
           </div>;
         })}
       </div>}
