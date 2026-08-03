@@ -60,19 +60,20 @@ export function encodeProgressionShareState(
   const normalized = normalizeRosterProgressionState(state);
   if (!normalized) throw new Error('INVALID_PROGRESSION_STATE');
 
-  const payload: CompactProgressionPayload = {
-    v: 1,
-    e: normalized.entries.flatMap<Array<[number, number]>>((entry) => {
-      const index = characterIndex.get(entry.characterName);
-      return index === undefined ? [] : [[index, entry.completedSteps]];
-    }),
-  };
+  const entries: Array<[number, number]> = [];
+  for (const entry of normalized.entries) {
+    const index = characterIndex.get(entry.characterName);
+    if (index !== undefined) entries.push([index, entry.completedSteps]);
+  }
 
+  const payload: CompactProgressionPayload = { v: 1, e: entries };
   if (includeInventory) {
-    payload.i = ascensionMaterialIds.flatMap<Array<[number, number]>>((id, index) => {
+    const inventory: Array<[number, number]> = [];
+    for (const [index, id] of ascensionMaterialIds.entries()) {
       const value = normalized.inventory[id];
-      return value > 0 ? [[index, value]] : [];
-    });
+      if (value > 0) inventory.push([index, value]);
+    }
+    payload.i = inventory;
   }
 
   return toBase64Url(JSON.stringify(payload));
