@@ -13,6 +13,7 @@ import './database.css';
 import './character-catalog.css';
 import './team-input.css';
 import './team-readiness.css';
+import './team-sequence-builder.css';
 import './home-tools.css';
 import './rotation-lab.css';
 import './rotation-catalog.css';
