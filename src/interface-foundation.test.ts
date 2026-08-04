@@ -1,7 +1,9 @@
 /// <reference types="vite/client" />
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import foundationCss from './interface-foundation.css?raw';
 import homeSource from './pages/HomePage.tsx?raw';
+
+const foundationCss = readFileSync(new URL('./interface-foundation.css', import.meta.url), 'utf8');
 
 describe('restrained interface foundation', () => {
   it('does not add decorative gradients or broad transition shorthands', () => {
