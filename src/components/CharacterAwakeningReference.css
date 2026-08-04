@@ -1,0 +1,105 @@
+.character-awakening-reference {
+  margin-top: 14px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.character-awakening-reference > summary {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.character-awakening-reference > summary::-webkit-details-marker {
+  display: none;
+}
+
+.character-awakening-reference > summary span {
+  font-weight: 800;
+}
+
+.character-awakening-reference > summary small {
+  color: var(--text-muted, #9b9b9b);
+  text-align: right;
+}
+
+.character-awakening-reference__intro {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 0 12px 12px;
+  color: var(--text-muted, #b2b2b2);
+}
+
+.character-awakening-reference__intro p {
+  margin: 0;
+}
+
+.character-awakening-reference__list {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.character-awakening-reference__list article {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.character-awakening-reference__list article.calculation-active {
+  border-color: rgba(255, 206, 71, 0.55);
+}
+
+.character-awakening-reference__list article > b {
+  color: #ffd24f;
+}
+
+.character-awakening-reference__list strong,
+.character-awakening-reference__list p,
+.character-awakening-reference__list small {
+  display: block;
+}
+
+.character-awakening-reference__list p {
+  margin: 4px 0;
+  color: var(--text-muted, #b8b8b8);
+}
+
+.character-awakening-reference__list small {
+  color: var(--text-muted, #8f8f8f);
+}
+
+.character-awakening-reference__list article > span {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  color: var(--text-muted, #a5a5a5);
+  white-space: nowrap;
+}
+
+.character-awakening-reference__list article.calculation-active > span {
+  color: #ffd24f;
+}
+
+@media (max-width: 720px) {
+  .character-awakening-reference > summary,
+  .character-awakening-reference__list article {
+    grid-template-columns: auto 1fr;
+  }
+
+  .character-awakening-reference > summary small,
+  .character-awakening-reference__list article > span {
+    grid-column: 2;
+    text-align: left;
+    white-space: normal;
+  }
+}
