@@ -67,6 +67,8 @@ const forbiddenPrimaryTerms: RegExp[] = [
   /сила пробоя/iu,
   /\bЗаклинани(?:е|я|ю|ем|и)\b/iu,
   /\bСинтез\b/iu,
+  /\bГазовый\b|\bПлазменный\b/iu,
+  /сломлени(?:е|я|ю|ем|и|й|ям|ями|ях)/iu,
   /перенаправленн(?:ый|ого|ым) навык/iu,
   /\bультимейт(?:а|е|ом|ы|ов)?\b/iu,
   /Emergency Delivery|Aerial Command|Cyclone Strike|Rider Express|Final Reckoning/iu,
@@ -91,6 +93,14 @@ describe('Russian localization regression contract', () => {
     for (const pattern of forbiddenPrimaryTerms) expect(corpus).not.toMatch(pattern);
   });
 
+  it('uses the exact current Arc-type, role and destruction labels', () => {
+    const corpus = russianRuntimeCorpus().join('\n');
+    expect(corpus).toContain('шкалу разрушения');
+    expect(corpus).toContain('интенсивность разрушения');
+    expect(corpus).toContain('урона разрушения');
+    expect(corpus).toContain('сломленным');
+  });
+
   it('keeps polished Russian Arc grammar in the public catalog', () => {
     const byName = new Map(arcCatalog.map((arc) => [arc.name, arc.effect.ru]));
     expect(byName.get('Clear Skies')).toContain('урон Анимы');
@@ -105,7 +115,7 @@ describe('Russian localization regression contract', () => {
     expect(Object.values(arcRussianNames)).not.toEqual(expect.arrayContaining(['Blushing Mirage', "What's Desired"]));
   });
 
-  it('rejects outdated client terms and avoidable guide jargon in every visible Russian source string', () => {
+  it('rejects avoidable guide jargon in every visible Russian source string', () => {
     const strings = sourceRussianStrings();
     const failures = strings.flatMap((entry) => forbiddenVisibleJargon.flatMap((pattern) => pattern.test(entry.text)
       ? [`${entry.file}:${entry.line} ${pattern} → ${entry.text}`]
