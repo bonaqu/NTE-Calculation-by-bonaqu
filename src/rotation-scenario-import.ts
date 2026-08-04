@@ -16,18 +16,28 @@ import { visibleActionById } from './verified-visible-actions';
 export const ROTATION_SCENARIO_IMPORT_STORAGE_KEY = 'nte.team.scenario.rotation-import.v1';
 export const ROTATION_SCENARIO_IMPORT_VERSION = 1 as const;
 
-export type RotationScenarioBinding =
+export type RotationScenarioSourceCoverage = 'full' | 'partial' | 'unsupported';
+
+export type RotationScenarioBindingAtom =
   | { kind: 'action-sequence'; actionIds: readonly string[] }
   | { kind: 'activate-effect'; effectId: VerifiedTeamEffectId }
   | { kind: 'activate-cycle'; cycleId: EsperCycleId };
 
+export interface RotationScenarioBinding {
+  coverage: Exclude<RotationScenarioSourceCoverage, 'unsupported'>;
+  items: readonly RotationScenarioBindingAtom[];
+}
+
 export interface RotationScenarioImportReport {
   presetId: string;
   totalSourceSteps: number;
+  fullyMappedSourceSteps: number;
+  partiallyMappedSourceSteps: number;
   mappedSourceSteps: number;
   generatedActionSteps: number;
   generatedEffectSteps: number;
   generatedCycleSteps: number;
+  generatedPartialRemainderSteps: number;
   unsupportedSourceSteps: number;
   coveragePercent: number;
 }
@@ -35,6 +45,7 @@ export interface RotationScenarioImportReport {
 export interface RotationScenarioStepOrigin {
   sourceStepId: string;
   part: number;
+  coverage?: RotationScenarioSourceCoverage;
 }
 
 export type PendingRotationCondition =
@@ -59,25 +70,35 @@ export interface RotationScenarioImportResult {
 
 const binding = (presetId: string, stepId: string) => `${presetId}:${stepId}`;
 
-/** Exact source-step bindings only. Text similarity is deliberately not used. */
-export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioBinding>> = {
-  [binding('chaos-remora-bomb', 'chaos-haniel-buffs')]: {
-    kind: 'activate-effect',
-    effectId: 'haniel.friendship.nova-atk-drain',
+const hanielSetupItems: readonly RotationScenarioBindingAtom[] = [
+  {
+    kind: 'action-sequence',
+    actionIds: [
+      'haniel.silent-moonlit-forest-guardian.direct.level-10',
+      'haniel.a-melody-named-haniel.initial.level-10',
+    ],
   },
-  [binding('chaos-remora-bomb', 'chaos-stain')]: {
-    kind: 'activate-cycle',
-    cycleId: 'stain',
+  { kind: 'activate-effect', effectId: 'haniel.friendship.nova-atk-drain' },
+];
+
+const sakiriSetupItems: readonly RotationScenarioBindingAtom[] = [
+  { kind: 'action-sequence', actionIds: ['sakiri.feast-of-gluttony.level-10'] },
+  { kind: 'activate-effect', effectId: 'sakiri.awakening-four.team-atk' },
+  { kind: 'activate-effect', effectId: 'sakiri.impish-trick.def-reduction' },
+];
+
+const daffodillUltimateRedirectItems: readonly RotationScenarioBindingAtom[] = [
+  {
+    kind: 'action-sequence',
+    actionIds: [
+      'daffodill.finale.initial-composition.level-10',
+      'daffodill.echoes.enhanced-sequence.level-10',
+    ],
   },
-  [binding('hathor-hyper', 'haniel-buffs')]: {
-    kind: 'activate-effect',
-    effectId: 'haniel.friendship.nova-atk-drain',
-  },
-  [binding('hathor-hyper', 'hathor-stain')]: {
-    kind: 'activate-cycle',
-    cycleId: 'stain',
-  },
-  [binding('hathor-hyper', 'hathor-ultimate')]: {
+];
+
+const hathorBurstItems: readonly RotationScenarioBindingAtom[] = [
+  {
     kind: 'action-sequence',
     actionIds: [
       'hathor.rider-express.level-10',
@@ -85,6 +106,95 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
       'hathor.cyclone-strike-second.level-10',
       'hathor.cyclone-strike-third.level-10',
     ],
+  },
+];
+
+/** Exact source-step bindings only. Text similarity is deliberately not used. */
+export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioBinding>> = {
+  [binding('shinku-charge', 'hathor-open')]: {
+    coverage: 'partial',
+    items: [
+      { kind: 'action-sequence', actionIds: ['hathor.rider-express.level-10'] },
+      { kind: 'activate-effect', effectId: 'hathor.delay-warning.remora-crit-rate' },
+    ],
+  },
+
+  [binding('hathor-hyper', 'haniel-buffs')]: {
+    coverage: 'partial',
+    items: hanielSetupItems,
+  },
+  [binding('hathor-hyper', 'hathor-stain')]: {
+    coverage: 'partial',
+    items: [{ kind: 'activate-cycle', cycleId: 'stain' }],
+  },
+  [binding('hathor-hyper', 'hathor-charge')]: {
+    coverage: 'partial',
+    items: [{ kind: 'activate-effect', effectId: 'hathor.delay-warning.remora-crit-rate' }],
+  },
+  [binding('hathor-hyper', 'hathor-ultimate')]: {
+    coverage: 'full',
+    items: hathorBurstItems,
+  },
+
+  [binding('chaos-remora-bomb', 'chaos-haniel-buffs')]: {
+    coverage: 'partial',
+    items: hanielSetupItems,
+  },
+  [binding('chaos-remora-bomb', 'chaos-stain')]: {
+    coverage: 'partial',
+    items: [{ kind: 'activate-cycle', cycleId: 'stain' }],
+  },
+  [binding('chaos-remora-bomb', 'chaos-return-hathor')]: {
+    coverage: 'partial',
+    items: [{ kind: 'action-sequence', actionIds: ['hathor.rider-express.level-10'] }],
+  },
+
+  [binding('nanally-hexed-dual', 'nanally-sakiri-setup')]: {
+    coverage: 'partial',
+    items: sakiriSetupItems,
+  },
+
+  [binding('lacrimosa-discord-dot', 'lacrimosa-haniel-open')]: {
+    coverage: 'partial',
+    items: hanielSetupItems,
+  },
+  [binding('lacrimosa-discord-dot', 'lacrimosa-sakiri-buffs')]: {
+    coverage: 'partial',
+    items: sakiriSetupItems,
+  },
+  [binding('lacrimosa-discord-dot', 'lacrimosa-daffodill-open')]: {
+    coverage: 'partial',
+    items: daffodillUltimateRedirectItems,
+  },
+
+  [binding('baicang-firefly-hyper', 'baicang-sakiri-buff')]: {
+    coverage: 'partial',
+    items: sakiriSetupItems,
+  },
+  [binding('baicang-firefly-hyper', 'baicang-daffodill-open')]: {
+    coverage: 'partial',
+    items: daffodillUltimateRedirectItems,
+  },
+  [binding('baicang-firefly-hyper', 'baicang-swap-ultimate')]: {
+    coverage: 'full',
+    items: [{
+      kind: 'action-sequence',
+      actionIds: ['baicang.judgment-of-autumn.expansion.level-10'],
+    }],
+  },
+  [binding('baicang-firefly-hyper', 'baicang-basic-three')]: {
+    coverage: 'partial',
+    items: [{
+      kind: 'action-sequence',
+      actionIds: ['baicang.heart-of-heaven-and-earth.level-10'],
+    }],
+  },
+  [binding('baicang-firefly-hyper', 'baicang-dodge-charged-one')]: {
+    coverage: 'full',
+    items: [{
+      kind: 'action-sequence',
+      actionIds: ['baicang.silenced-thought.full-composition.level-10'],
+    }],
   },
 };
 
@@ -119,9 +229,18 @@ export function normalizeRotationScenarioImportMetadata(value: unknown): Rotatio
       if (!isRecord(raw)) continue;
       const sourceStepId = safeText(raw.sourceStepId, 100);
       const part = typeof raw.part === 'number' && Number.isFinite(raw.part)
-        ? Math.max(0, Math.min(20, Math.trunc(raw.part)))
+        ? Math.max(0, Math.min(40, Math.trunc(raw.part)))
         : 0;
-      if (stepId && sourceStepId) originsByStepId[safeText(stepId, 80)] = { sourceStepId, part };
+      const coverage = raw.coverage === 'full' || raw.coverage === 'partial' || raw.coverage === 'unsupported'
+        ? raw.coverage
+        : undefined;
+      if (stepId && sourceStepId) {
+        originsByStepId[safeText(stepId, 80)] = {
+          sourceStepId,
+          part,
+          ...(coverage ? { coverage } : {}),
+        };
+      }
     }
   }
 
@@ -155,6 +274,16 @@ export function normalizeRotationScenarioImportMetadata(value: unknown): Rotatio
   const rawReport = isRecord(value.report) ? value.report : null;
   const report = preset && rawReport ? previewRotationScenarioImport(preset) : null;
 
+  if (preset) {
+    for (const origin of Object.values(originsByStepId)) {
+      if (origin.coverage) continue;
+      const sourceStep = preset.steps.find((step) => step.id === origin.sourceStepId);
+      origin.coverage = sourceStep
+        ? validatedBinding(preset, sourceStep)?.coverage ?? 'unsupported'
+        : 'unsupported';
+    }
+  }
+
   return {
     version: ROTATION_SCENARIO_IMPORT_VERSION,
     sourceRotationId: preset?.id ?? '',
@@ -165,26 +294,38 @@ export function normalizeRotationScenarioImportMetadata(value: unknown): Rotatio
   };
 }
 
+function atomFingerprint(atom: RotationScenarioBindingAtom): string {
+  if (atom.kind === 'action-sequence') return `actions:${atom.actionIds.join(',')}`;
+  if (atom.kind === 'activate-effect') return `effect:${atom.effectId}`;
+  return `cycle:${atom.cycleId}`;
+}
+
+function validBindingAtom(step: RotationStep, atom: RotationScenarioBindingAtom): boolean {
+  if (atom.kind === 'action-sequence') {
+    return atom.actionIds.length > 0
+      && atom.actionIds.every((actionId) => visibleActionById.get(actionId)?.characterName === step.actor);
+  }
+  if (atom.kind === 'activate-effect') {
+    return verifiedTeamEffectById.get(atom.effectId)?.sourceCharacter === step.actor;
+  }
+  return step.cycle === atom.cycleId && verifiedCombatCycleModelById.has(atom.cycleId);
+}
+
 function validatedBinding(preset: RotationPreset, step: RotationStep): RotationScenarioBinding | null {
   const candidate = rotationScenarioBindings[binding(preset.id, step.id)];
-  if (!candidate) return null;
-
-  if (candidate.kind === 'action-sequence') {
-    if (!candidate.actionIds.length) return null;
-    return candidate.actionIds.every((actionId) => visibleActionById.get(actionId)?.characterName === step.actor)
-      ? candidate
-      : null;
-  }
-  if (candidate.kind === 'activate-effect') {
-    return verifiedTeamEffectById.get(candidate.effectId)?.sourceCharacter === step.actor ? candidate : null;
-  }
-  return step.cycle === candidate.cycleId && verifiedCombatCycleModelById.has(candidate.cycleId)
-    ? candidate
-    : null;
+  if (!candidate || candidate.items.length === 0) return null;
+  const fingerprints = candidate.items.map(atomFingerprint);
+  if (new Set(fingerprints).size !== fingerprints.length) return null;
+  return candidate.items.every((atom) => validBindingAtom(step, atom)) ? candidate : null;
 }
 
 function stepNote(step: RotationStep, locale: Locale): string {
   return `${step.instruction[locale]} ${step.outcome[locale]}`.normalize('NFKC').trim().slice(0, 400);
+}
+
+function partialRemainderNote(step: RotationStep, locale: Locale): string {
+  const prefix = locale === 'ru' ? 'Непокрытая часть исходного шага:' : 'Unsupported remainder of the source step:';
+  return `${prefix} ${stepNote(step, locale)}`.slice(0, 400);
 }
 
 function baseScenarioStep(
@@ -215,14 +356,21 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
   const steps: CombatScenarioStep[] = [];
   const originsByStepId: Record<string, RotationScenarioStepOrigin> = {};
   const pendingByStepId: Record<string, PendingRotationCondition> = {};
-  let mappedSourceSteps = 0;
+  let fullyMappedSourceSteps = 0;
+  let partiallyMappedSourceSteps = 0;
   let generatedActionSteps = 0;
   let generatedEffectSteps = 0;
   let generatedCycleSteps = 0;
+  let generatedPartialRemainderSteps = 0;
 
-  const append = (scenarioStep: CombatScenarioStep, sourceStep: RotationStep, part: number) => {
+  const append = (
+    scenarioStep: CombatScenarioStep,
+    sourceStep: RotationStep,
+    part: number,
+    coverage: RotationScenarioSourceCoverage,
+  ) => {
     steps.push(scenarioStep);
-    originsByStepId[scenarioStep.id] = { sourceStepId: sourceStep.id, part };
+    originsByStepId[scenarioStep.id] = { sourceStepId: sourceStep.id, part, coverage };
   };
 
   preset.steps.forEach((sourceStep, sourceIndex) => {
@@ -233,56 +381,76 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
       append({
         ...baseScenarioStep(preset, sourceStep, sourceIndex, Math.max(0, sourceSlot), 0),
         note: stepNote(sourceStep, locale),
-      }, sourceStep, 0);
+      }, sourceStep, 0, 'unsupported');
       return;
     }
 
-    mappedSourceSteps += 1;
-    if (matched.kind === 'action-sequence') {
-      matched.actionIds.forEach((actionId, part) => {
-        append({
-          ...baseScenarioStep(preset, sourceStep, sourceIndex, sourceSlot, part),
-          kind: 'action',
-          actionId,
-        }, sourceStep, part);
-        generatedActionSteps += 1;
-      });
-      return;
-    }
+    if (matched.coverage === 'full') fullyMappedSourceSteps += 1;
+    else partiallyMappedSourceSteps += 1;
 
-    const pendingStep = {
-      ...baseScenarioStep(preset, sourceStep, sourceIndex, sourceSlot, 0),
-      note: stepNote(sourceStep, locale),
-    };
-    append(pendingStep, sourceStep, 0);
-    if (matched.kind === 'activate-effect') {
-      pendingByStepId[pendingStep.id] = {
-        kind: 'activate-effect',
-        effectId: matched.effectId,
-        sourceSlot,
+    let part = 0;
+    for (const atom of matched.items) {
+      if (atom.kind === 'action-sequence') {
+        for (const actionId of atom.actionIds) {
+          append({
+            ...baseScenarioStep(preset, sourceStep, sourceIndex, sourceSlot, part),
+            kind: 'action',
+            actionId,
+          }, sourceStep, part, matched.coverage);
+          generatedActionSteps += 1;
+          part += 1;
+        }
+        continue;
+      }
+
+      const pendingStep = {
+        ...baseScenarioStep(preset, sourceStep, sourceIndex, sourceSlot, part),
+        note: stepNote(sourceStep, locale),
       };
-      generatedEffectSteps += 1;
-      return;
+      append(pendingStep, sourceStep, part, matched.coverage);
+      if (atom.kind === 'activate-effect') {
+        pendingByStepId[pendingStep.id] = {
+          kind: 'activate-effect',
+          effectId: atom.effectId,
+          sourceSlot,
+        };
+        generatedEffectSteps += 1;
+      } else {
+        pendingByStepId[pendingStep.id] = {
+          kind: 'activate-cycle',
+          cycleId: atom.cycleId,
+          sourceSlot,
+        };
+        generatedCycleSteps += 1;
+      }
+      part += 1;
     }
-    pendingByStepId[pendingStep.id] = {
-      kind: 'activate-cycle',
-      cycleId: matched.cycleId,
-      sourceSlot,
-    };
-    generatedCycleSteps += 1;
+
+    if (matched.coverage === 'partial') {
+      append({
+        ...baseScenarioStep(preset, sourceStep, sourceIndex, sourceSlot, part),
+        note: partialRemainderNote(sourceStep, locale),
+      }, sourceStep, part, 'partial');
+      generatedPartialRemainderSteps += 1;
+    }
   });
 
+  const mappedSourceSteps = fullyMappedSourceSteps + partiallyMappedSourceSteps;
   const unsupportedSourceSteps = preset.steps.length - mappedSourceSteps;
+  const weightedMappedSteps = fullyMappedSourceSteps + partiallyMappedSourceSteps * 0.5;
   const report: RotationScenarioImportReport = {
     presetId: preset.id,
     totalSourceSteps: preset.steps.length,
+    fullyMappedSourceSteps,
+    partiallyMappedSourceSteps,
     mappedSourceSteps,
     generatedActionSteps,
     generatedEffectSteps,
     generatedCycleSteps,
+    generatedPartialRemainderSteps,
     unsupportedSourceSteps,
     coveragePercent: preset.steps.length
-      ? Math.round(mappedSourceSteps / preset.steps.length * 1_000) / 10
+      ? Math.round(weightedMappedSteps / preset.steps.length * 1_000) / 10
       : 0,
   };
   return {
@@ -379,11 +547,16 @@ export function invalidateRotationScenarioTiming(
 export function rotationSourceStep(
   metadata: RotationScenarioImportMetadata,
   scenarioStepId: string,
-): { preset: RotationPreset; step: RotationStep; part: number } | null {
+): { preset: RotationPreset; step: RotationStep; part: number; coverage: RotationScenarioSourceCoverage } | null {
   const preset = rotationPresetById.get(metadata.sourceRotationId);
   const origin = metadata.originsByStepId[scenarioStepId];
   const step = preset?.steps.find((entry) => entry.id === origin?.sourceStepId);
-  return preset && step && origin ? { preset, step, part: origin.part } : null;
+  return preset && step && origin ? {
+    preset,
+    step,
+    part: origin.part,
+    coverage: origin.coverage ?? validatedBinding(preset, step)?.coverage ?? 'unsupported',
+  } : null;
 }
 
 export function validateRotationScenarioBindings(): string[] {
