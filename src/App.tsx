@@ -3,7 +3,7 @@ import { BarChart3, BookOpen, Boxes, ChevronDown, Database, GitBranch, Home, Lan
 import { useI18n } from './i18n';
 import type { RouteKey } from './types';
 import { HomePage } from './pages/HomePage';
-import { TeamCalculatorPage } from './pages/TeamCalculatorPage';
+import { GameVisibleTeamCalculatorPage } from './pages/GameVisibleTeamCalculatorPage';
 import { RotationLabPage } from './pages/RotationLabPage';
 import { ArcExperiencePage } from './pages/ArcExperiencePage';
 import { ProgressionPage } from './pages/ProgressionPage';
@@ -48,7 +48,7 @@ export default function App() {
     ['home', Home], ['team', Users], ['rotations', Route], ['arcs', BarChart3], ['progression', Boxes], ['database', Database], ['methodology', BookOpen],
   ] as const;
   const page = route === 'home' ? <HomePage navigate={navigate} />
-    : route === 'team' ? <TeamCalculatorPage />
+    : route === 'team' ? <GameVisibleTeamCalculatorPage />
       : route === 'rotations' ? <RotationLabPage />
         : route === 'arcs' ? <ArcExperiencePage />
           : route === 'progression' ? <ProgressionPage />
