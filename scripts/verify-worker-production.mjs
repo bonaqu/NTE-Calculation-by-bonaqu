@@ -6,6 +6,7 @@ const expected = {
   formulaVersion: process.env.EXPECTED_FORMULA_VERSION || '0.2',
   visibleBuildVersion: Number(process.env.EXPECTED_VISIBLE_BUILD_VERSION || 1),
   verifiedActionCount: Number(process.env.EXPECTED_VERIFIED_ACTION_COUNT || 14),
+  verifiedTeamEffectCount: Number(process.env.EXPECTED_VERIFIED_TEAM_EFFECT_COUNT || 4),
   partialCharacters: String(process.env.EXPECTED_PARTIAL_CHARACTERS || 'Chaos,Hathor,Jiuyuan,Lacrimosa,Nanally,Shinku,Zero')
     .split(',')
     .map((value) => value.trim())
@@ -250,10 +251,11 @@ async function verifyOnce() {
   assert(combatModels.count === 20, `expected 20 combat coverage records, got ${combatModels.count}`);
   assert(combatModels.visibleBuildVersion === 1, 'combat model visible version mismatch');
   assert(combatModels.verifiedActionCount === expected.verifiedActionCount, `expected ${expected.verifiedActionCount} verified actions, got ${combatModels.verifiedActionCount}`);
-  assert(combatModels.verifiedTeamEffectCount === 3, `expected 3 verified team effects, got ${combatModels.verifiedTeamEffectCount}`);
+  assert(combatModels.verifiedTeamEffectCount === expected.verifiedTeamEffectCount, `expected ${expected.verifiedTeamEffectCount} verified team effects, got ${combatModels.verifiedTeamEffectCount}`);
   assert(combatModels.verifiedTeamEffects.some((effect) => effect.id === 'haniel.friendship.nova-atk-drain' && effect.baseAtkPercent === 8), 'Haniel team effect missing');
   assert(combatModels.verifiedTeamEffects.some((effect) => effect.id === 'sakiri.awakening-four.team-atk' && effect.baseAtkPercent === 30), 'Sakiri A4 effect missing');
   assert(combatModels.verifiedTeamEffects.some((effect) => effect.id === 'sakiri.impish-trick.def-reduction' && effect.enemyDefenceReduction === 10), 'Sakiri DEF reduction missing');
+  assert(combatModels.verifiedTeamEffects.some((effect) => effect.id === 'hathor.delay-warning.remora-crit-rate' && effect.critRate === 10 && effect.durationSeconds === 12), 'Hathor Remora CRIT Rate effect missing');
 
   const partial = combatModels.data
     .filter((record) => record.coverage === 'partial')
