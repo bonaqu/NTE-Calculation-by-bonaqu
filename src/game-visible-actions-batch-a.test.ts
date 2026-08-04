@@ -21,12 +21,13 @@ function combatBuild(characterName: string): GameVisibleCharacterBuild {
 }
 
 describe('verified game-visible actions batch A', () => {
-  it('publishes nine unique standalone records for five characters', () => {
-    expect(verifiedVisibleActions).toHaveLength(9);
-    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(9);
-    expect(new Set(verifiedVisibleActions.map((action) => action.characterName)))
+  it('keeps the original nine unique standalone records stable', () => {
+    const batchA = verifiedVisibleActions.slice(0, 9);
+    expect(batchA).toHaveLength(9);
+    expect(new Set(batchA.map((action) => action.id)).size).toBe(9);
+    expect(new Set(batchA.map((action) => action.characterName)))
       .toEqual(new Set(['Shinku', 'Nanally', 'Chaos', 'Lacrimosa', 'Zero']));
-    for (const action of verifiedVisibleActions) {
+    for (const action of batchA) {
       expect(action.multiplier).toBeGreaterThan(0);
       expect(action.title.ru.trim()).not.toBe('');
       expect(action.title.en.trim()).not.toBe('');
