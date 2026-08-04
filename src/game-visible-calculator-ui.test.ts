@@ -27,9 +27,10 @@ describe('game-visible Team Calculator product contract', () => {
       'Скорость зарядки',
       'Интенсивность цикла',
       'Интенсивность разрушения',
-      'Способность эспера',
-      'Консоль',
-    ]) expect(pageSource).toContain(label);
+    ]) expect(modelSource).toContain(label);
+    for (const visibleSection of ['Способность эспера', 'Консоль']) expect(pageSource).toContain(visibleSection);
+    expect(pageSource).toContain('screenshotConfirmedRussianLabels.critRate');
+    expect(pageSource).toContain('screenshotConfirmedRussianLabels.breakIntensity');
 
     expect(pageSource).not.toContain('Множитель одного одинакового попадания');
     expect(pageSource).not.toContain('Одинаковых попаданий за применение');
