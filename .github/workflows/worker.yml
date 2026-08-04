@@ -14,6 +14,10 @@ on:
       - 'src/arc-presets.ts'
       - 'src/esper-cycles.ts'
       - 'src/rotation-presets.ts'
+      - 'src/rotation-presets-base.ts'
+      - 'src/rotation-presets-extra.ts'
+      - 'src/game-visible-build.ts'
+      - 'src/game-visible-calculation.ts'
       - 'src/progression-data.ts'
       - 'src/progression-engine.ts'
       - 'package.json'
@@ -37,6 +41,7 @@ jobs:
       arcs_url: ${{ steps.verify.outputs.arcs_url }}
       presets_url: ${{ steps.verify.outputs.presets_url }}
       characters_url: ${{ steps.verify.outputs.characters_url }}
+      combat_models_url: ${{ steps.verify.outputs.combat_models_url }}
       cycles_url: ${{ steps.verify.outputs.cycles_url }}
       rotations_url: ${{ steps.verify.outputs.rotations_url }}
       progression_url: ${{ steps.verify.outputs.progression_url }}
@@ -65,8 +70,9 @@ jobs:
         id: verify
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
-          EXPECTED_SERVICE_VERSION: '0.6.1'
+          EXPECTED_SERVICE_VERSION: '0.7.0'
           EXPECTED_FORMULA_VERSION: '0.2'
+          EXPECTED_VISIBLE_BUILD_VERSION: '1'
         run: |
           BASE="${DEPLOYMENT_URL%/}"
           test -n "$BASE"
@@ -74,9 +80,90 @@ jobs:
           ARCS_URL="$BASE/api/v1/data/arcs"
           PRESETS_URL="$BASE/api/v1/data/arc-presets"
           CHARACTERS_URL="$BASE/api/v1/data/characters"
+          COMBAT_MODELS_URL="$BASE/api/v1/data/combat-models"
           CYCLES_URL="$BASE/api/v1/data/esper-cycles"
           ROTATIONS_URL="$BASE/api/v1/data/rotation-presets"
           PROGRESSION_URL="$BASE/api/v1/data/progression/characters"
+          VISIBLE_CALC_URL="$BASE/api/v1/calculate/visible-team"
+
+          cat > /tmp/visible-input.json <<'JSON'
+          {
+            "version": 1,
+            "activeSlot": 0,
+            "duration": 30,
+            "builds": [
+              {
+                "characterName": "Shinku",
+                "level": 70,
+                "maxLevel": 70,
+                "awakeningLevel": 5,
+                "stats": {
+                  "hp": 21316,
+                  "atk": 2026,
+                  "def": 968,
+                  "critRate": 79,
+                  "critDamage": 176.4,
+                  "damageBonus": 8,
+                  "attributeDamageBonus": 10,
+                  "chargeSpeed": 100,
+                  "cycleIntensity": 0,
+                  "breakIntensity": 48
+                },
+                "arc": {
+                  "arcName": "Blushing Mirage",
+                  "level": 80,
+                  "maxLevel": 80,
+                  "baseAtk": 570,
+                  "secondaryLabel": "CRIT Rate",
+                  "secondaryValue": 24,
+                  "mixingRank": 1,
+                  "afterUltimateActive": false
+                },
+                "skills": { "basic": 9, "skill": 9, "ultimate": 9, "support": 8 },
+                "console": { "gridType": 2, "typeThreeModules": 4 },
+                "testMode": "neutral-reference",
+                "verifiedActionId": ""
+              },
+              {
+                "characterName": "Hathor",
+                "level": 1,
+                "maxLevel": 20,
+                "awakeningLevel": 0,
+                "stats": { "hp": 0, "atk": 0, "def": 0, "critRate": 0, "critDamage": 0, "damageBonus": 0, "attributeDamageBonus": 0, "chargeSpeed": 100, "cycleIntensity": 0, "breakIntensity": 0 },
+                "arc": { "arcName": "", "level": 1, "maxLevel": 80, "baseAtk": 0, "secondaryLabel": "", "secondaryValue": 0, "mixingRank": 1, "afterUltimateActive": false },
+                "skills": { "basic": 1, "skill": 1, "ultimate": 1, "support": 1 },
+                "console": { "gridType": 0, "typeThreeModules": 0 },
+                "testMode": "neutral-reference",
+                "verifiedActionId": ""
+              },
+              {
+                "characterName": "Zero",
+                "level": 1,
+                "maxLevel": 20,
+                "awakeningLevel": 0,
+                "stats": { "hp": 0, "atk": 0, "def": 0, "critRate": 0, "critDamage": 0, "damageBonus": 0, "attributeDamageBonus": 0, "chargeSpeed": 100, "cycleIntensity": 0, "breakIntensity": 0 },
+                "arc": { "arcName": "", "level": 1, "maxLevel": 80, "baseAtk": 0, "secondaryLabel": "", "secondaryValue": 0, "mixingRank": 1, "afterUltimateActive": false },
+                "skills": { "basic": 1, "skill": 1, "ultimate": 1, "support": 1 },
+                "console": { "gridType": 0, "typeThreeModules": 0 },
+                "testMode": "neutral-reference",
+                "verifiedActionId": ""
+              },
+              {
+                "characterName": "Nanally",
+                "level": 1,
+                "maxLevel": 20,
+                "awakeningLevel": 0,
+                "stats": { "hp": 0, "atk": 0, "def": 0, "critRate": 0, "critDamage": 0, "damageBonus": 0, "attributeDamageBonus": 0, "chargeSpeed": 100, "cycleIntensity": 0, "breakIntensity": 0 },
+                "arc": { "arcName": "", "level": 1, "maxLevel": 80, "baseAtk": 0, "secondaryLabel": "", "secondaryValue": 0, "mixingRank": 1, "afterUltimateActive": false },
+                "skills": { "basic": 1, "skill": 1, "ultimate": 1, "support": 1 },
+                "console": { "gridType": 0, "typeThreeModules": 0 },
+                "testMode": "neutral-reference",
+                "verifiedActionId": ""
+              }
+            ],
+            "target": { "level": 80, "resistance": 10, "defenceReduction": 0, "resistanceReduction": 0, "boss": true }
+          }
+          JSON
 
           for attempt in $(seq 1 30); do
             echo "Production contract check $attempt/30"
@@ -84,9 +171,11 @@ jobs:
             curl -fsSL "$ARCS_URL" -o /tmp/arcs.json || true
             curl -fsSL "$PRESETS_URL" -o /tmp/presets.json || true
             curl -fsSL "$CHARACTERS_URL" -o /tmp/characters.json || true
+            curl -fsSL "$COMBAT_MODELS_URL" -o /tmp/combat-models.json || true
             curl -fsSL "$CYCLES_URL" -o /tmp/cycles.json || true
             curl -fsSL "$ROTATIONS_URL" -o /tmp/rotations.json || true
             curl -fsSL "$PROGRESSION_URL" -o /tmp/progression.json || true
+            curl -fsSL -X POST -H 'content-type: application/json' --data-binary @/tmp/visible-input.json "$VISIBLE_CALC_URL" -o /tmp/visible-result.json || true
 
             if node <<'NODE'
           const fs = require('node:fs');
@@ -96,13 +185,17 @@ jobs:
             const arcs = read('/tmp/arcs.json');
             const presets = read('/tmp/presets.json');
             const characters = read('/tmp/characters.json');
+            const combatModels = read('/tmp/combat-models.json');
             const cycles = read('/tmp/cycles.json');
             const rotations = read('/tmp/rotations.json');
             const progression = read('/tmp/progression.json');
+            const visibleResult = read('/tmp/visible-result.json');
             const wrongM1 = presets.data.find((item) => item.id === 'wrong-gate-m1');
             const wrongM5 = presets.data.find((item) => item.id === 'wrong-gate-m5');
             const shinku = rotations.data.find((item) => item.id === 'shinku-charge');
             const hathor = rotations.data.find((item) => item.id === 'hathor-hyper');
+            const chaos = rotations.data.find((item) => item.id === 'chaos-remora-bomb');
+            const shinkuCoverage = combatModels.data.find((item) => item.characterName === 'Shinku');
             const stepTotals = progression.steps.reduce((sum, step) => ({
               coins: sum.coins + step.beetleCoin,
               boss: sum.boss + step.bossCount,
@@ -114,13 +207,15 @@ jobs:
               Chiz: '2026-06-11', Daffodill: '2026-07-28', Edgar: '2026-07-28', Fadia: '2026-07-28',
               Haniel: '2026-07-28', Hathor: '2026-06-27', Hotori: '2026-07-01', Iroi: '2026-07-27',
               Jiuyuan: '2026-07-28', Lacrimosa: '2026-07-28', Mint: '2026-07-28', Nanally: '2026-07-31',
-              Sakiri: '2026-07-28', Shinku: '2026-07-31', Skia: '2026-07-28', Zero: '2026-07-28',
+              Sakiri: '2026-07-28', Shinku: '2026-07-31', Skia: '2026-07-28', Zero: '2026-07-28'
             };
             const sourceDatesValid = progression.data.length === Object.keys(expectedDates).length
               && progression.data.every((item) => item.sourceUpdatedAt === expectedDates[item.characterName]);
+            const visibleShinku = visibleResult.result.rows[0];
             const valid = health.ok === true
               && health.version === process.env.EXPECTED_SERVICE_VERSION
               && health.formulaVersion === process.env.EXPECTED_FORMULA_VERSION
+              && String(health.visibleBuildVersion) === process.env.EXPECTED_VISIBLE_BUILD_VERSION
               && arcs.count === 47
               && arcs.sourceIds.includes('prydwen-arcs')
               && arcs.sourceIds.includes('gamewith-wrong-gate')
@@ -130,13 +225,19 @@ jobs:
               && characters.count === 22
               && characters.releasedCount === 20
               && characters.upcomingCount === 2
+              && combatModels.count === 20
+              && combatModels.visibleBuildVersion === 1
+              && combatModels.verifiedActionCount === 2
+              && shinkuCoverage.coverage === 'partial'
+              && combatModels.data.filter((item) => item.characterName !== 'Shinku').every((item) => item.coverage === 'relative-only')
               && cycles.count === 8
               && cycles.pairCount === 6
               && cycles.tripleCount === 2
-              && rotations.count === 2
-              && rotations.stepCount === 19
+              && rotations.count === 6
+              && rotations.stepCount === rotations.data.reduce((sum, item) => sum + item.steps.length, 0)
               && shinku.steps.length === 8
               && hathor.steps.length === 11
+              && chaos.steps.length >= 8
               && progression.count === 20
               && progression.stepCount === 6
               && progression.materialCount === 20
@@ -156,7 +257,13 @@ jobs:
               && stepTotals.boss === 86
               && stepTotals.common === 50
               && progression.exclusions.includes('character-exp')
-              && progression.exclusions.includes('skills');
+              && progression.exclusions.includes('skills')
+              && visibleResult.visibleBuildVersion === 1
+              && visibleResult.policy === 'game-visible-input-only'
+              && visibleShinku.supported === true
+              && visibleShinku.result.totalAtk === 2026
+              && visibleShinku.result.totalAtk !== 2596
+              && visibleResult.result.comparableRows === 1;
             process.exit(valid ? 0 : 1);
           } catch {
             process.exit(1);
@@ -177,10 +284,11 @@ jobs:
           echo "arcs_url=$ARCS_URL" >> "$GITHUB_OUTPUT"
           echo "presets_url=$PRESETS_URL" >> "$GITHUB_OUTPUT"
           echo "characters_url=$CHARACTERS_URL" >> "$GITHUB_OUTPUT"
+          echo "combat_models_url=$COMBAT_MODELS_URL" >> "$GITHUB_OUTPUT"
           echo "cycles_url=$CYCLES_URL" >> "$GITHUB_OUTPUT"
           echo "rotations_url=$ROTATIONS_URL" >> "$GITHUB_OUTPUT"
           echo "progression_url=$PROGRESSION_URL" >> "$GITHUB_OUTPUT"
-          echo "API 0.6.1 verified: all 20 progression source dates match the current direct-source fixture." >> "$GITHUB_STEP_SUMMARY"
+          echo "API 0.7.0 verified: game-visible Shinku input uses final ATK 2026 without adding Arc ATK 570 again." >> "$GITHUB_STEP_SUMMARY"
 
   report:
     if: ${{ always() }}
@@ -196,16 +304,18 @@ jobs:
           JOB_RESULT: ${{ needs.deploy.result }}
           DEPLOYMENT_URL: ${{ needs.deploy.outputs.deployment_url }}
           HEALTH_URL: ${{ needs.deploy.outputs.health_url }}
+          COMBAT_MODELS_URL: ${{ needs.deploy.outputs.combat_models_url }}
           PROGRESSION_URL: ${{ needs.deploy.outputs.progression_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$PROGRESSION_URL" ]]; then
+          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$COMBAT_MODELS_URL" ]]; then
             BODY="### Cloudflare Worker deployment: successful ✅
 
           - Worker URL: $DEPLOYMENT_URL
           - Health endpoint: $HEALTH_URL
+          - Combat model coverage: $COMBAT_MODELS_URL
           - Roster ascension dataset: $PROGRESSION_URL
-          - API 0.6.1 and exact 20-profile source-date freshness contract: success
+          - API 0.7.0 visible-input and no-double-count production contract: success
           - Workflow evidence: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌
