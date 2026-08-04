@@ -5,9 +5,9 @@ const expected = {
   serviceVersion: process.env.EXPECTED_SERVICE_VERSION || '0.9.0',
   formulaVersion: process.env.EXPECTED_FORMULA_VERSION || '0.2',
   visibleBuildVersion: Number(process.env.EXPECTED_VISIBLE_BUILD_VERSION || 1),
-  verifiedActionCount: Number(process.env.EXPECTED_VERIFIED_ACTION_COUNT || 14),
+  verifiedActionCount: Number(process.env.EXPECTED_VERIFIED_ACTION_COUNT || 35),
   verifiedTeamEffectCount: Number(process.env.EXPECTED_VERIFIED_TEAM_EFFECT_COUNT || 4),
-  partialCharacters: String(process.env.EXPECTED_PARTIAL_CHARACTERS || 'Chaos,Hathor,Jiuyuan,Lacrimosa,Nanally,Shinku,Zero')
+  partialCharacters: String(process.env.EXPECTED_PARTIAL_CHARACTERS || 'Baicang,Chaos,Daffodill,Haniel,Hathor,Jiuyuan,Lacrimosa,Nanally,Sakiri,Shinku,Zero')
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean)
@@ -87,6 +87,15 @@ const teamPayload = (primary, targetLevel = 80) => payload([
   build('Nanally'),
 ], targetLevel);
 
+const exactActionPayload = (characterName, actionId, skillLevels) => teamPayload(build(characterName, {
+  level: 80,
+  maxLevel: 80,
+  stats: emptyStats(2000),
+  skills: { basic: 1, skill: 1, ultimate: 1, support: 1, ...skillLevels },
+  testMode: 'verified-action',
+  verifiedActionId: actionId,
+}));
+
 const shinkuPayload = teamPayload(build('Shinku', {
   level: 70,
   maxLevel: 70,
@@ -117,14 +126,7 @@ const shinkuPayload = teamPayload(build('Shinku', {
   console: { gridType: 2, typeThreeModules: 4 },
 }));
 
-const nanallyPayload = teamPayload(build('Nanally', {
-  level: 80,
-  maxLevel: 80,
-  stats: emptyStats(2000),
-  skills: { basic: 11, skill: 1, ultimate: 1, support: 1 },
-  testMode: 'verified-action',
-  verifiedActionId: 'nanally.fair-duel.level-11',
-}));
+const nanallyPayload = exactActionPayload('Nanally', 'nanally.fair-duel.level-11', { basic: 11 });
 
 const zeroPayload = teamPayload(build('Zero', {
   level: 70,
@@ -135,14 +137,7 @@ const zeroPayload = teamPayload(build('Zero', {
   verifiedActionId: 'zero.blooming-gaze.awakening-one',
 }), 60);
 
-const hathorPayload = teamPayload(build('Hathor', {
-  level: 80,
-  maxLevel: 80,
-  stats: emptyStats(2000),
-  skills: { basic: 1, skill: 10, ultimate: 10, support: 1 },
-  testMode: 'verified-action',
-  verifiedActionId: 'hathor.cyclone-strike-third.level-10',
-}));
+const hathorPayload = exactActionPayload('Hathor', 'hathor.cyclone-strike-third.level-10', { skill: 10, ultimate: 10 });
 
 const jiuyuanPayload = teamPayload(build('Jiuyuan', {
   level: 80,
@@ -153,7 +148,12 @@ const jiuyuanPayload = teamPayload(build('Jiuyuan', {
   verifiedActionId: 'jiuyuan.know-every-secret.awakening-six',
 }));
 
-const hanielPayload = payload([
+const hanielActionPayload = exactActionPayload('Haniel', 'haniel.a-melody-named-haniel.initial.level-10', { ultimate: 10 });
+const sakiriActionPayload = exactActionPayload('Sakiri', 'sakiri.feast-of-gluttony.level-10', { ultimate: 10 });
+const baicangActionPayload = exactActionPayload('Baicang', 'baicang.judgment-of-autumn.expansion.level-10', { ultimate: 10 });
+const daffodillActionPayload = exactActionPayload('Daffodill', 'daffodill.finale.initial-composition.level-10', { ultimate: 10 });
+
+const hanielEffectPayload = payload([
   build('Shinku', { level: 80, maxLevel: 80, stats: emptyStats(1000) }),
   build('Haniel', {
     level: 80,
@@ -166,7 +166,7 @@ const hanielPayload = payload([
   build('Nanally', { level: 80, maxLevel: 80, stats: emptyStats(1000) }),
 ]);
 
-const sakiriPayload = payload([
+const sakiriEffectPayload = payload([
   build('Shinku', { level: 80, maxLevel: 80, stats: emptyStats(1000) }),
   build('Sakiri', {
     level: 80,
@@ -201,6 +201,13 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function assertMultiplier(calculation, expectedMultiplier, label) {
+  const row = calculation.result.rows[0];
+  assert(row.supported === true, `${label} must be supported`);
+  assert(Math.abs(row.multiplier - expectedMultiplier) < 1e-7, `${label} multiplier mismatch: ${row.multiplier}`);
+  return row;
+}
+
 async function verifyOnce() {
   const [
     health,
@@ -216,8 +223,12 @@ async function verifyOnce() {
     zero,
     hathor,
     jiuyuan,
-    haniel,
-    sakiri,
+    hanielAction,
+    sakiriAction,
+    baicangAction,
+    daffodillAction,
+    hanielEffect,
+    sakiriEffect,
   ] = await Promise.all([
     readJson(endpoints.health),
     readJson(endpoints.arcs),
@@ -232,8 +243,12 @@ async function verifyOnce() {
     postVisible(zeroPayload),
     postVisible(hathorPayload),
     postVisible(jiuyuanPayload),
-    postVisible(hanielPayload),
-    postVisible(sakiriPayload),
+    postVisible(hanielActionPayload),
+    postVisible(sakiriActionPayload),
+    postVisible(baicangActionPayload),
+    postVisible(daffodillActionPayload),
+    postVisible(hanielEffectPayload),
+    postVisible(sakiriEffectPayload),
   ]);
 
   assert(health.ok === true, 'health.ok must be true');
@@ -266,6 +281,10 @@ async function verifyOnce() {
   assert(combatModels.verifiedActions.some((action) => action.id === 'zero.blooming-gaze.awakening-one' && action.defenceIgnore === 75), 'Zero A1 action missing DEF Ignore');
   assert(combatModels.verifiedActions.some((action) => action.id === 'hathor.cyclone-strike-third.level-10' && Math.abs(action.multiplier - 1099.4) < 1e-9), 'Hathor third Cyclone Strike missing');
   assert(combatModels.verifiedActions.some((action) => action.id === 'jiuyuan.know-every-secret.awakening-six' && action.multiplier === 200 && action.minimumAwakening === 6), 'Jiuyuan A6 action missing');
+  assert(combatModels.verifiedActions.some((action) => action.id === 'haniel.a-melody-named-haniel.initial.level-10' && Math.abs(action.multiplier - 599.7) < 1e-7), 'Haniel Batch C action missing');
+  assert(combatModels.verifiedActions.some((action) => action.id === 'sakiri.feast-of-gluttony.level-10' && Math.abs(action.multiplier - 1799.2) < 1e-7), 'Sakiri Batch C action missing');
+  assert(combatModels.verifiedActions.some((action) => action.id === 'baicang.judgment-of-autumn.one-dot-tick.level-10' && action.multiplier === 80), 'Baicang one-tick Batch C action missing');
+  assert(combatModels.verifiedActions.some((action) => action.id === 'daffodill.finale.one-parry-extra.level-10' && Math.abs(action.multiplier - 599.7) < 1e-7), 'Daffodill one-Parry Batch C action missing');
 
   const shinkuRow = shinku.result.rows[0];
   assert(shinku.policy === 'game-visible-input-only', 'visible calculation policy mismatch');
@@ -273,36 +292,30 @@ async function verifyOnce() {
   assert(shinkuRow.result.totalAtk === 2026, `Shinku final ATK must remain 2026, got ${shinkuRow.result.totalAtk}`);
   assert(shinkuRow.result.totalAtk !== 2596, 'Shinku Arc ATK was added twice');
 
-  const nanallyRow = nanally.result.rows[0];
-  assert(nanallyRow.supported === true, 'Nanally Fair Duel must be supported');
-  assert(nanallyRow.multiplier === 129.5, `Nanally multiplier mismatch: ${nanallyRow.multiplier}`);
-
-  const zeroRow = zero.result.rows[0];
-  assert(zeroRow.supported === true, 'Zero Awakening 1 hit must be supported against a lower-level target');
-  assert(zeroRow.multiplier === 200, `Zero multiplier mismatch: ${zeroRow.multiplier}`);
+  const nanallyRow = assertMultiplier(nanally, 129.5, 'Nanally Fair Duel');
+  const zeroRow = assertMultiplier(zero, 200, 'Zero Awakening 1');
   assert(zeroRow.conditions.some((condition) => condition.id.endsWith('.defence-ignore')), 'Zero DEF Ignore provenance condition missing');
-
-  const hathorRow = hathor.result.rows[0];
-  assert(hathorRow.supported === true, 'Hathor third Cyclone Strike must be supported at Skill Lv.10');
-  assert(Math.abs(hathorRow.multiplier - 1099.4) < 1e-9, `Hathor multiplier mismatch: ${hathorRow.multiplier}`);
-
-  const jiuyuanRow = jiuyuan.result.rows[0];
-  assert(jiuyuanRow.supported === true, 'Jiuyuan A6 trigger must be supported at A6');
-  assert(jiuyuanRow.multiplier === 200, `Jiuyuan multiplier mismatch: ${jiuyuanRow.multiplier}`);
+  const hathorRow = assertMultiplier(hathor, 1099.4, 'Hathor third Cyclone Strike');
+  const jiuyuanRow = assertMultiplier(jiuyuan, 200, 'Jiuyuan A6');
   assert(jiuyuanRow.conditions.some((condition) => condition.label.ru.includes('5 секунд')), 'Jiuyuan cooldown provenance missing');
 
-  assert(haniel.result.teamEffects.length === 1 && haniel.result.teamEffects[0].active === true, 'Haniel effect evaluation missing');
-  assert(haniel.result.teamEffects[0].derivedAmount === 40, `Haniel flat ATK mismatch: ${haniel.result.teamEffects[0].derivedAmount}`);
-  assert(haniel.result.rows.every((row) => row.result.totalAtk === 1040), 'Haniel +40 ATK must reach all four slots');
-  assert(haniel.result.rows.every((row) => row.conditions.some((condition) => condition.id.startsWith('haniel.friendship.nova-atk-drain'))), 'Haniel provenance missing');
+  const hanielActionRow = assertMultiplier(hanielAction, 599.7, 'Haniel Ultimate initial hit');
+  const sakiriActionRow = assertMultiplier(sakiriAction, 1799.2, 'Sakiri Feast of Gluttony');
+  const baicangActionRow = assertMultiplier(baicangAction, 799.6, 'Baicang Judgment expansion');
+  const daffodillActionRow = assertMultiplier(daffodillAction, 1598.7, 'Daffodill Finale initial composition');
 
-  const sakiriEffects = sakiri.result.teamEffects;
+  assert(hanielEffect.result.teamEffects.length === 1 && hanielEffect.result.teamEffects[0].active === true, 'Haniel effect evaluation missing');
+  assert(hanielEffect.result.teamEffects[0].derivedAmount === 40, `Haniel flat ATK mismatch: ${hanielEffect.result.teamEffects[0].derivedAmount}`);
+  assert(hanielEffect.result.rows.every((row) => row.result.totalAtk === 1040), 'Haniel +40 ATK must reach all four slots');
+  assert(hanielEffect.result.rows.every((row) => row.conditions.some((condition) => condition.id.startsWith('haniel.friendship.nova-atk-drain'))), 'Haniel provenance missing');
+
+  const sakiriEffects = sakiriEffect.result.teamEffects;
   assert(sakiriEffects.length === 2 && sakiriEffects.every((effect) => effect.active === true), 'Sakiri effects must both be active');
   assert(sakiriEffects.find((effect) => effect.effect.id === 'sakiri.awakening-four.team-atk')?.derivedAmount === 180, 'Sakiri A4 +180 mismatch');
-  assert(sakiri.result.rows[0].result.totalAtk === 1180, 'Sakiri A4 must buff slot 1');
-  assert(sakiri.result.rows[1].result.totalAtk === 1000, 'Sakiri A4 must exclude Sakiri');
-  assert(sakiri.result.rows[2].result.totalAtk === 1180 && sakiri.result.rows[3].result.totalAtk === 1180, 'Sakiri A4 must buff the other slots');
-  assert(sakiri.result.rows.every((row) => row.conditions.some((condition) => condition.id.startsWith('sakiri.impish-trick.def-reduction'))), 'Sakiri DEF reduction provenance missing');
+  assert(sakiriEffect.result.rows[0].result.totalAtk === 1180, 'Sakiri A4 must buff slot 1');
+  assert(sakiriEffect.result.rows[1].result.totalAtk === 1000, 'Sakiri A4 must exclude Sakiri');
+  assert(sakiriEffect.result.rows[2].result.totalAtk === 1180 && sakiriEffect.result.rows[3].result.totalAtk === 1180, 'Sakiri A4 must buff the other slots');
+  assert(sakiriEffect.result.rows.every((row) => row.conditions.some((condition) => condition.id.startsWith('sakiri.impish-trick.def-reduction'))), 'Sakiri DEF reduction provenance missing');
 
   return {
     combatModelCount: combatModels.count,
@@ -314,7 +327,11 @@ async function verifyOnce() {
     zeroMultiplier: zeroRow.multiplier,
     hathorMultiplier: hathorRow.multiplier,
     jiuyuanMultiplier: jiuyuanRow.multiplier,
-    hanielFlatAtk: haniel.result.teamEffects[0].derivedAmount,
+    hanielActionMultiplier: hanielActionRow.multiplier,
+    sakiriActionMultiplier: sakiriActionRow.multiplier,
+    baicangActionMultiplier: baicangActionRow.multiplier,
+    daffodillActionMultiplier: daffodillActionRow.multiplier,
+    hanielFlatAtk: hanielEffect.result.teamEffects[0].derivedAmount,
     sakiriFlatAtk: sakiriEffects.find((effect) => effect.effect.id === 'sakiri.awakening-four.team-atk')?.derivedAmount,
   };
 }
