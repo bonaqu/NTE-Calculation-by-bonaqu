@@ -24,20 +24,40 @@ describe('game-visible combat evidence freshness', () => {
     }
   });
 
-  it('requires direct source metadata and a hard freshness limit for exact actions', () => {
-    expect(verifiedVisibleActions.length).toBeGreaterThan(0);
+  it('requires direct source metadata and hard freshness limits for exact actions', () => {
+    expect(verifiedVisibleActions).toHaveLength(9);
+    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(verifiedVisibleActions.length);
     for (const action of verifiedVisibleActions) {
       expect(action.sourceUrl).toMatch(/^https:\/\//u);
       expect(action.sourcePublisher.trim().length).toBeGreaterThan(0);
+      expect(action.sourceUpdatedAt).toMatch(/^2026-\d{2}-\d{2}$/u);
       expect(action.verifiedAt).toMatch(/^2026-\d{2}-\d{2}$/u);
+      expect(ageDays(action.sourceUpdatedAt)).toBeGreaterThanOrEqual(0);
+      expect(ageDays(action.sourceUpdatedAt)).toBeLessThanOrEqual(120);
       expect(ageDays(action.verifiedAt)).toBeGreaterThanOrEqual(0);
       expect(ageDays(action.verifiedAt)).toBeLessThanOrEqual(90);
       expect(action.multiplier).toBeGreaterThan(0);
       expect(Number.isFinite(action.multiplier)).toBe(true);
+      expect(action.title.ru.trim().length).toBeGreaterThan(0);
+      expect(action.title.en.trim().length).toBeGreaterThan(0);
+      expect(action.description.ru.trim().length).toBeGreaterThan(0);
+      expect(action.description.en.trim().length).toBeGreaterThan(0);
     }
   });
 
-  it('does not let relative-only coverage expose exact-action mode', () => {
+  it('aligns partial coverage with exact-action records', () => {
+    const actionCharacters = new Set(verifiedVisibleActions.map((action) => action.characterName));
+    const partialCharacters = new Set(characterCombatCoverage
+      .filter((record) => record.coverage === 'partial')
+      .map((record) => record.characterName));
+    expect(partialCharacters).toEqual(actionCharacters);
+    for (const characterName of actionCharacters) {
+      const coverage = characterCombatCoverage.find((record) => record.characterName === characterName);
+      expect(coverage?.supportedModes).toContain('verified-action');
+    }
+  });
+
+  it('does not let relative-only coverage expose exact-action or burst modes', () => {
     for (const record of characterCombatCoverage.filter((entry) => entry.coverage === 'relative-only')) {
       expect(record.supportedModes).not.toContain('verified-action');
       expect(record.supportedModes).not.toContain('burst-reference');
