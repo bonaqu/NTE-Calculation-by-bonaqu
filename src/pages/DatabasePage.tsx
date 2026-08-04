@@ -6,6 +6,7 @@ import { arcPresetSources } from '../arc-presets';
 import { characterCatalog } from '../characters';
 import { sources } from '../data';
 import { useI18n } from '../i18n';
+import { CharacterAwakeningReference } from '../components/CharacterAwakeningReference';
 import { Panel } from '../components/UI';
 import { QuickStart } from '../components/GuidedHelp';
 import { ResilientImage } from '../components/ResilientImage';
@@ -118,16 +119,16 @@ export function DatabasePage() {
   const hasCharacterFilters = characterRarity !== 'all' || characterAttribute !== 'all' || characterRole !== 'all' || characterArcType !== 'all' || characterStatus !== 'all';
 
   return <div className="page calc-page database-page">
-    <header className="page-heading"><div><span>{ru ? 'БАЗА ДАННЫХ' : 'DATABASE'}</span><h1>{ru ? 'Персонажи и дуги NTE' : 'NTE database'}</h1><p>{ru ? 'Найди персонажа, проверь его роль и тип дуги, а затем сразу открой совместимое оружие. Основным показывается название с наиболее сильными доступными доказательствами; английское имя и конфликтующие варианты остаются доступны для проверки и поиска.' : 'Find a character, verify their role and Arc type, then open compatible weapons. The strongest supported localized label is primary while canonical and conflicting alternatives remain searchable and reviewable.'}</p></div></header>
+    <header className="page-heading"><div><span>{ru ? 'БАЗА ДАННЫХ' : 'DATABASE'}</span><h1>{ru ? 'Персонажи и дуги NTE' : 'NTE database'}</h1><p>{ru ? 'Найди персонажа, проверь его роль, тип дуги и пробуждения, а затем открой совместимое оружие. Основным показывается название с наиболее сильными доступными доказательствами; английское имя и конфликтующие варианты остаются доступны для проверки и поиска.' : 'Find a character, verify their role, Arc type and Awakenings, then open compatible weapons. The strongest supported localized label is primary while canonical and conflicting alternatives remain searchable and reviewable.'}</p></div></header>
 
     <QuickStart title={ru ? 'Как пользоваться базой' : 'How to use the database'} steps={ru ? [
       'Открой вкладку персонажей или введи имя. Поиск понимает официальное «Шинку», старое «Синку», «Оценщик», «Зеро» и другие зафиксированные варианты.',
+      'Раскрой «Пробуждения» в карточке персонажа: это справка о всех узлах, а не дополнительная анкета калькулятора.',
       'Нажми «Показать совместимые дуги» — база сама переключится на подходящий тип оружия.',
-      'Раскрой карточку дуги, чтобы увидеть характеристики, эффект, источник данных и доказательства русского названия.',
     ] : [
       'Open Characters and filter by role, attribute or rarity. Recorded alternative names remain searchable.',
+      'Expand Awakenings in a character card. This is reference data, not extra calculator input.',
       'Select “Show compatible Arcs” to switch to matching weapons automatically.',
-      'Open an Arc card to view stats, effect, data source and Russian-label evidence.',
     ]} />
 
     <LocalizationEvidenceLegend />
@@ -173,6 +174,7 @@ export function DatabasePage() {
           <p className="character-summary">{character.summary[locale]}</p>
           {ru && nameEvidence ? <LocalizationEvidenceNote evidence={nameEvidence} subject="Имя" /> : null}
           {ru && typeEvidence ? <LocalizationEvidenceNote evidence={typeEvidence} subject="Тип дуги" /> : null}
+          <CharacterAwakeningReference characterName={character.name} locale={locale} />
           <div className="character-card-actions">
             {character.arcType ? <button className="button ghost compact-button" type="button" onClick={() => showCompatibleArcs(character.arcType!)}>{ru ? 'Показать совместимые дуги' : 'Show compatible Arcs'}</button> : <span className="character-unknown-note">{ru ? 'Совместимые дуги появятся после объявления типа.' : 'Compatible Arcs will appear after the type is announced.'}</span>}
             <a href={character.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Источник характеристик' : 'Profile source'} <ExternalLink size={14} /></a>
