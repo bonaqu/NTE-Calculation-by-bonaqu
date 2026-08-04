@@ -46,18 +46,22 @@ describe('Russian client terminology', () => {
     expect(canonicalCharacterName('Нулевой эспер')).toBe('Zero');
   });
 
-  it('uses Russian client-facing Arc types, attributes, roles and stats', () => {
+  it('uses exact Russian client-facing Arc types, attributes, roles and stats', () => {
     expect(localizedArcType('Solid', 'ru')).toBe('Твёрдый');
-    expect(localizedArcType('Gas', 'ru')).toBe('Газовый');
+    expect(localizedArcType('Gas', 'ru')).toBe('Газ');
     expect(localizedArcType('Liquid', 'ru')).toBe('Жидкий');
-    expect(localizedArcType('Plasma', 'ru')).toBe('Плазменный');
+    expect(localizedArcType('Plasma', 'ru')).toBe('Плазма');
     expect(localizedArcType('Synthesis', 'ru')).toBe('Гибридный');
     expect(localizedAttribute('Incantation', 'ru')).toBe('Чары');
+    expect(localizedRole('Buff', 'ru')).toBe('Бафф');
     expect(localizedRole('Survival', 'ru')).toBe('Выживание');
-    expect(localizedStatLabel('Break Intensity', 'ru')).toBe('Интенсивность сломления');
+    expect(localizedStatLabel('Break Intensity', 'ru')).toBe('Интенсивность разрушения');
     expect(russianClientTerminology.combat.esperCycle).toBe('Цикл эспера');
     expect(russianClientTerminology.combat.ultimate).toBe('Сверхспособность');
     expect(russianClientTerminology.combat.progressionStage).toBe('Прорыв');
+    expect(russianClientTerminology.combat.breakGauge).toBe('Шкала разрушения');
+    expect(russianClientTerminology.combat.breakDamage).toBe('Урон разрушения');
+    expect(russianClientTerminology.combat.brokenEnemy).toBe('Сломленный враг');
   });
 
   it('uses current Russian Arc and progression-material names', () => {
