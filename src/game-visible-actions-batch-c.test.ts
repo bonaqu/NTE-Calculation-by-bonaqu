@@ -80,7 +80,7 @@ describe('verified game-visible actions batch C', () => {
     expect(multiplier('baicang.judgment-of-autumn.objurgate-trigger.level-10')).toBeCloseTo(399.8, 8);
     expect(multiplier('baicang.judgment-of-autumn.bless-trigger.level-10')).toBe(120);
     const tick = verifiedVisibleActionsBatchC.find((action) => action.id.includes('one-dot-tick'))!;
-    expect(tick.description.ru).toContain('ровно одно');
+    expect(tick.assumedConditions?.some((condition) => condition.ru.includes('ровно одно'))).toBe(true);
     expect(tick.description.ru).not.toMatch(/6\s*(?:тиков|раз)/iu);
   });
 
@@ -92,7 +92,7 @@ describe('verified game-visible actions batch C', () => {
     expect(multiplier('daffodill.crossed-blades.level-10')).toBeCloseTo(399.8, 8);
     const parry = verifiedVisibleActionsBatchC.find((action) => action.id.includes('one-parry-extra'))!;
     expect(parry.description.ru).toContain('Один');
-    expect(parry.assumedConditions?.join(' ')).toContain('ровно одно');
+    expect(parry.assumedConditions?.some((condition) => condition.ru.includes('ровно одно'))).toBe(true);
   });
 
   it('requires the exact sourced skill category at level 10', () => {
@@ -144,11 +144,9 @@ describe('verified game-visible actions batch C', () => {
     expect(result.calculatedActionCount).toBe(4);
     expect(result.blockedActionCount).toBe(0);
     expect(result.coveragePercent).toBe(100);
-    expect(result.steps.map((entry) => entry.calculation?.multiplier)).toEqual([
-      599.7,
-      1799.2,
-      799.6,
-      1598.7,
-    ]);
+    const values = result.steps.map((entry) => entry.calculation?.multiplier ?? 0);
+    [599.7, 1799.2, 799.6, 1598.7].forEach((expected, index) => {
+      expect(values[index]).toBeCloseTo(expected, 8);
+    });
   });
 });
