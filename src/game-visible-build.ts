@@ -181,7 +181,7 @@ const currentClientEvidence = {
 };
 
 const releasedCharacters = characterCatalog.filter((character) => character.releaseStatus === 'released');
-const firstVerifiedActionBatch = new Set(['Shinku', 'Nanally', 'Chaos', 'Lacrimosa', 'Zero']);
+const verifiedActionCharacters = new Set(['Shinku', 'Nanally', 'Chaos', 'Lacrimosa', 'Zero', 'Hathor', 'Jiuyuan']);
 
 export const characterCombatCoverage: readonly CharacterCombatCoverage[] = releasedCharacters.map((character) => {
   if (character.name === 'Shinku') {
@@ -198,7 +198,7 @@ export const characterCombatCoverage: readonly CharacterCombatCoverage[] = relea
     } satisfies CharacterCombatCoverage;
   }
 
-  if (firstVerifiedActionBatch.has(character.name)) {
+  if (verifiedActionCharacters.has(character.name)) {
     return {
       characterName: character.name,
       coverage: 'partial',
