@@ -1,0 +1,192 @@
+import { useMemo } from 'react';
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  CircleAlert,
+  Clock3,
+  Copy,
+  Plus,
+  Shield,
+  Swords,
+  Trash2,
+} from 'lucide-react';
+import {
+  calculateCombatScenario,
+  COMBAT_SCENARIO_STORAGE_KEY,
+  createCombatScenarioStep,
+  initialCombatScenarioState,
+  normalizeCombatScenarioState,
+  type CombatScenarioState,
+  type CombatScenarioStep,
+  type CombatScenarioStepKind,
+} from '../combat-scenario';
+import { actionsForCharacter } from '../game-visible-calculation';
+import type { GameVisibleTeamState } from '../game-visible-build';
+import { localizedCharacterName } from '../gameTerms';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { teamEffectsForCharacter } from '../team-effects';
+
+interface TeamCombatScenarioPanelProps {
+  team: GameVisibleTeamState;
+  locale: 'ru' | 'en';
+}
+
+function nextStepId(steps: readonly CombatScenarioStep[]): string {
+  const used = new Set(steps.map((step) => step.id));
+  let index = steps.length + 1;
+  while (used.has(`step-${index}`)) index += 1;
+  return `step-${index}`;
+}
+
+function numberValue(value: string): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(0, Math.min(600, parsed)) : 0;
+}
+
+function stepLabel(kind: CombatScenarioStepKind, ru: boolean): string {
+  if (kind === 'activate-effect') return ru ? 'Включить эффект' : 'Activate effect';
+  if (kind === 'wait') return ru ? 'Ожидание / непокрытый шаг' : 'Wait / unsupported step';
+  return ru ? 'Подтверждённое действие' : 'Verified action';
+}
+
+export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPanelProps) {
+  const ru = locale === 'ru';
+  const [scenario, setScenario] = useLocalStorage<CombatScenarioState>(
+    COMBAT_SCENARIO_STORAGE_KEY,
+    initialCombatScenarioState(),
+    { normalize: normalizeCombatScenarioState },
+  );
+  const result = useMemo(() => calculateCombatScenario(team, scenario), [scenario, team]);
+
+  const updateStep = (id: string, updater: (step: CombatScenarioStep) => CombatScenarioStep) => {
+    setScenario((current) => ({
+      ...current,
+      steps: current.steps.map((step) => step.id === id ? updater(step) : step),
+    }));
+  };
+
+  const addStep = (kind: CombatScenarioStepKind) => {
+    setScenario((current) => {
+      const step = createCombatScenarioStep(current.steps.length, kind);
+      step.id = nextStepId(current.steps);
+      step.at = current.steps.reduce((maximum, entry) => Math.max(maximum, entry.at), 0);
+      if (kind === 'action') {
+        const sourceSlot = team.builds.findIndex((build) => actionsForCharacter(build.characterName).length > 0);
+        step.sourceSlot = sourceSlot >= 0 ? sourceSlot : 0;
+        step.actionId = actionsForCharacter(team.builds[step.sourceSlot]?.characterName ?? '')[0]?.id ?? '';
+      }
+      if (kind === 'activate-effect') {
+        const sourceSlot = team.builds.findIndex((build) => teamEffectsForCharacter(build.characterName).length > 0);
+        step.sourceSlot = sourceSlot >= 0 ? sourceSlot : 0;
+        step.effectId = teamEffectsForCharacter(team.builds[step.sourceSlot]?.characterName ?? '')[0]?.id ?? '';
+      }
+      return { ...current, steps: [...current.steps, step] };
+    });
+  };
+
+  const removeStep = (id: string) => setScenario((current) => ({
+    ...current,
+    steps: current.steps.filter((step) => step.id !== id),
+  }));
+
+  const duplicateStep = (id: string) => setScenario((current) => {
+    const index = current.steps.findIndex((step) => step.id === id);
+    const source = current.steps[index];
+    if (!source) return current;
+    const copy = { ...source, id: nextStepId(current.steps) };
+    const next = [...current.steps];
+    next.splice(index + 1, 0, copy);
+    return { ...current, steps: next };
+  });
+
+  const moveStep = (id: string, direction: -1 | 1) => setScenario((current) => {
+    const index = current.steps.findIndex((step) => step.id === id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= current.steps.length) return current;
+    const next = [...current.steps];
+    [next[index], next[target]] = [next[target]!, next[index]!];
+    return { ...current, steps: next };
+  });
+
+  const format = (value: number) => value.toLocaleString(locale, { maximumFractionDigits: 1 });
+
+  return <section className="combat-scenario-panel">
+    <div className="combat-scenario-heading">
+      <div>
+        <span>{ru ? 'ПЕРВЫЙ СЛОЙ РЕАЛЬНОГО КОМАНДНОГО РАСЧЁТА' : 'FIRST REAL TEAM-COMBAT LAYER'}</span>
+        <h2>{ru ? 'Боевой сценарий' : 'Combat scenario'}</h2>
+        <p>{ru
+          ? 'Расставь подтверждённые действия и окна эффектов по времени. Сайт посчитает только доказанные части и покажет, что пока не покрыто моделью.'
+          : 'Place verified actions and effect windows on a timeline. The site calculates only sourced parts and exposes everything not covered yet.'}</p>
+      </div>
+      <div className="combat-scenario-warning"><Shield size={18} /><span>{ru
+        ? 'Это не полный DPS ротации: анимации, энергия и неподтверждённые удары не додумываются.'
+        : 'This is not full rotation DPS: animations, energy and unsupported hits are not guessed.'}</span></div>
+    </div>
+
+    <div className="combat-scenario-summary" aria-label={ru ? 'Итог сценария' : 'Scenario summary'}>
+      <div><span>{ru ? 'Подтверждённый ожидаемый урон' : 'Verified expected damage'}</span><strong>{format(result.totalExpected)}</strong></div>
+      <div><span>{ru ? 'Покрытие действий' : 'Action coverage'}</span><strong>{result.coveragePercent}%</strong><small>{result.calculatedActionCount}/{result.actionStepCount}</small></div>
+      <div><span>{ru ? 'Длительность отметок' : 'Timeline span'}</span><strong>{format(result.durationSeconds)} {ru ? 'с' : 's'}</strong></div>
+      <div><span>{ru ? 'Активировано эффектов' : 'Effects activated'}</span><strong>{result.activatedEffectCount}</strong></div>
+    </div>
+
+    <div className="combat-scenario-toolbar">
+      <label><span>{ru ? 'Название сценария' : 'Scenario name'}</span><input value={scenario.name} maxLength={120} onChange={(event) => setScenario((current) => ({ ...current, name: event.target.value }))} placeholder={ru ? 'Например: окно Шинку после Новы' : 'Example: Shinku post-Nova window'} /></label>
+      <div>
+        <button type="button" onClick={() => addStep('action')}><Swords size={16} />{ru ? 'Действие' : 'Action'}</button>
+        <button type="button" onClick={() => addStep('activate-effect')}><Shield size={16} />{ru ? 'Эффект' : 'Effect'}</button>
+        <button type="button" onClick={() => addStep('wait')}><Clock3 size={16} />{ru ? 'Ожидание' : 'Wait'}</button>
+      </div>
+    </div>
+
+    {scenario.steps.length ? <div className="combat-scenario-editor">
+      <div className="combat-scenario-editor-head"><span>{ru ? 'Порядок' : 'Order'}</span><span>{ru ? 'Время' : 'Time'}</span><span>{ru ? 'Тип шага' : 'Step type'}</span><span>{ru ? 'Источник' : 'Source'}</span><span>{ru ? 'Действие или условие' : 'Action or condition'}</span><span /></div>
+      {scenario.steps.map((step, index) => {
+        const build = team.builds[step.sourceSlot];
+        const actions = actionsForCharacter(build?.characterName ?? '');
+        const effects = teamEffectsForCharacter(build?.characterName ?? '');
+        return <div className="combat-scenario-editor-row" key={step.id}>
+          <div className="combat-scenario-order"><b>{index + 1}</b><button type="button" aria-label={ru ? 'Выше' : 'Move up'} disabled={index === 0} onClick={() => moveStep(step.id, -1)}><ChevronUp size={15} /></button><button type="button" aria-label={ru ? 'Ниже' : 'Move down'} disabled={index === scenario.steps.length - 1} onClick={() => moveStep(step.id, 1)}><ChevronDown size={15} /></button></div>
+          <label className="combat-scenario-time"><span className="sr-only">{ru ? 'Секунда' : 'Second'}</span><input type="number" min="0" max="600" step="0.1" value={step.at} onChange={(event) => updateStep(step.id, (current) => ({ ...current, at: numberValue(event.target.value) }))} /><small>{ru ? 'с' : 's'}</small></label>
+          <select value={step.kind} aria-label={ru ? 'Тип шага' : 'Step type'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, kind: event.target.value as CombatScenarioStepKind, actionId: '', effectId: '' }))}>
+            <option value="action">{stepLabel('action', ru)}</option>
+            <option value="activate-effect">{stepLabel('activate-effect', ru)}</option>
+            <option value="wait">{stepLabel('wait', ru)}</option>
+          </select>
+          <select value={step.sourceSlot} aria-label={ru ? 'Слот команды' : 'Team slot'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, sourceSlot: Number(event.target.value), actionId: '', effectId: '' }))}>
+            {team.builds.map((entry, slot) => <option key={`${entry.characterName}-${slot}`} value={slot}>{slot + 1} · {localizedCharacterName(entry.characterName, locale)}</option>)}
+          </select>
+          {step.kind === 'action' ? <select value={step.actionId} aria-label={ru ? 'Подтверждённое действие' : 'Verified action'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, actionId: event.target.value }))}>
+            <option value="">{actions.length ? (ru ? 'Выбери действие' : 'Select action') : (ru ? 'Нет подтверждённых действий' : 'No verified actions')}</option>
+            {actions.map((entry) => <option value={entry.id} key={entry.id}>{entry.title[locale]}</option>)}
+          </select> : step.kind === 'activate-effect' ? <select value={step.effectId} aria-label={ru ? 'Проверенный эффект' : 'Verified effect'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, effectId: event.target.value }))}>
+            <option value="">{effects.length ? (ru ? 'Выбери эффект' : 'Select effect') : (ru ? 'Нет подтверждённых эффектов' : 'No verified effects')}</option>
+            {effects.map((entry) => <option value={entry.id} key={entry.id}>{entry.title[locale]}</option>)}
+          </select> : <input value={step.note} maxLength={400} onChange={(event) => updateStep(step.id, (current) => ({ ...current, note: event.target.value }))} placeholder={ru ? 'Что происходит в непокрытой части ротации' : 'What happens in the unsupported rotation part'} />}
+          <div className="combat-scenario-row-actions"><button type="button" aria-label={ru ? 'Дублировать' : 'Duplicate'} onClick={() => duplicateStep(step.id)}><Copy size={15} /></button><button type="button" aria-label={ru ? 'Удалить' : 'Remove'} onClick={() => removeStep(step.id)}><Trash2 size={15} /></button></div>
+        </div>;
+      })}
+    </div> : <div className="combat-scenario-empty"><Clock3 size={24} /><h3>{ru ? 'Сценарий пока пуст' : 'The scenario is empty'}</h3><p>{ru ? 'Добавь эффект, действие или промежуток ожидания. Коэффициенты вручную вводить не нужно.' : 'Add an effect, action or wait step. No manual multipliers are required.'}</p><button type="button" onClick={() => addStep('action')}><Plus size={16} />{ru ? 'Добавить первое действие' : 'Add first action'}</button></div>}
+
+    {result.steps.length ? <div className="combat-scenario-results">
+      <div className="combat-scenario-results-heading"><div><h3>{ru ? 'Проверенная временная шкала' : 'Verified timeline'}</h3><p>{ru ? 'Шаги отсортированы по времени; при одинаковом времени сохраняется порядок строк.' : 'Steps are sorted by time; equal timestamps preserve row order.'}</p></div><span>{result.blockedStepCount ? `${result.blockedStepCount} ${ru ? 'заблок.' : 'blocked'}` : (ru ? 'без блокировок' : 'no blocks')}</span></div>
+      <ol>{result.steps.map((entry) => {
+        const damage = entry.calculation?.result;
+        return <li className={`status-${entry.status}`} key={`${entry.step.id}-${entry.originalIndex}`}>
+          <time>{format(entry.step.at)}{ru ? 'с' : 's'}</time>
+          <div className="combat-scenario-status-icon">{entry.status === 'blocked' ? <CircleAlert size={18} /> : entry.status === 'wait' ? <Clock3 size={18} /> : <CheckCircle2 size={18} />}</div>
+          <div className="combat-scenario-result-copy"><b>{entry.status === 'calculated'
+            ? entry.calculation?.title[locale]
+            : entry.status === 'activated'
+              ? entry.effectEvaluation?.effect.title[locale]
+              : entry.status === 'wait'
+                ? (entry.step.note || (ru ? 'Непокрытый промежуток' : 'Unsupported interval'))
+                : (ru ? 'Шаг заблокирован' : 'Step blocked')}</b><small>{entry.sourceCharacter ? localizedCharacterName(entry.sourceCharacter, locale) : ''}{entry.activeEffects.length ? ` · ${entry.activeEffects.length} ${ru ? 'активн. эфф.' : 'active effects'}` : ''}</small>{entry.blockedReason ? <p>{entry.blockedReason[locale]}</p> : null}</div>
+          <div className="combat-scenario-result-value">{damage ? <><strong>{format(damage.expected)}</strong><small>{ru ? 'ожидаемый' : 'expected'}</small></> : entry.status === 'activated' ? <><strong>{entry.effectEvaluation?.effect.durationSeconds === 'combat' ? '∞' : `${entry.effectEvaluation?.effect.durationSeconds}${ru ? 'с' : 's'}`}</strong><small>{ru ? 'окно' : 'window'}</small></> : null}</div>
+        </li>;
+      })}</ol>
+    </div> : null}
+  </section>;
+}
