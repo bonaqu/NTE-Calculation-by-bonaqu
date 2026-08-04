@@ -1,5 +1,5 @@
 import type { LocalizationEvidenceLevel } from './localization-evidence';
-import type { Locale, LocalizedText, RotationPreset, RotationStep } from './types';
+import type { Locale, LocalizedText } from './types';
 
 export type CharacterTermKind =
   | 'basic'
@@ -41,6 +41,8 @@ export interface CharacterTermRecord {
   note: LocalizedText;
 }
 
+type CharacterTermExtra = Partial<Pick<CharacterTermRecord, 'aliases' | 'alternatives' | 'resolution'>>;
+
 const verifiedAt = '2026-08-04';
 const publisher = 'NTE Neverness to Everness Database';
 const db = (locale: 'ru' | 'en', id: number) => `https://interactivemap.app/neverness-to-everness/database/${locale}/espers/esper-${id}/`;
@@ -53,7 +55,7 @@ const exact = (
   english: string,
   esperId: number,
   note?: LocalizedText,
-  extra?: Pick<CharacterTermRecord, 'aliases' | 'alternatives' | 'resolution'>,
+  extra?: CharacterTermExtra,
 ): CharacterTermRecord => ({
   id,
   characterName,
@@ -237,29 +239,6 @@ export function characterTermKindLabel(kind: CharacterTermKind, locale: Locale):
     coverage: { ru: 'Статус покрытия', en: 'Coverage status' },
   };
   return labels[kind][locale];
-}
-
-export function termsForRotationStep(step: RotationStep): CharacterTermRecord[] {
-  return (step.termRefs ?? []).flatMap((id) => {
-    const term = characterTermById.get(id);
-    return term ? [term] : [];
-  });
-}
-
-export function validateRotationCharacterTerms(preset: RotationPreset): string[] {
-  const errors: string[] = [];
-  for (const step of preset.steps) {
-    for (const id of step.termRefs ?? []) {
-      const term = characterTermById.get(id);
-      if (!term) {
-        errors.push(`${preset.id}:${step.id}:unknown-term:${id}`);
-        continue;
-      }
-      if (term.characterName !== step.actor) errors.push(`${preset.id}:${step.id}:term-actor:${id}:${term.characterName}`);
-      if (term.resolution === 'unresolved') errors.push(`${preset.id}:${step.id}:unresolved-term:${id}`);
-    }
-  }
-  return errors;
 }
 
 export function normalizeCharacterTermSearch(value: string): string {
