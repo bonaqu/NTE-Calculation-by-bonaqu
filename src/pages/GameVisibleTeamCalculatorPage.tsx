@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Activity, BarChart3, CheckCircle2, Gauge, Shield, Sparkles, Swords, Target, Users, Zap } from 'lucide-react';
+import { Activity, BarChart3, CheckCircle2, CircleDot, Shield, Sparkles, Swords, Target, Users } from 'lucide-react';
 import { arcDirectory } from '../arc-directory';
+import { awakeningNodesByCharacter } from '../awakening-data';
 import { characterByName, characterCatalog } from '../characters';
 import {
   actionsForCharacter,
   calculateGameVisibleTeam,
+  type VerifiedVisibleAction,
   type VisibleBuildCalculation,
 } from '../game-visible-calculation';
 import {
@@ -25,36 +27,32 @@ import {
   localizedAttribute,
   localizedCharacterName,
   localizedRole,
-  localizedStatLabel,
 } from '../gameTerms';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useI18n } from '../i18n';
 
-const tabs = ['overview', 'attributes', 'arc', 'ability', 'console', 'test'] as const;
+const tabs = ['overview', 'damage', 'conditions', 'test'] as const;
 type CalculatorTab = typeof tabs[number];
-
-type NumericStatKey = keyof VisibleCombatStats;
+type DamageStatKey = 'atk' | 'critRate' | 'critDamage' | 'damageBonus' | 'attributeDamageBonus';
 
 const tabLabels: Record<CalculatorTab, { ru: string; en: string }> = {
   overview: { ru: 'Обзор', en: 'Overview' },
-  attributes: { ru: 'Атрибуты', en: 'Attributes' },
-  arc: { ru: 'Дуга', en: 'Arc' },
-  ability: { ru: 'Способность эспера', en: 'Esper Ability' },
-  console: { ru: 'Консоль', en: 'Console' },
+  damage: { ru: 'Урон', en: 'Damage' },
+  conditions: { ru: 'Условия', en: 'Conditions' },
   test: { ru: 'Тест', en: 'Test' },
 };
 
 const modeLabels: Record<VisibleTestModeId, { ru: string; en: string }> = {
-  'neutral-reference': { ru: 'Текущая сборка · контрольный удар', en: 'Current build · reference hit' },
+  'neutral-reference': { ru: 'Сравнение сборки', en: 'Build comparison' },
   'burst-reference': { ru: 'Окно после сверхспособности', en: 'Post-Ultimate window' },
-  'training-target': { ru: 'Заданная тренировочная цель', en: 'Custom training target' },
+  'training-target': { ru: 'Тренировочная цель', en: 'Training target' },
   'verified-action': { ru: 'Проверенное действие', en: 'Verified action' },
 };
 
 const coverageLabels = {
   verified: { ru: 'Модель проверена', en: 'Verified model' },
   partial: { ru: 'Модель частичная', en: 'Partial model' },
-  'relative-only': { ru: 'Только сравнение статов', en: 'Visible-stat comparison only' },
+  'relative-only': { ru: 'Только сравнение сборки', en: 'Build comparison only' },
   unavailable: { ru: 'Расчёт недоступен', en: 'Model unavailable' },
 } as const;
 
@@ -133,6 +131,10 @@ function CharacterResult({ calculation, ru, locale }: {
   </>;
 }
 
+function actionNeedsSkill(action: VerifiedVisibleAction | undefined): action is VerifiedVisibleAction & { requiredLevel: number } {
+  return Boolean(action && action.requiredLevel !== '—');
+}
+
 export function GameVisibleTeamCalculatorPage() {
   const { locale } = useI18n();
   const ru = locale === 'ru';
@@ -149,58 +151,63 @@ export function GameVisibleTeamCalculatorPage() {
   const teamCalculation = useMemo(() => calculateGameVisibleTeam(state), [state]);
   const activeCalculation = teamCalculation.rows[state.activeSlot] ?? teamCalculation.rows[0]!;
   const selectedNames = useMemo(() => new Set(state.builds.map((build) => build.characterName)), [state.builds]);
+  const verifiedActions = useMemo(() => actionsForCharacter(activeBuild.characterName), [activeBuild.characterName]);
+  const selectedAction = verifiedActions.find((action) => action.id === activeBuild.verifiedActionId);
+  const awakeningNodes = awakeningNodesByCharacter.get(activeBuild.characterName) ?? [];
+  const showArcCondition = activeBuild.characterName === 'Shinku' && activeBuild.testMode === 'burst-reference';
+  const showTarget = activeBuild.testMode === 'training-target'
+    || (activeBuild.testMode === 'verified-action' && Boolean(selectedAction));
   const compatibleArcs = useMemo(
     () => arcDirectory.filter((arc) => !character?.arcType || arc.type === character.arcType),
     [character?.arcType],
   );
-  const verifiedActions = useMemo(() => actionsForCharacter(activeBuild.characterName), [activeBuild.characterName]);
 
   const updateState = (updater: (current: GameVisibleTeamState) => GameVisibleTeamState) => setState(updater);
   const updateBuild = (updater: (build: GameVisibleCharacterBuild) => GameVisibleCharacterBuild) => updateState((current) => ({
     ...current,
     builds: current.builds.map((build, index) => index === current.activeSlot ? updater(build) : build),
   }));
-  const updateStat = (key: NumericStatKey, value: number) => updateBuild((build) => ({
+  const updateStat = (key: DamageStatKey, value: number) => updateBuild((build) => ({
     ...build,
     stats: { ...build.stats, [key]: value },
   }));
   const selectCharacter = (name: string) => updateBuild(() => createEmptyGameVisibleBuild(name));
-  const selectArc = (arcName: string) => {
-    const arc = arcDirectory.find((entry) => entry.name === arcName);
-    updateBuild((build) => ({
-      ...build,
-      arc: arc ? {
-        arcName: arc.name,
-        level: 80,
-        maxLevel: 80,
-        baseAtk: arc.baseAtk,
-        secondaryLabel: arc.secondaryLabel,
-        secondaryValue: arc.secondaryValue,
-        mixingRank: 1,
-        afterUltimateActive: false,
-      } : { ...build.arc, arcName: '' },
-    }));
-  };
+  const selectArc = (arcName: string) => updateBuild((build) => ({
+    ...build,
+    arc: {
+      ...build.arc,
+      arcName,
+      mixingRank: 1,
+      afterUltimateActive: false,
+    },
+  }));
 
-  const statFields: Array<{ key: NumericStatKey; ru: string; en: string; suffix?: string; hint?: string }> = [
-    { key: 'hp', ru: screenshotConfirmedRussianLabels.hp, en: 'HP' },
-    { key: 'atk', ru: screenshotConfirmedRussianLabels.atk, en: 'ATK', hint: ru ? 'Готовое итоговое число из «Атрибутов». Дуга отдельно не прибавляется.' : 'Final number from Attributes. Arc ATK is not added again.' },
-    { key: 'def', ru: screenshotConfirmedRussianLabels.def, en: 'DEF' },
+  const damageFields: Array<{ key: DamageStatKey; ru: string; en: string; suffix?: string; hint?: string }> = [
+    {
+      key: 'atk',
+      ru: screenshotConfirmedRussianLabels.atk,
+      en: 'ATK',
+      hint: ru
+        ? 'Итоговое число из «Атрибутов»: для Шинку на скриншоте это 1126 + 900 = 2026. Дугу и консоль отдельно не прибавляй.'
+        : 'Final Attributes value. Arc and Console contributions are already included and must not be added again.',
+    },
     { key: 'critRate', ru: screenshotConfirmedRussianLabels.critRate, en: 'CRIT Rate', suffix: '%' },
     { key: 'critDamage', ru: screenshotConfirmedRussianLabels.critDamage, en: 'CRIT DMG', suffix: '%' },
     { key: 'damageBonus', ru: screenshotConfirmedRussianLabels.damageBonus, en: 'DMG Bonus', suffix: '%' },
-    { key: 'attributeDamageBonus', ru: character ? `${ru ? 'Бонус к урону' : 'DMG Bonus'} ${localizedAttribute(character.attribute, locale).toLocaleLowerCase(locale)}` : (ru ? 'Бонус атрибута' : 'Attribute DMG Bonus'), en: 'Attribute DMG Bonus', suffix: '%' },
-    { key: 'chargeSpeed', ru: screenshotConfirmedRussianLabels.chargeSpeed, en: 'Charge Speed', suffix: '%' },
-    { key: 'cycleIntensity', ru: screenshotConfirmedRussianLabels.cycleIntensity, en: 'Cycle Intensity' },
-    { key: 'breakIntensity', ru: screenshotConfirmedRussianLabels.breakIntensity, en: 'Break Intensity' },
+    {
+      key: 'attributeDamageBonus',
+      ru: character ? `Бонус к урону ${localizedAttribute(character.attribute, locale).toLocaleLowerCase(locale)}` : 'Бонус атрибута',
+      en: 'Attribute DMG Bonus',
+      suffix: '%',
+    },
   ];
 
   return <div className="page nte-visible-calculator">
     <header className="nte-calc-hero">
-      <div><span>{ru ? 'РАСЧЁТ ПО ДАННЫМ ИЗ ИГРЫ' : 'IN-GAME INPUT CALCULATOR'}</span><h1>{ru ? 'Калькулятор команды' : 'Team Calculator'}</h1><p>{ru
-        ? 'Вводи только цифры и переключатели, которые видишь в клиенте. Коэффициенты действий сайт берёт только из проверенной базы.'
-        : 'Enter only values and switches shown by the game client. Action coefficients come only from verified records.'}</p></div>
-      <div className="nte-calc-rule"><Shield size={20} /><b>{ru ? 'Итоговая Атака используется напрямую' : 'Final ATK is used directly'}</b><small>{ru ? 'АТК дуги не складывается с ней повторно' : 'Arc ATK is never added a second time'}</small></div>
+      <div><span>{ru ? 'ТОЛЬКО НУЖНЫЕ ДАННЫЕ ИЗ ИГРЫ' : 'ONLY FORMULA-RELEVANT GAME DATA'}</span><h1>{ru ? 'Калькулятор команды' : 'Team Calculator'}</h1><p>{ru
+        ? 'Сайт запрашивает поле только тогда, когда оно влияет на выбранный тест. Постоянные бонусы дуги, консоли и развития уже находятся в итоговых атрибутах.'
+        : 'A field appears only when it affects the selected test. Permanent Arc, Console and progression bonuses are already included in final Attributes.'}</p></div>
+      <div className="nte-calc-rule"><Shield size={20} /><b>{ru ? 'Никакого повторного учёта' : 'No double counting'}</b><small>{ru ? 'Итоговая Атака используется напрямую' : 'Final ATK is used directly'}</small></div>
     </header>
 
     <section className="nte-team-rail" aria-label={ru ? 'Состав команды' : 'Team lineup'}>
@@ -233,68 +240,88 @@ export function GameVisibleTeamCalculatorPage() {
       </aside>
 
       <main className="nte-build-editor">
-        <nav className="nte-editor-tabs" aria-label={ru ? 'Разделы сборки' : 'Build sections'}>{tabs.map((key) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{tabLabels[key][locale]}</button>)}</nav>
+        <nav className="nte-editor-tabs" aria-label={ru ? 'Разделы расчёта' : 'Calculation sections'}>{tabs.map((key) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{tabLabels[key][locale]}</button>)}</nav>
 
         {tab === 'overview' ? <section className="nte-editor-section">
-          <div className="nte-section-heading"><Users size={21} /><div><h2>{ru ? 'Данные с экрана «Информация»' : 'Information screen values'}</h2><p>{ru ? 'Уровень, пробуждение и готовые итоговые характеристики.' : 'Level, Awakening and final displayed stats.'}</p></div></div>
-          <div className="nte-field-grid three">
-            <StatInput label={ru ? 'Уровень персонажа' : 'Character level'} value={activeBuild.level} onChange={(value) => updateBuild((build) => ({ ...build, level: value }))} step="1" min={1} />
-            <StatInput label={ru ? 'Текущий максимум уровня' : 'Current level cap'} value={activeBuild.maxLevel} onChange={(value) => updateBuild((build) => ({ ...build, maxLevel: value }))} step="1" min={1} />
-            <StatInput label={ru ? 'Уровень пробуждения' : 'Awakening level'} value={activeBuild.awakeningLevel} onChange={(value) => updateBuild((build) => ({ ...build, awakeningLevel: value }))} step="1" />
-          </div>
-          <div className="nte-visible-summary">
-            <div><Shield size={19} /><span>{screenshotConfirmedRussianLabels.hp}</span><b>{activeBuild.stats.hp.toLocaleString(locale)}</b></div>
-            <div><Swords size={19} /><span>{screenshotConfirmedRussianLabels.atk}</span><b>{activeBuild.stats.atk.toLocaleString(locale)}</b></div>
-            <div><Gauge size={19} /><span>{screenshotConfirmedRussianLabels.def}</span><b>{activeBuild.stats.def.toLocaleString(locale)}</b></div>
-            <div><Zap size={19} /><span>{screenshotConfirmedRussianLabels.critRate}</span><b>{activeBuild.stats.critRate}%</b></div>
-          </div>
-        </section> : null}
-
-        {tab === 'attributes' ? <section className="nte-editor-section">
-          <div className="nte-section-heading"><BarChart3 size={21} /><div><h2>{ru ? 'Атрибуты из клиента' : 'In-client attributes'}</h2><p>{ru ? 'Названия повторяют русскую вкладку «Атрибуты» на присланных скриншотах.' : 'Labels follow the current client Attributes screen.'}</p></div></div>
-          <div className="nte-field-grid two">{statFields.map((field) => <StatInput key={field.key} label={ru ? field.ru : field.en} value={activeBuild.stats[field.key]} suffix={field.suffix} hint={field.hint} onChange={(value) => updateStat(field.key, value)} />)}</div>
-        </section> : null}
-
-        {tab === 'arc' ? <section className="nte-editor-section">
-          <div className="nte-section-heading"><Sparkles size={21} /><div><h2>{ru ? 'Дуга' : 'Arc'}</h2><p>{ru ? 'Характеристики дуги сохраняются для условий и сравнений, но не прибавляются повторно к итоговой Атаке.' : 'Arc stats are stored for conditions and comparisons but never added to final ATK again.'}</p></div></div>
-          <label className="nte-select-field"><span>{ru ? 'Экипированная дуга' : 'Equipped Arc'}</span><select value={activeBuild.arc.arcName} onChange={(event) => selectArc(event.target.value)}><option value="">{ru ? 'Не выбрана' : 'Not selected'}</option>{compatibleArcs.map((arc) => <option key={arc.id} value={arc.name}>{localizedArcName(arc.name, locale)}</option>)}</select></label>
-          <div className="nte-field-grid three">
-            <StatInput label={ru ? 'Уровень дуги' : 'Arc level'} value={activeBuild.arc.level} onChange={(value) => updateBuild((build) => ({ ...build, arc: { ...build.arc, level: value } }))} step="1" min={1} />
-            <StatInput label={ru ? 'Атака дуги' : 'Arc ATK'} value={activeBuild.arc.baseAtk} onChange={(value) => updateBuild((build) => ({ ...build, arc: { ...build.arc, baseAtk: value } }))} hint={ru ? 'Справочное число — уже учтено в итоговой Атаке персонажа.' : 'Informational only — already included in final character ATK.'} />
-            <StatInput label={ru ? 'Смешивание P' : 'Mixing M'} value={activeBuild.arc.mixingRank} onChange={(value) => updateBuild((build) => ({ ...build, arc: { ...build.arc, mixingRank: value } }))} step="1" min={1} />
-          </div>
-          <div className="nte-arc-readout"><span>{localizedStatLabel(activeBuild.arc.secondaryLabel, locale) || (ru ? 'Доп. характеристика' : 'Secondary stat')}</span><b>{activeBuild.arc.secondaryValue}%</b></div>
-          {activeBuild.arc.arcName === 'Blushing Mirage' ? <label className="nte-condition-toggle"><input type="checkbox" checked={activeBuild.arc.afterUltimateActive} onChange={(event) => updateBuild((build) => ({ ...build, arc: { ...build.arc, afterUltimateActive: event.target.checked } }))} /><span><b>{ru ? 'Окно после сверхспособности активно' : 'Post-Ultimate window active'}</b><small>{ru ? 'Используется только в соответствующем тестовом режиме.' : 'Used only by the matching test mode.'}</small></span></label> : null}
-        </section> : null}
-
-        {tab === 'ability' ? <section className="nte-editor-section">
-          <div className="nte-section-heading"><Swords size={21} /><div><h2>{ru ? 'Уровни способностей эспера' : 'Esper Ability levels'}</h2><p>{ru ? 'Вводятся уровни, которые игра показывает под четырьмя иконками. Коэффициенты пользователь не вводит.' : 'Enter levels shown below the four ability icons. The player never enters coefficients.'}</p></div></div>
-          <div className="nte-ability-row">
-            {(['basic', 'skill', 'ultimate', 'support'] as const).map((key) => <label key={key}><span>{key === 'basic' ? (ru ? 'Базовая атака' : 'Basic Attack') : key === 'skill' ? (ru ? 'Навык' : 'Skill') : key === 'ultimate' ? (ru ? 'Сверхспособность' : 'Ultimate') : (ru ? 'Навык поддержки' : 'Support Skill')}</span><input type="number" min="1" max="15" value={activeBuild.skills[key]} onChange={(event) => updateBuild((build) => ({ ...build, skills: { ...build.skills, [key]: numberValue(event.target.value) } }))} /><small>/ 15</small></label>)}
-          </div>
-          <div className="nte-model-note"><Shield size={18} /><span>{ru ? 'При отсутствии точной таблицы нужного уровня действие будет заблокировано. Интерполяции между уровнями нет.' : 'An action is blocked when its exact level table is unavailable. No level interpolation is used.'}</span></div>
-        </section> : null}
-
-        {tab === 'console' ? <section className="nte-editor-section">
-          <div className="nte-section-heading"><Activity size={21} /><div><h2>{ru ? 'Консоль' : 'Console'}</h2><p>{ru ? 'Пока сохраняются только видимые параметры. Бонус включается в расчёт лишь после отдельной проверки его формулы.' : 'Only visible parameters are stored for now. A bonus enters the model only after its formula is verified.'}</p></div></div>
+          <div className="nte-section-heading"><Users size={21} /><div><h2>{ru ? 'Основа расчёта' : 'Calculation base'}</h2><p>{ru ? 'Для коэффициента защиты противника нужен уровень персонажа. Текущий предел уровня, ОЗ и Защита для выбранных тестов не требуются.' : 'Character level is used by the enemy defence formula. Level cap, HP and DEF are not required by the selected tests.'}</p></div></div>
           <div className="nte-field-grid two">
-            <StatInput label={ru ? 'Тип сетки консоли' : 'Console grid type'} value={activeBuild.console.gridType} onChange={(value) => updateBuild((build) => ({ ...build, console: { ...build.console, gridType: value } }))} step="1" />
-            <StatInput label={ru ? 'Модулей типа III' : 'Type III modules'} value={activeBuild.console.typeThreeModules} onChange={(value) => updateBuild((build) => ({ ...build, console: { ...build.console, typeThreeModules: value } }))} step="1" />
+            <StatInput label={ru ? 'Уровень персонажа' : 'Character level'} value={activeBuild.level} onChange={(value) => updateBuild((build) => ({ ...build, level: value }))} step="1" min={1} />
+            <div className="nte-input-policy"><Shield size={19} /><b>{ru ? 'Убрано из ввода' : 'Removed from input'}</b><span>{ru ? 'ОЗ, Защита, Скорость зарядки, интенсивности, статы дуги и схема консоли.' : 'HP, DEF, Charge Speed, intensities, Arc stats and Console layout.'}</span></div>
           </div>
-          {activeBuild.characterName === 'Shinku' ? <div className="nte-console-evidence"><b>{ru ? 'Подтверждено для Шинку' : 'Confirmed for Shinku'}</b><span>{ru ? 'Тип сетки 2; рекомендованный шаблон использует четыре модуля типа III.' : 'Grid Type 2; the recommended template uses four Type III modules.'}</span></div> : null}
+          <div className="nte-visible-summary compact">
+            <div><Swords size={19} /><span>{screenshotConfirmedRussianLabels.atk}</span><b>{activeBuild.stats.atk.toLocaleString(locale)}</b></div>
+            <div><CircleDot size={19} /><span>{screenshotConfirmedRussianLabels.critRate}</span><b>{activeBuild.stats.critRate}%</b></div>
+            <div><Sparkles size={19} /><span>{screenshotConfirmedRussianLabels.critDamage}</span><b>{activeBuild.stats.critDamage}%</b></div>
+          </div>
+        </section> : null}
+
+        {tab === 'damage' ? <section className="nte-editor-section">
+          <div className="nte-section-heading"><BarChart3 size={21} /><div><h2>{ru ? 'Показатели, участвующие в уроне' : 'Damage-relevant attributes'}</h2><p>{ru ? 'Вводятся готовые значения с экрана «Атрибуты». Постоянные бонусы снаряжения уже входят в них.' : 'Enter final values from Attributes. Permanent equipment bonuses are already included.'}</p></div></div>
+          <div className="nte-field-grid two">{damageFields.map((field) => <StatInput key={field.key} label={ru ? field.ru : field.en} value={activeBuild.stats[field.key]} suffix={field.suffix} hint={field.hint} onChange={(value) => updateStat(field.key, value)} />)}</div>
+        </section> : null}
+
+        {tab === 'conditions' ? <section className="nte-editor-section">
+          <div className="nte-section-heading"><Activity size={21} /><div><h2>{ru ? 'Только условия выбранного теста' : 'Selected-test conditions only'}</h2><p>{ru ? 'Здесь нет общей анкеты сборки: показываются лишь данные, которые способны изменить текущий результат.' : 'This is not a full build form. Only fields capable of changing the current result are shown.'}</p></div></div>
+
+          {actionNeedsSkill(selectedAction) ? <div className="nte-condition-section">
+            <h3>{ru ? 'Требуемый уровень способности' : 'Required ability level'}</h3>
+            <StatInput
+              label={selectedAction.requiredSkill === 'basic' ? (ru ? 'Базовая атака' : 'Basic Attack') : selectedAction.requiredSkill === 'skill' ? (ru ? 'Навык' : 'Skill') : selectedAction.requiredSkill === 'ultimate' ? (ru ? 'Сверхспособность' : 'Ultimate') : (ru ? 'Навык поддержки' : 'Support Skill')}
+              value={activeBuild.skills[selectedAction.requiredSkill]}
+              onChange={(value) => updateBuild((build) => ({ ...build, skills: { ...build.skills, [selectedAction.requiredSkill]: value } }))}
+              step="1"
+              min={1}
+              hint={ru ? `Источник подтверждает коэффициент только для уровня ${selectedAction.requiredLevel}.` : `The coefficient is sourced only for level ${selectedAction.requiredLevel}.`}
+            />
+          </div> : null}
+
+          {awakeningNodes.length ? <div className="nte-condition-section">
+            <h3>{ru ? 'Открытые пробуждения' : 'Unlocked Awakenings'}</h3>
+            <p className="nte-condition-copy">{ru ? 'Выбери максимальный открытый узел. Все предыдущие считаются открытыми автоматически; сам номер не является скрытым множителем урона.' : 'Select the highest unlocked node. Previous nodes are unlocked automatically; the number itself is not a hidden damage multiplier.'}</p>
+            <div className="nte-awakening-picker" role="group" aria-label={ru ? 'Уровень пробуждения' : 'Awakening level'}>
+              {Array.from({ length: 7 }, (_, level) => <button key={level} className={activeBuild.awakeningLevel === level ? 'active' : ''} onClick={() => updateBuild((build) => ({ ...build, awakeningLevel: level }))}>{level === 0 ? 'A0' : `A${level}`}</button>)}
+            </div>
+            <div className="nte-awakening-list">{awakeningNodes.map((node) => {
+              const unlocked = node.level <= activeBuild.awakeningLevel;
+              const used = Boolean(selectedAction && node.relatedActionIds?.includes(selectedAction.id));
+              return <article key={`${node.characterName}-${node.level}`} className={`${unlocked ? 'unlocked' : 'locked'} ${used ? 'used' : ''}`}>
+                <b>A{node.level}</b>
+                <div><strong>{node.title[locale]}</strong><p>{node.description[locale]}</p><small>{node.evidence === 'current-russian-reference' ? (ru ? 'текущая русская карточка' : 'current Russian record') : (ru ? 'русское название не подтверждено — показано английское' : 'English current reference')}</small></div>
+                <span>{used ? (ru ? 'участвует в тесте' : 'used by test') : unlocked ? (ru ? 'открыто' : 'unlocked') : (ru ? 'закрыто' : 'locked')}</span>
+              </article>;
+            })}</div>
+          </div> : null}
+
+          {showArcCondition ? <div className="nte-condition-section">
+            <h3>{ru ? 'Условный эффект дуги' : 'Conditional Arc effect'}</h3>
+            <p className="nte-condition-copy">{ru ? 'Название и смешивание нужны только потому, что эффект после сверхспособности не входит в постоянные атрибуты. Атака дуги и её вторичный стат не вводятся.' : 'Arc identity and Mixing are needed only because the post-Ultimate effect is not a permanent attribute. Arc ATK and secondary stat are not entered.'}</p>
+            <label className="nte-select-field"><span>{ru ? 'Экипированная дуга' : 'Equipped Arc'}</span><select value={activeBuild.arc.arcName} onChange={(event) => selectArc(event.target.value)}><option value="">{ru ? 'Эффект не применяется' : 'No Arc effect'}</option>{compatibleArcs.map((arc) => <option key={arc.id} value={arc.name}>{localizedArcName(arc.name, locale)}</option>)}</select></label>
+            {activeBuild.arc.arcName === 'Blushing Mirage' ? <>
+              <StatInput label={ru ? 'Смешивание P' : 'Mixing M'} value={activeBuild.arc.mixingRank} onChange={(value) => updateBuild((build) => ({ ...build, arc: { ...build.arc, mixingRank: value } }))} step="1" min={1} />
+              <label className="nte-condition-toggle"><input type="checkbox" checked={activeBuild.arc.afterUltimateActive} onChange={(event) => updateBuild((build) => ({ ...build, arc: { ...build.arc, afterUltimateActive: event.target.checked } }))} /><span><b>{ru ? 'Окно эффекта после сверхспособности активно' : 'Post-Ultimate effect window is active'}</b><small>{ru ? 'Только этот переключатель включает временный эффект дуги.' : 'Only this switch enables the temporary Arc effect.'}</small></span></label>
+            </> : null}
+          </div> : null}
+
+          {!actionNeedsSkill(selectedAction) && !awakeningNodes.length && !showArcCondition ? <div className="nte-input-policy"><CheckCircle2 size={19} /><b>{ru ? 'Дополнительные поля не нужны' : 'No extra inputs needed'}</b><span>{ru ? 'Выбранный тест считается только по итоговым атрибутам и заданной цели.' : 'The selected test uses only final attributes and the target preset.'}</span></div> : null}
         </section> : null}
 
         {tab === 'test' ? <section className="nte-editor-section">
-          <div className="nte-section-heading"><Target size={21} /><div><h2>{ru ? 'Режим теста' : 'Test mode'}</h2><p>{ru ? 'Режим определяет, какие подтверждённые условия калькулятор применит сам.' : 'The mode determines which verified conditions are applied automatically.'}</p></div></div>
-          <div className="nte-test-modes">{coverage?.supportedModes.map((mode) => <button key={mode} className={activeBuild.testMode === mode ? 'active' : ''} onClick={() => updateBuild((build) => ({ ...build, testMode: mode, verifiedActionId: mode === 'verified-action' ? build.verifiedActionId : '' }))}><span>{modeLabels[mode][locale]}</span><small>{mode === 'verified-action' ? (ru ? 'точный коэффициент из источника' : 'exact sourced coefficient') : (ru ? 'нормализованный тест 100% АТК' : 'normalized 100% ATK test')}</small></button>)}</div>
-          {activeBuild.testMode === 'verified-action' ? <label className="nte-select-field"><span>{ru ? 'Подтверждённое действие' : 'Verified action'}</span><select value={activeBuild.verifiedActionId} onChange={(event) => updateBuild((build) => ({ ...build, verifiedActionId: event.target.value }))}><option value="">{ru ? 'Выбери действие' : 'Select an action'}</option>{verifiedActions.map((action) => <option key={action.id} value={action.id}>{action.title[locale]} · ур. {action.requiredLevel}</option>)}</select></label> : null}
-          {activeBuild.testMode === 'training-target' ? <div className="nte-field-grid two">
-            <StatInput label={ru ? 'Уровень цели' : 'Target level'} value={state.target.level} onChange={(value) => updateState((current) => ({ ...current, target: { ...current.target, level: value } }))} step="1" min={1} />
-            <StatInput label={ru ? 'Сопротивление цели' : 'Target resistance'} value={state.target.resistance} suffix="%" onChange={(value) => updateState((current) => ({ ...current, target: { ...current.target, resistance: value } }))} min={-100} />
-            <StatInput label={ru ? 'Снижение защиты' : 'DEF reduction'} value={state.target.defenceReduction} suffix="%" onChange={(value) => updateState((current) => ({ ...current, target: { ...current.target, defenceReduction: value } }))} />
-            <StatInput label={ru ? 'Снижение сопротивления' : 'RES reduction'} value={state.target.resistanceReduction} suffix="%" onChange={(value) => updateState((current) => ({ ...current, target: { ...current.target, resistanceReduction: value } }))} />
+          <div className="nte-section-heading"><Target size={21} /><div><h2>{ru ? 'Что именно считать' : 'What to calculate'}</h2><p>{ru ? 'Сначала выбирается тест — после этого сайт показывает только связанные с ним условия.' : 'Choose a test first; the site then reveals only its relevant conditions.'}</p></div></div>
+          <div className="nte-test-modes">{coverage?.supportedModes.map((mode) => <button key={mode} className={activeBuild.testMode === mode ? 'active' : ''} onClick={() => updateBuild((build) => ({ ...build, testMode: mode, verifiedActionId: mode === 'verified-action' ? build.verifiedActionId : '' }))}><span>{modeLabels[mode][locale]}</span><small>{mode === 'verified-action' ? (ru ? 'точный коэффициент из источника' : 'exact sourced coefficient') : (ru ? 'контрольный тест 100% АТК' : '100% ATK reference')}</small></button>)}</div>
+
+          {activeBuild.testMode === 'verified-action' ? <label className="nte-select-field"><span>{ru ? 'Подтверждённое действие' : 'Verified action'}</span><select value={activeBuild.verifiedActionId} onChange={(event) => updateBuild((build) => ({ ...build, verifiedActionId: event.target.value }))}><option value="">{ru ? 'Выбери действие' : 'Select an action'}</option>{verifiedActions.map((action) => <option key={action.id} value={action.id}>{action.title[locale]}{action.requiredLevel === '—' ? '' : ` · ур. ${action.requiredLevel}`}</option>)}</select></label> : null}
+
+          {showTarget ? <div className="nte-condition-section">
+            <h3>{ru ? 'Параметры цели' : 'Target parameters'}</h3>
+            <div className="nte-field-grid two">
+              <StatInput label={ru ? 'Уровень цели' : 'Target level'} value={state.target.level} onChange={(value) => updateState((current) => ({ ...current, target: { ...current.target, level: value } }))} step="1" min={1} />
+              <StatInput label={ru ? 'Сопротивление цели' : 'Target resistance'} value={state.target.resistance} suffix="%" onChange={(value) => updateState((current) => ({ ...current, target: { ...current.target, resistance: value } }))} min={-100} />
+              <StatInput label={ru ? 'Снижение защиты' : 'DEF reduction'} value={state.target.defenceReduction} suffix="%" onChange={(value) => updateState((current) => ({ ...current, target: { ...current.target, defenceReduction: value } }))} />
+              <StatInput label={ru ? 'Снижение сопротивления' : 'RES reduction'} value={state.target.resistanceReduction} suffix="%" onChange={(value) => updateState((current) => ({ ...current, target: { ...current.target, resistanceReduction: value } }))} />
+            </div>
           </div> : null}
-          <div className="nte-model-note"><Shield size={18} /><span>{ru ? 'Контрольный удар не объявляется уроном навыка. Он сравнивает сборки при одинаковом коэффициенте 100% АТК.' : 'A reference hit is not presented as skill damage. It compares builds at the same 100% ATK ratio.'}</span></div>
+
+          <div className="nte-model-note"><Shield size={18} /><span>{ru ? 'Контрольный удар нужен для сравнения сборок. Он не объявляется уроном конкретного навыка или полной ротации.' : 'The reference hit compares builds. It is not presented as a skill or full-rotation result.'}</span></div>
         </section> : null}
       </main>
 
@@ -306,7 +333,7 @@ export function GameVisibleTeamCalculatorPage() {
           <strong><ResultNumber value={teamCalculation.totalExpected} locale={locale} /></strong>
           <small>{ru ? `${teamCalculation.comparableRows} из 4 слотов рассчитано` : `${teamCalculation.comparableRows} of 4 slots calculated`}</small>
         </div>
-        <div className="nte-trust-footer"><Shield size={17} /><span>{ru ? 'Результат показывает выбранные тесты, а не автоматически заявленный DPS полной боевой ротации.' : 'The result represents selected tests, not an automatically claimed full-rotation DPS value.'}</span></div>
+        <div className="nte-trust-footer"><Shield size={17} /><span>{ru ? 'Сайт применяет только подтверждённые эффекты выбранного теста. Скрытые бонусы дуги, консоли и пробуждения не добавляются автоматически.' : 'Only verified effects for the selected test are applied. Hidden Arc, Console or Awakening bonuses are never added automatically.'}</span></div>
       </aside>
     </div>
   </div>;
