@@ -34,6 +34,9 @@ describe('localization evidence contract', () => {
 
   it('keeps the owner-confirmed Tears primary and records the conflicting article variant', () => {
     const evidence = arcNameEvidence['Tears Beneath the Mask'];
+    expect(evidence).toBeDefined();
+    if (!evidence) throw new Error('Missing Tears Beneath the Mask localization evidence');
+
     expect(localizedArcName('Tears Beneath the Mask', 'ru')).toBe('Слезы за маской');
     expect(evidence.level).toBe('owner-confirmed-client');
     expect(evidence.supportingSources?.length).toBeGreaterThanOrEqual(3);
@@ -48,8 +51,12 @@ describe('localization evidence contract', () => {
       expect.objectContaining({ russian: 'Газовый' }),
     ]));
 
+    const zeroEvidence = characterNameEvidence.Zero;
+    expect(zeroEvidence).toBeDefined();
+    if (!zeroEvidence) throw new Error('Missing Zero localization evidence');
+
     expect(localizedCharacterName('Zero', 'ru')).toBe('Оценщик');
-    expect(characterNameEvidence.Zero.alternatives).toEqual(expect.arrayContaining([
+    expect(zeroEvidence.alternatives).toEqual(expect.arrayContaining([
       expect.objectContaining({ russian: 'Нулевой эспер', level: 'official-russian' }),
     ]));
   });
