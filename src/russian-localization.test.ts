@@ -16,33 +16,26 @@ import { ascensionMaterials, progressionDatasetSources } from './progression-dat
 import { rotationPresets } from './rotation-presets';
 
 function russianRuntimeCorpus(): string[] {
-  const scenarioText = arcBenchmarkScenarios.flatMap((scenario) => [
-    scenario.title.ru,
-    scenario.description.ru,
-    ...scenario.meta.map((item) => item.ru),
-    ...scenario.rows.map((row) => row.note.ru),
-  ]);
-  const presetText = arcPresets.flatMap((preset) => [
-    preset.benchmarkNote.ru,
-    preset.model.trigger.ru,
-  ]);
-  const rotationText = rotationPresets.flatMap((preset) => [
-    preset.title.ru,
-    preset.description.ru,
-    preset.timingPolicy.ru,
-    ...preset.assumptions.map((item) => item.ru),
-    ...preset.steps.flatMap((step) => [step.instruction.ru, step.outcome.ru]),
-  ]);
-
   return [
     ...Object.values(characterRussianNames),
     ...Object.values(arcRussianNames),
     ...characterCatalog.map((character) => character.summary.ru),
     ...arcCatalog.map((arc) => arc.effect.ru),
-    ...presetText,
-    ...scenarioText,
+    ...arcPresets.flatMap((preset) => [preset.benchmarkNote.ru, preset.model.trigger.ru]),
+    ...arcBenchmarkScenarios.flatMap((scenario) => [
+      scenario.title.ru,
+      scenario.description.ru,
+      ...scenario.meta.map((item) => item.ru),
+      ...scenario.rows.map((row) => row.note.ru),
+    ]),
     ...esperCycles.flatMap((cycle) => [cycle.name.ru, cycle.effect.ru]),
-    ...rotationText,
+    ...rotationPresets.flatMap((preset) => [
+      preset.title.ru,
+      preset.description.ru,
+      preset.timingPolicy.ru,
+      ...preset.assumptions.map((item) => item.ru),
+      ...preset.steps.flatMap((step) => [step.instruction.ru, step.outcome.ru]),
+    ]),
     ...Object.values(ascensionMaterials).flatMap((material) => [material.name.ru, material.farm?.ru ?? '']),
     ...progressionDatasetSources.map((source) => source.scope.ru),
   ];
@@ -120,7 +113,7 @@ describe('Russian localization regression contract', () => {
     expect(corpus).toContain('ОЗ');
     expect(corpus).not.toMatch(/\bATK\b|\bDEF\b|\bHP\b/u);
     expect(arcCatalog.find((arc) => arc.name === 'Dangerous Game')?.effect.ru).toContain('60/66/72/78/84');
-    expect(arcCatalog.find((arc) => arc.name === 'Good Boy\'s Grand Adventure')?.effect.ru).toContain('18/21/24/27/30%');
+    expect(arcCatalog.find((arc) => arc.name === "Good Boy's Grand Adventure")?.effect.ru).toContain('18/21/24/27/30%');
   });
 
   it('keeps polished Russian Arc grammar in the public catalog', () => {
@@ -132,8 +125,7 @@ describe('Russian localization regression contract', () => {
   });
 
   it('does not duplicate primary terminology examples inside Methodology', () => {
-    const methodology = rawSourceModules['./pages/MethodologyPage.tsx'];
-    expect(methodology).toBeDefined();
+    const methodology = rawSourceModules['./pages/MethodologyPage.tsx'] ?? '';
     expect(methodology).not.toContain('основное имя здесь');
     expect(methodology).not.toContain('Синку');
     expect(methodology).not.toContain('Плазма');
@@ -146,8 +138,7 @@ describe('Russian localization regression contract', () => {
   });
 
   it('rejects avoidable guide jargon in every visible Russian source string', () => {
-    const strings = sourceRussianStrings();
-    const failures = strings.flatMap((entry) => forbiddenVisibleJargon.flatMap((pattern) => pattern.test(entry.text)
+    const failures = sourceRussianStrings().flatMap((entry) => forbiddenVisibleJargon.flatMap((pattern) => pattern.test(entry.text)
       ? [`${entry.file}:${entry.line} ${pattern} → ${entry.text}`]
       : []));
     expect(failures).toEqual([]);
