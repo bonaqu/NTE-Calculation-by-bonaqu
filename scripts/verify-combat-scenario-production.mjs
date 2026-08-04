@@ -110,8 +110,8 @@ const hathorScenario = {
 };
 
 const stainTeam = team([
-  build('Lacrimosa'),
-  build('Nanally'),
+  build('Chaos'),
+  build('Haniel'),
   build('Shinku', { skills: { basic: 11, skill: 1, ultimate: 1, support: 1 } }),
   build('Zero'),
 ], 20);
@@ -120,9 +120,9 @@ const stainScenario = {
   name: 'Stain production duration boundary',
   steps: [
     scenarioStep('activate-stain', 0, 'activate-cycle', 0, { cycleId: 'stain' }),
-    scenarioStep('stain-lakshana-inside', 11.9, 'action', 0, { actionId: 'lacrimosa.discord-enhancement.broken-target' }),
+    scenarioStep('stain-lakshana-inside', 11.9, 'action', 0, { actionId: 'chaos.remora-enhancement.maximum-twelve-seconds' }),
     scenarioStep('stain-cosmos-inside', 11.9, 'action', 2, { actionId: 'shinku.charge-enhancement.level-11' }),
-    scenarioStep('stain-lakshana-expired', 12, 'action', 0, { actionId: 'lacrimosa.discord-enhancement.broken-target' }),
+    scenarioStep('stain-lakshana-expired', 12, 'action', 0, { actionId: 'chaos.remora-enhancement.maximum-twelve-seconds' }),
   ],
 };
 
