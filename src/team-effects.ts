@@ -4,13 +4,14 @@ import type { LocalizedText } from './types';
 export type VerifiedTeamEffectId =
   | 'haniel.friendship.nova-atk-drain'
   | 'sakiri.awakening-four.team-atk'
-  | 'sakiri.impish-trick.def-reduction';
+  | 'sakiri.impish-trick.def-reduction'
+  | 'hathor.delay-warning.remora-crit-rate';
 
 export type TeamEffectRecipientPolicy = 'all-team-members' | 'other-team-members' | 'enemy';
 
 export interface VerifiedTeamEffect {
   id: VerifiedTeamEffectId;
-  sourceCharacter: 'Haniel' | 'Sakiri';
+  sourceCharacter: 'Haniel' | 'Sakiri' | 'Hathor';
   title: LocalizedText;
   description: LocalizedText;
   trigger: LocalizedText;
@@ -18,6 +19,7 @@ export interface VerifiedTeamEffect {
   recipientPolicy: TeamEffectRecipientPolicy;
   baseAtkPercent?: number;
   enemyDefenceReduction?: number;
+  critRate?: number;
   minimumAwakening?: number;
   sourcePublisher: string;
   sourceUrl: string;
@@ -29,6 +31,7 @@ export interface VerifiedTeamEffect {
 export interface TeamEffectSlotModifier {
   flatAtk: number;
   enemyDefenceReduction: number;
+  critRate: number;
   provenance: readonly TeamEffectProvenance[];
 }
 
@@ -37,7 +40,7 @@ export interface TeamEffectProvenance {
   sourceSlot: number;
   sourceCharacter: string;
   amount: number;
-  kind: 'flat-atk' | 'enemy-defence-reduction';
+  kind: 'flat-atk' | 'enemy-defence-reduction' | 'crit-rate';
   label: LocalizedText;
 }
 
@@ -116,6 +119,27 @@ export const verifiedTeamEffects: readonly VerifiedTeamEffect[] = [
     sourceUpdatedAt: '2026-05-26',
     verifiedAt,
   },
+  {
+    id: 'hathor.delay-warning.remora-crit-rate',
+    sourceCharacter: 'Hathor',
+    title: { ru: 'Delay Warning · Ремора', en: 'Delay Warning · Remora Enhancement' },
+    description: {
+      ru: 'Когда союзники атакуют цель под Реморой, их шанс критического удара повышается на 10 процентных пунктов. Пассив Хатор продлевает Ремору до 12 секунд. Английское название сохранено до подтверждения русской локализации клиента.',
+      en: 'Allies gain 10 percentage points of CRIT Rate while attacking a target affected by Remora. Hathor extends that Remora duration to 12 seconds.',
+    },
+    trigger: {
+      ru: 'На проверяемую цель наложена Ремора',
+      en: 'Remora was applied to the tested target',
+    },
+    durationSeconds: 12,
+    recipientPolicy: 'all-team-members',
+    critRate: 10,
+    sourcePublisher: 'Prydwen Institute / Icy Veins',
+    sourceUrl: prydwen('hathor'),
+    supportingSourceUrl: 'https://www.icy-veins.com/neverness-to-everness/hathor-profile-skills',
+    sourceUpdatedAt: '2026-06-27',
+    verifiedAt,
+  },
 ];
 
 export const verifiedTeamEffectById = new Map(verifiedTeamEffects.map((effect) => [effect.id, effect]));
@@ -130,10 +154,16 @@ function recipientSlots(policy: TeamEffectRecipientPolicy, sourceSlot: number, s
   return all;
 }
 
+function sourceCharacterRussianName(characterName: VerifiedTeamEffect['sourceCharacter']): string {
+  if (characterName === 'Haniel') return 'Ханиэль';
+  if (characterName === 'Sakiri') return 'Сакири';
+  return 'Хатор';
+}
+
 function blockedReason(effect: VerifiedTeamEffect, baseAtk: number, awakeningLevel: number): LocalizedText | null {
   if (effect.baseAtkPercent !== undefined && baseAtk <= 0) {
     return {
-      ru: `Для эффекта «${effect.title.ru}» нужна базовая Атака ${effect.sourceCharacter === 'Haniel' ? 'Ханиэль' : 'Сакири'} с левой стороны строки «Атака» в подробных атрибутах.`,
+      ru: `Для эффекта «${effect.title.ru}» нужна базовая Атака ${sourceCharacterRussianName(effect.sourceCharacter)} с левой стороны строки «Атака» в подробных атрибутах.`,
       en: `${effect.title.en} requires the source character's Base ATK from the left side of the detailed ATK row.`,
     };
   }
@@ -146,10 +176,17 @@ function blockedReason(effect: VerifiedTeamEffect, baseAtk: number, awakeningLev
   return null;
 }
 
+function effectAmount(effect: VerifiedTeamEffect, baseAtk: number): number {
+  if (effect.baseAtkPercent !== undefined) return baseAtk * effect.baseAtkPercent / 100;
+  if (effect.enemyDefenceReduction !== undefined) return effect.enemyDefenceReduction;
+  return effect.critRate ?? 0;
+}
+
 export function deriveVerifiedTeamEffects(state: GameVisibleTeamState): DerivedTeamEffects {
   const mutable = state.builds.map(() => ({
     flatAtk: 0,
     enemyDefenceReduction: 0,
+    critRate: 0,
     provenance: [] as TeamEffectProvenance[],
   }));
   const evaluations: TeamEffectEvaluation[] = [];
@@ -161,9 +198,7 @@ export function deriveVerifiedTeamEffects(state: GameVisibleTeamState): DerivedT
 
       const recipients = recipientSlots(effect.recipientPolicy, sourceSlot, state.builds.length);
       const reason = blockedReason(effect, sourceBuild.baseAtk, sourceBuild.awakeningLevel);
-      const derivedAmount = effect.baseAtkPercent !== undefined
-        ? sourceBuild.baseAtk * effect.baseAtkPercent / 100
-        : effect.enemyDefenceReduction ?? 0;
+      const derivedAmount = effectAmount(effect, sourceBuild.baseAtk);
 
       evaluations.push({
         effect,
@@ -204,6 +239,20 @@ export function deriveVerifiedTeamEffects(state: GameVisibleTeamState): DerivedT
             label: {
               ru: `${effect.title.ru}: защита цели снижена на ${effect.enemyDefenceReduction}%`,
               en: `${effect.title.en}: target DEF reduced by ${effect.enemyDefenceReduction}%`,
+            },
+          });
+        }
+        if (effect.critRate !== undefined) {
+          target.critRate += effect.critRate;
+          target.provenance.push({
+            effectId: effect.id,
+            sourceSlot,
+            sourceCharacter: sourceBuild.characterName,
+            amount: effect.critRate,
+            kind: 'crit-rate',
+            label: {
+              ru: `${effect.title.ru}: +${effect.critRate}% к шансу крит. удара по цели под Реморой`,
+              en: `${effect.title.en}: +${effect.critRate}% CRIT Rate against the Remora target`,
             },
           });
         }

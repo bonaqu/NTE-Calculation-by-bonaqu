@@ -44,9 +44,22 @@ describe('verified team effect UI contract', () => {
     expect(panelSource).toContain('effect.minimumAwakening');
   });
 
-  it('renders derived provenance while keeping final ATK and temporary flat ATK separate', () => {
+  it('renders Hathor Remora as a specific timed CRIT Rate condition', () => {
+    expect(effectSource).toContain("'hathor.delay-warning.remora-crit-rate'");
+    expect(effectSource).toContain('durationSeconds: 12');
+    expect(effectSource).toContain('critRate: 10');
+    expect(effectSource).toContain('На проверяемую цель наложена Ремора');
+    expect(panelSource).toContain('effect.critRate');
+    expect(panelSource).toContain('+${amount}%');
+    expect(panelSource).toContain('к шансу крит. удара');
+    expect(panelSource).toContain('по цели под Реморой');
+    expect(panelSource).not.toContain("build.characterName === 'Hathor'");
+  });
+
+  it('renders derived provenance while keeping final stats and temporary modifiers separate', () => {
     expect(calculationSource).toContain('baseAtk: build.stats.atk');
     expect(calculationSource).toContain('flatAtk: modifier.flatAtk');
+    expect(calculationSource).toContain('critRate: build.stats.critRate + modifier.critRate');
     expect(calculationSource).toContain('supportConditions(modifier)');
     expect(calculationSource).toContain('modifier.enemyDefenceReduction');
     expect(calculationSource).toContain('deriveVerifiedTeamEffects(state)');

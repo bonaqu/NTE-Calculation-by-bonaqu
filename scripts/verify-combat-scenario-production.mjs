@@ -2,17 +2,18 @@ const base = String(process.env.DEPLOYMENT_URL || '').replace(/\/$/u, '');
 if (!base) throw new Error('DEPLOYMENT_URL is required');
 
 const expectedVersion = Number(process.env.EXPECTED_COMBAT_SCENARIO_VERSION || 1);
+const expectedEffectCount = Number(process.env.EXPECTED_VERIFIED_TEAM_EFFECT_COUNT || 4);
 const endpoints = {
   models: `${base}/api/v1/data/combat-models`,
   scenario: `${base}/api/v1/calculate/combat-scenario`,
 };
 
-const stats = (atk = 0) => ({
+const stats = (atk = 0, critRate = 0, critDamage = 0) => ({
   hp: 0,
   atk,
   def: 0,
-  critRate: 0,
-  critDamage: 0,
+  critRate,
+  critDamage,
   damageBonus: 0,
   attributeDamageBonus: 0,
   chargeSpeed: 100,
@@ -47,7 +48,15 @@ const build = (characterName, overrides = {}) => ({
   ...overrides,
 });
 
-const team = {
+const target = {
+  level: 80,
+  resistance: 0,
+  defenceReduction: 0,
+  resistanceReduction: 0,
+  boss: true,
+};
+
+const sakiriTeam = {
   version: 1,
   activeSlot: 0,
   duration: 30,
@@ -57,18 +66,12 @@ const team = {
     build('Zero'),
     build('Nanally'),
   ],
-  target: {
-    level: 80,
-    resistance: 0,
-    defenceReduction: 0,
-    resistanceReduction: 0,
-    boss: true,
-  },
+  target,
 };
 
-const scenario = {
+const sakiriScenario = {
   version: 1,
-  name: 'Production duration boundary',
+  name: 'Sakiri production duration boundary',
   steps: [
     {
       id: 'activate-sakiri-a4',
@@ -80,7 +83,7 @@ const scenario = {
       note: '',
     },
     {
-      id: 'inside-window',
+      id: 'sakiri-inside-window',
       at: 19.9,
       kind: 'action',
       sourceSlot: 0,
@@ -89,8 +92,58 @@ const scenario = {
       note: '',
     },
     {
-      id: 'expired-window',
+      id: 'sakiri-expired-window',
       at: 20,
+      kind: 'action',
+      sourceSlot: 0,
+      actionId: 'shinku.charge-enhancement.level-11',
+      effectId: '',
+      note: '',
+    },
+  ],
+};
+
+const hathorTeam = {
+  version: 1,
+  activeSlot: 0,
+  duration: 20,
+  builds: [
+    build('Shinku', {
+      stats: stats(1_000, 50, 100),
+      skills: { basic: 11, skill: 1, ultimate: 1, support: 1 },
+    }),
+    build('Hathor', { stats: stats(1_000, 50, 100) }),
+    build('Zero', { stats: stats(1_000, 50, 100) }),
+    build('Nanally', { stats: stats(1_000, 50, 100) }),
+  ],
+  target,
+};
+
+const hathorScenario = {
+  version: 1,
+  name: 'Hathor Remora production duration boundary',
+  steps: [
+    {
+      id: 'activate-hathor-remora',
+      at: 0,
+      kind: 'activate-effect',
+      sourceSlot: 1,
+      actionId: '',
+      effectId: 'hathor.delay-warning.remora-crit-rate',
+      note: '',
+    },
+    {
+      id: 'hathor-inside-window',
+      at: 11.9,
+      kind: 'action',
+      sourceSlot: 0,
+      actionId: 'shinku.charge-enhancement.level-11',
+      effectId: '',
+      note: '',
+    },
+    {
+      id: 'hathor-expired-window',
+      at: 12,
       kind: 'action',
       sourceSlot: 0,
       actionId: 'shinku.charge-enhancement.level-11',
@@ -106,41 +159,67 @@ async function readJson(url, init) {
   return response.json();
 }
 
+async function calculate(team, scenario) {
+  return readJson(endpoints.scenario, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ team, scenario }),
+  });
+}
+
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function step(calculation, id) {
+  return calculation.result.steps.find((entry) => entry.step.id === id);
+}
+
 async function verifyOnce() {
-  const [models, calculation] = await Promise.all([
+  const [models, sakiri, hathor] = await Promise.all([
     readJson(endpoints.models),
-    readJson(endpoints.scenario, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ team, scenario }),
-    }),
+    calculate(sakiriTeam, sakiriScenario),
+    calculate(hathorTeam, hathorScenario),
   ]);
 
   assert(models.combatScenarioVersion === expectedVersion, `combat scenario model version mismatch: ${models.combatScenarioVersion}`);
+  assert(models.verifiedTeamEffectCount === expectedEffectCount, `expected ${expectedEffectCount} verified team effects, got ${models.verifiedTeamEffectCount}`);
+  assert(models.verifiedTeamEffects.some((effect) => effect.id === 'hathor.delay-warning.remora-crit-rate' && effect.critRate === 10 && effect.durationSeconds === 12), 'Hathor Remora effect metadata missing');
   assert(Array.isArray(models.combatScenarioStepKinds), 'combat scenario step kinds missing');
   assert(models.combatScenarioStepKinds.join(',') === 'action,activate-effect,wait', 'combat scenario step kinds mismatch');
-  assert(calculation.combatScenarioVersion === expectedVersion, `calculation scenario version mismatch: ${calculation.combatScenarioVersion}`);
-  assert(calculation.policy === 'verified-actions-and-timed-effects-only', 'scenario policy mismatch');
-  assert(calculation.result.activatedEffectCount === 1, 'Sakiri A4 activation missing');
-  assert(calculation.result.calculatedActionCount === 2, 'expected two calculated Shinku actions');
-  assert(calculation.result.coveragePercent === 100, `scenario coverage mismatch: ${calculation.result.coveragePercent}`);
 
-  const inside = calculation.result.steps.find((entry) => entry.step.id === 'inside-window');
-  const expired = calculation.result.steps.find((entry) => entry.step.id === 'expired-window');
-  assert(inside?.calculation?.result?.totalAtk === 1_180, `inside-window ATK must be 1180, got ${inside?.calculation?.result?.totalAtk}`);
-  assert(expired?.calculation?.result?.totalAtk === 1_000, `expired-window ATK must be 1000, got ${expired?.calculation?.result?.totalAtk}`);
-  assert(inside.activeEffects.some((entry) => entry.effectId === 'sakiri.awakening-four.team-atk'), 'inside-window active effect provenance missing');
-  assert(expired.activeEffects.length === 0, 'expired effect remained active at 20 seconds');
+  for (const calculation of [sakiri, hathor]) {
+    assert(calculation.combatScenarioVersion === expectedVersion, `calculation scenario version mismatch: ${calculation.combatScenarioVersion}`);
+    assert(calculation.policy === 'verified-actions-and-timed-effects-only', 'scenario policy mismatch');
+    assert(calculation.result.activatedEffectCount === 1, 'effect activation missing');
+    assert(calculation.result.calculatedActionCount === 2, 'expected two calculated actions');
+    assert(calculation.result.coveragePercent === 100, `scenario coverage mismatch: ${calculation.result.coveragePercent}`);
+  }
+
+  const sakiriInside = step(sakiri, 'sakiri-inside-window');
+  const sakiriExpired = step(sakiri, 'sakiri-expired-window');
+  assert(sakiriInside?.calculation?.result?.totalAtk === 1_180, `Sakiri inside-window ATK must be 1180, got ${sakiriInside?.calculation?.result?.totalAtk}`);
+  assert(sakiriExpired?.calculation?.result?.totalAtk === 1_000, `Sakiri expired-window ATK must be 1000, got ${sakiriExpired?.calculation?.result?.totalAtk}`);
+  assert(sakiriInside.activeEffects.some((entry) => entry.effectId === 'sakiri.awakening-four.team-atk'), 'Sakiri active effect provenance missing');
+  assert(sakiriExpired.activeEffects.length === 0, 'Sakiri effect remained active at 20 seconds');
+
+  const hathorInside = step(hathor, 'hathor-inside-window');
+  const hathorExpired = step(hathor, 'hathor-expired-window');
+  assert(hathorInside?.calculation?.result?.totalAtk === 1_000, `Hathor effect must not change ATK, got ${hathorInside?.calculation?.result?.totalAtk}`);
+  assert(hathorExpired?.calculation?.result?.totalAtk === 1_000, `expired Hathor ATK mismatch: ${hathorExpired?.calculation?.result?.totalAtk}`);
+  assert(hathorInside?.calculation?.result?.expectedCritMultiplier === 1.6, `inside Remora expected CRIT multiplier must be 1.6, got ${hathorInside?.calculation?.result?.expectedCritMultiplier}`);
+  assert(hathorExpired?.calculation?.result?.expectedCritMultiplier === 1.5, `expired Remora expected CRIT multiplier must be 1.5, got ${hathorExpired?.calculation?.result?.expectedCritMultiplier}`);
+  assert(hathorInside.calculation.result.expected > hathorExpired.calculation.result.expected, 'Remora CRIT Rate did not increase expected damage');
+  assert(hathorInside.activeEffects.some((entry) => entry.effectId === 'hathor.delay-warning.remora-crit-rate'), 'Hathor active effect provenance missing');
+  assert(hathorExpired.activeEffects.length === 0, 'Hathor effect remained active at 12 seconds');
 
   return {
-    combatScenarioVersion: calculation.combatScenarioVersion,
-    insideWindowAtk: inside.calculation.result.totalAtk,
-    expiredWindowAtk: expired.calculation.result.totalAtk,
-    coveragePercent: calculation.result.coveragePercent,
+    combatScenarioVersion: hathor.combatScenarioVersion,
+    verifiedTeamEffectCount: models.verifiedTeamEffectCount,
+    sakiriInsideWindowAtk: sakiriInside.calculation.result.totalAtk,
+    sakiriExpiredWindowAtk: sakiriExpired.calculation.result.totalAtk,
+    hathorInsideExpectedCritMultiplier: hathorInside.calculation.result.expectedCritMultiplier,
+    hathorExpiredExpectedCritMultiplier: hathorExpired.calculation.result.expectedCritMultiplier,
   };
 }
 

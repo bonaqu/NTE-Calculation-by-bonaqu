@@ -61,6 +61,7 @@ const referenceExplanation: LocalizedText = {
 const emptyModifier: TeamEffectSlotModifier = {
   flatAtk: 0,
   enemyDefenceReduction: 0,
+  critRate: 0,
   provenance: [],
 };
 
@@ -268,7 +269,7 @@ export function calculateGameVisibleBuild(
     hits: 1,
     damageBonus: build.stats.damageBonus + build.stats.attributeDamageBonus + conditional.damageBonus,
     teamDamageBonus: 0,
-    critRate: build.stats.critRate,
+    critRate: build.stats.critRate + modifier.critRate,
     critDamage: build.stats.critDamage,
     enemy: {
       ...target,
