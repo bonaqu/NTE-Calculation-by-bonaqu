@@ -89,7 +89,7 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Daffodill', pageSlug: 'daffodil', imageSlug: 'daffodil', rarity: 'S', attribute: 'Chaos', role: 'Damage', arcType: 'Liquid',
     summary: {
-      ru: 'Дополнительный персонаж взрывного урона: быстро снижает шкалу сломления и любит частые переключения.',
+      ru: 'Дополнительный персонаж взрывного урона: быстро снижает шкалу разрушения и любит частые переключения.',
       en: 'A burst-oriented secondary damage dealer who shreds Break and rewards frequent swapping.',
     },
   }),
@@ -110,7 +110,7 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Haniel', rarity: 'A', attribute: 'Psyche', role: 'Buff', arcType: 'Solid',
     summary: {
-      ru: 'Универсальный персонаж усиления: повышает ATK команды и не требует долгого времени на поле.',
+      ru: 'Универсальный баффер: повышает ATK команды и не требует долгого времени на поле.',
       en: 'A universal buffer who raises team ATK without demanding much field time.',
     },
   }),
@@ -124,7 +124,7 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Hotori', rarity: 'S', attribute: 'Cosmos', role: 'Buff', arcType: 'Solid',
     summary: {
-      ru: 'Персонаж усиления Космоса с сильным коротким окном собственного урона во время сверхспособности.',
+      ru: 'Баффер Космоса с сильным коротким окном собственного урона во время сверхспособности.',
       en: 'A Cosmos buffer with a strong short personal damage window during the Ultimate.',
     },
   }),
@@ -175,7 +175,7 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Sakiri', rarity: 'S', attribute: 'Incantation', role: 'Buff', arcType: 'Gas',
     summary: {
-      ru: 'Универсальный персонаж усиления Чар, особенно полезный для Поджога и периодического урона.',
+      ru: 'Универсальный баффер Чар, особенно полезный для Поджога и периодического урона.',
       en: 'A universal Incantation buffer with extra value in Scorch and damage-over-time teams.',
     },
   }),
