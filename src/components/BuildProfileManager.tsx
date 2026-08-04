@@ -155,7 +155,12 @@ export function BuildProfileManager({ team, locale }: BuildProfileManagerProps) 
   const exportProfile = (profile: BuildProfile) => {
     const text = exportBuildProfile(profile);
     setTransferText(text);
-    void navigator.clipboard?.writeText(text).then(
+    const write = navigator.clipboard?.writeText(text);
+    if (!write) {
+      setNotice({ kind: 'ok', text: ru ? 'JSON подготовлен в поле ниже.' : 'JSON is ready in the field below.' });
+      return;
+    }
+    void write.then(
       () => setNotice({ kind: 'ok', text: ru ? 'JSON скопирован и оставлен в поле ниже.' : 'JSON copied and left in the field below.' }),
       () => setNotice({ kind: 'ok', text: ru ? 'JSON подготовлен в поле ниже.' : 'JSON is ready in the field below.' }),
     );
