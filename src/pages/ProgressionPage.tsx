@@ -2,8 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Backpack,
   Check,
-  CheckCircle2,
-  Circle,
   Copy,
   Download,
   ExternalLink,
@@ -16,11 +14,11 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { characterByName } from '../characters';
 import { QuickStart } from '../components/GuidedHelp';
-import { ResilientImage } from '../components/ResilientImage';
+import { ProgressionNextOverview } from '../components/ProgressionNextOverview';
+import { ProgressionRosterList } from '../components/ProgressionRosterList';
 import { Field, formatNumber, Metric, Panel, SelectField } from '../components/UI';
-import { localizedAttribute, localizedCharacterName, localizedRole } from '../gameTerms';
+import { localizedCharacterName } from '../gameTerms';
 import { parseStoredJson, useLocalStorage } from '../hooks/useLocalStorage';
 import { useI18n } from '../i18n';
 import {
@@ -40,7 +38,6 @@ import {
   defaultRosterProgressionState,
   migrateLegacyIroiState,
   normalizeRosterProgressionState,
-  requirementsForCharacter,
   totalForCategory,
   usedMaterialIds,
   type RosterProgressionState,
@@ -242,7 +239,7 @@ export function ProgressionPage() {
   }[transferStatus];
 
   return <div className="page calc-page roster-progression-page">
-    <header className="page-heading"><div><span>{ru ? 'ПЛАН ПРОКАЧКИ' : 'ROSTER PROGRESSION'}</span><h1>{ru ? 'Планировщик прорыва персонажей' : 'Roster ascension planner'}</h1><p>{ru ? 'Добавь нескольких персонажей, отметь уже оплаченные этапы прорыва и введи общий инвентарь. Сайт объединит одинаковые материалы и покажет, что действительно осталось фармить до открытия 80 уровня.' : 'Add several characters, mark paid ascensions and enter one shared inventory. The planner combines matching materials and shows what is still required to unlock level 80.'}</p></div><button className="button ghost" onClick={resetPlan}><Trash2 size={16} /> {ru ? 'Сбросить план' : 'Reset plan'}</button></header>
+    <header className="page-heading"><div><span>{ru ? 'ПЛАН ПРОКАЧКИ' : 'ROSTER PROGRESSION'}</span><h1>{ru ? 'Что прокачивать и фармить дальше' : 'What to raise and farm next'}</h1><p>{ru ? 'Добавь персонажей и отметь оплаченные прорывы. Сначала сайт покажет точные ресурсы для ближайших этапов, а ниже — полный остаток до открытия 80 уровня.' : 'Add characters and mark paid ascensions. The site first shows exact resources for the next steps, then the complete remaining plan to unlock level 80.'}</p></div><button className="button ghost" onClick={resetPlan}><Trash2 size={16} /> {ru ? 'Сбросить план' : 'Reset plan'}</button></header>
 
     {sharedPlan ? <Panel className="progression-share-preview">
       <div className="progression-share-preview-copy"><Link2 size={22} /><div><h2>{ru ? 'Получен общий план' : 'Shared plan received'}</h2><p>{ru ? `${sharedPlan.state.entries.length} персонажей · ${sharedCompleted} оплаченных этапов прорыва. ${sharedPlan.includesInventory ? 'Автор включил свой инвентарь — он заменит текущий.' : 'Инвентарь не передан — твои текущие значения сохранятся.'}` : `${sharedPlan.state.entries.length} characters · ${sharedCompleted} paid ascensions. ${sharedPlan.includesInventory ? 'The sender included inventory, which will replace yours.' : 'Inventory was not shared, so your current values will be preserved.'}`}</p></div></div>
@@ -250,23 +247,25 @@ export function ProgressionPage() {
     </Panel> : null}
 
     <QuickStart title={ru ? 'Как составить план' : 'How to build a plan'} steps={ru ? [
-      'Добавь всех персонажей, которых собираешься поднять. Будущие Линко и Занкоу не показываются до публикации их материалов.',
-      'В каждой карточке выбери последний этап прорыва, который уже полностью оплачен. Формулировка сразу показывает новый открытый предел уровня.',
-      'Введи общий инвентарь один раз — одинаковые материалы автоматически распределяются по всему плану.',
+      'Добавь персонажей и укажи последний полностью оплаченный этап прорыва.',
+      'В блоке «Ближайшая цель» смотри общий набор только для следующего этапа каждого персонажа.',
+      'Введи общий инвентарь: ближайшие блокеры и полный остаток до 80 пересчитаются автоматически.',
     ] : [
-      'Add every character you intend to raise. Upcoming Linko and Zankou remain unavailable until their materials are public.',
-      'For every card, choose the last ascension you fully paid. The option also states the level cap it unlocked.',
-      'Enter shared inventory once; matching materials are automatically applied across the whole plan.',
+      'Add characters and set the last fully paid ascension for each one.',
+      'Use Next target for the shared requirements of only one immediate step per character.',
+      'Enter shared inventory to recalculate immediate blockers and the complete remainder to level 80.',
     ]} />
 
     <div className="disclaimer top-note"><ShieldCheck size={18} /><span>{ru ? 'В расчёт входят только шесть этапов прорыва персонажа: валюта «Жук-монета», семейство обычных материалов и материалы с боссов Охоты на аномалию. EXP, навыки, пассивы, жизненные навыки и дуги намеренно не прибавляются без отдельного полного набора данных.' : 'This calculation includes the six character ascensions only: Beetle Coins, one common material family and one Anomaly Hunt drop. EXP, abilities, passives, Life Skills and Arcs are intentionally excluded without a separate complete dataset.'}</span></div>
 
     <div className="summary-strip roster-summary">
       <Metric label={ru ? 'Персонажей в плане' : 'Planned characters'} value={state.entries.length} />
-      <Metric label={ru ? 'Этапов прорыва оплачено' : 'Ascensions paid'} value={`${completedAscensions}/${totalAscensions || 0}`} />
-      <Metric label={ru ? 'Не хватает монет' : 'Coins missing'} value={formatNumber(shortages.beetleCoin)} />
-      <Metric label={ru ? 'Не хватает материалов с боссов' : 'Boss drops missing'} value={formatNumber(totalForCategory(shortages, 'boss'))} />
+      <Metric label={ru ? 'Этапов оплачено' : 'Ascensions paid'} value={`${completedAscensions}/${totalAscensions || 0}`} />
+      <Metric label={ru ? 'До ур. 80: монет' : 'To Lv. 80: coins'} value={formatNumber(shortages.beetleCoin)} />
+      <Metric label={ru ? 'До ур. 80: материалов с боссов' : 'To Lv. 80: boss drops'} value={formatNumber(totalForCategory(shortages, 'boss'))} />
     </div>
+
+    <ProgressionNextOverview entries={state.entries} inventory={state.inventory} />
 
     <Panel className="progression-transfer-panel">
       <div className="panel-title"><Link2 size={20} /><div><h2>{ru ? 'Передать или сохранить план' : 'Share or back up the plan'}</h2><p>{ru ? 'Ссылка предназначена для быстрой передачи, JSON — для полной резервной копии.' : 'Use a link for quick sharing and JSON for a complete backup.'}</p></div></div>
@@ -287,39 +286,17 @@ export function ProgressionPage() {
       </div>
     </Panel>
 
-    {state.entries.length === 0 ? <Panel className="progression-empty"><Backpack size={34} /><h2>{ru ? 'План пока пуст' : 'The plan is empty'}</h2><p>{ru ? 'Добавь хотя бы одного персонажа — после этого появятся материалы, инвентарь и маршруты фарма.' : 'Add at least one character to reveal material totals, inventory and farming routes.'}</p></Panel> : <section className="progression-character-grid" aria-label={ru ? 'Персонажи в плане' : 'Planned characters'}>{state.entries.map((entry) => {
-      const profile = characterAscensionByName.get(entry.characterName);
-      if (!profile) return null;
-      const character = characterByName.get(entry.characterName);
-      const characterRequired = requirementsForCharacter(profile, entry.completedSteps);
-      const displayName = localizedCharacterName(entry.characterName, locale);
-      const currentCap = entry.completedSteps === 0 ? 20 : ascensionSteps[entry.completedSteps - 1]?.unlocksLevel ?? 80;
-      const commonTotal = totalForCategory(characterRequired, 'common');
-      return <Panel key={entry.characterName} className="progression-character-card">
-        <header><ResilientImage src={character?.image} alt={displayName} wrapperClassName="progression-character-art" loading="lazy" /><div><h2>{displayName}</h2>{ru ? <small>{entry.characterName}</small> : null}<p>{localizedAttribute(character?.attribute, locale)} · {localizedRole(character?.role, locale)}</p></div><button className="icon-button progression-remove" onClick={() => removeCharacter(entry.characterName)} aria-label={ru ? `Убрать ${displayName} из плана` : `Remove ${displayName} from plan`}><Trash2 size={16} /></button></header>
-        <div className="progression-cap"><span>{ru ? 'Текущий открытый предел' : 'Current unlocked cap'}</span><strong>{ru ? `Ур. ${currentCap}` : `Lv. ${currentCap}`}</strong></div>
-        <SelectField label={ru ? 'Последний полностью оплаченный этап прорыва' : 'Last fully paid ascension'} value={entry.completedSteps} onChange={(event) => updateCompleted(entry.characterName, Number(event.target.value))}>
-          <option value={0}>{ru ? 'Этапы прорыва ещё не оплачены · предел ур. 20' : 'No ascensions paid · Lv. 20 cap'}</option>
-          {ascensionSteps.map((step, index) => <option key={step.atLevel} value={index + 1}>{ru ? `Оплачено на ур. ${step.atLevel} · открыт ур. ${step.unlocksLevel}` : `Paid at Lv. ${step.atLevel} · unlocked Lv. ${step.unlocksLevel}`}</option>)}
-        </SelectField>
-        <div className="progression-card-totals"><span><small>{ru ? 'Монеты' : 'Coins'}</small><b>{formatNumber(characterRequired.beetleCoin)}</b></span><span><small>{ascensionMaterials[profile.bossMaterial].name[locale]}</small><b>{formatNumber(characterRequired[profile.bossMaterial])}</b></span><span><small>{ru ? 'Обычные материалы' : 'Common materials'}</small><b>{formatNumber(commonTotal)}</b></span></div>
-        <details className="progression-breakdowns"><summary>{ru ? 'Показать этапы и источник' : 'Show stages and source'}</summary><div>{ascensionSteps.map((step, index) => {
-          const done = index < entry.completedSteps;
-          const materialId = profile.commonMaterials[step.commonTier];
-          return <div className={done ? 'done' : ''} key={step.atLevel}><span>{done ? <CheckCircle2 size={15} /> : <Circle size={15} />}</span><b>{ru ? `Ур. ${step.atLevel} → ${step.unlocksLevel}` : `Lv. ${step.atLevel} → ${step.unlocksLevel}`}</b><small>{formatNumber(step.beetleCoin)} · {step.bossCount ? `${step.bossCount} ${ascensionMaterials[profile.bossMaterial].name[locale]} · ` : ''}{step.commonCount} {ascensionMaterials[materialId].name[locale]}</small></div>;
-        })}</div><a href={profile.sourceUrl} target="_blank" rel="noreferrer">{profile.sourcePublisher} · {ru ? 'гайд обновлён' : 'guide updated'} {profile.sourceUpdatedAt} <ExternalLink size={13} /></a><small>{ru ? 'Проверено для проекта' : 'Verified for project'}: {profile.verifiedAt}</small></details>
-      </Panel>;
-    })}</section>}
+    {state.entries.length === 0 ? <Panel className="progression-empty"><Backpack size={34} /><h2>{ru ? 'План пока пуст' : 'The plan is empty'}</h2><p>{ru ? 'Добавь хотя бы одного персонажа — после этого появятся ближайшая цель, материалы, инвентарь и маршруты фарма.' : 'Add at least one character to reveal the next target, materials, inventory and farming routes.'}</p></Panel> : <ProgressionRosterList entries={state.entries} onUpdateCompleted={updateCompleted} onRemove={removeCharacter} />}
 
     {state.entries.length > 0 ? <div className="roster-progression-layout">
-      <Panel className="progression-inventory-panel"><div className="panel-title"><Backpack size={20} /><div><h2>{ru ? 'Общий инвентарь' : 'Shared inventory'}</h2><p>{ru ? 'Показываются только материалы, которые нужны выбранным персонажам. Сохранённые значения остальных материалов не удаляются.' : 'Only materials required by the selected characters are shown. Saved values for other materials are retained.'}</p></div></div><div className="progression-inventory-grid">{activeMaterialIds.map((id) => <Field key={id} label={ascensionMaterials[id].name[locale]} hint={ru ? ascensionMaterials[id].name.en : undefined} type="number" min="0" value={state.inventory[id]} onChange={(event) => updateInventory(id, Number(event.target.value))} />)}</div></Panel>
+      <Panel className="progression-inventory-panel"><div className="panel-title"><Backpack size={20} /><div><h2>{ru ? 'Общий инвентарь' : 'Shared inventory'}</h2><p>{ru ? 'Показываются только материалы, которые нужны выбранным персонажам. Одни и те же значения используются и для ближайших этапов, и для полного плана.' : 'Only materials required by selected characters are shown. The same values feed both immediate targets and the complete plan.'}</p></div></div><div className="progression-inventory-grid">{activeMaterialIds.map((id) => <Field key={id} label={ascensionMaterials[id].name[locale]} hint={ru ? ascensionMaterials[id].name.en : undefined} type="number" min="0" value={state.inventory[id]} onChange={(event) => updateInventory(id, Number(event.target.value))} />)}</div></Panel>
 
-      <Panel className="progression-shortage-panel"><h2>{ru ? 'Что осталось собрать' : 'What is still missing'}</h2><div className="material-list roster-material-list">{activeMaterialIds.map((id) => <div key={id} className={shortages[id] === 0 ? 'complete' : ''}><span className="material-name"><span>{ascensionMaterials[id].name[locale]}</span>{ru ? <small>{ascensionMaterials[id].name.en}</small> : null}</span><b>{formatNumber(shortages[id])}</b><small>{ru ? `Нужно ${formatNumber(required[id])}, есть ${formatNumber(state.inventory[id])}` : `Need ${formatNumber(required[id])}, owned ${formatNumber(state.inventory[id])}`}</small></div>)}</div></Panel>
+      <Panel className="progression-shortage-panel"><h2>{ru ? 'Полный остаток до ур. 80' : 'Complete remainder to Lv. 80'}</h2><p className="progression-shortage-intro">{ru ? 'Здесь показаны все будущие этапы выбранных персонажей, а не только ближайший.' : 'This includes every future ascension for the selected characters, not only the next one.'}</p><div className="material-list roster-material-list">{activeMaterialIds.map((id) => <div key={id} className={shortages[id] === 0 ? 'complete' : ''}><span className="material-name"><span>{ascensionMaterials[id].name[locale]}</span>{ru ? <small>{ascensionMaterials[id].name.en}</small> : null}</span><b>{formatNumber(shortages[id])}</b><small>{ru ? `Нужно ${formatNumber(required[id])}, есть ${formatNumber(state.inventory[id])}` : `Need ${formatNumber(required[id])}, owned ${formatNumber(state.inventory[id])}`}</small></div>)}</div></Panel>
     </div> : null}
 
-    {state.entries.length > 0 ? <section className="progression-farm-section"><h2 className="section-title">{ru ? 'Маршрут фарма материалов с боссов' : 'Boss-drop farming route'}</h2><div className="progression-farm-grid">{activeBossIds.map((id) => <Panel key={id} className={shortages[id] === 0 ? 'farm-card complete' : 'farm-card'}><Route size={20} /><div><h3>{ascensionMaterials[id].name[locale]}</h3>{ru ? <small>{ascensionMaterials[id].name.en}</small> : null}<p>{ascensionMaterials[id].farm?.[locale]}</p>{ru && ascensionMaterials[id].originalFarmName ? <span>{ascensionMaterials[id].originalFarmName}</span> : null}</div><strong>{shortages[id] === 0 ? (ru ? 'Собрано' : 'Ready') : formatNumber(shortages[id])}</strong><footer>{charactersUsingMaterial(state.entries, id).map((name) => localizedCharacterName(name, locale)).join(' · ')}</footer></Panel>)}</div>
+    {state.entries.length > 0 ? <section className="progression-farm-section"><h2 className="section-title">{ru ? 'Маршруты боссов для полного плана до ур. 80' : 'Boss routes for the complete plan to Lv. 80'}</h2><div className="progression-farm-grid">{activeBossIds.map((id) => <Panel key={id} className={shortages[id] === 0 ? 'farm-card complete' : 'farm-card'}><Route size={20} /><div><h3>{ascensionMaterials[id].name[locale]}</h3>{ru ? <small>{ascensionMaterials[id].name.en}</small> : null}<p>{ascensionMaterials[id].farm?.[locale]}</p>{ru && ascensionMaterials[id].originalFarmName ? <span>{ascensionMaterials[id].originalFarmName}</span> : null}</div><strong>{shortages[id] === 0 ? (ru ? 'Собрано' : 'Ready') : formatNumber(shortages[id])}</strong><footer>{charactersUsingMaterial(state.entries, id).map((name) => localizedCharacterName(name, locale)).join(' · ')}</footer></Panel>)}</div>
 
-      <h2 className="section-title">{ru ? 'Обычные материалы в плане' : 'Common materials in the plan'}</h2><Panel className="common-material-summary">{activeCommonIds.map((id) => <div key={id} className={shortages[id] === 0 ? 'complete' : ''}><span><b>{ascensionMaterials[id].name[locale]}</b>{ru ? <small>{ascensionMaterials[id].name.en}</small> : null}</span><strong>{formatNumber(shortages[id])}</strong><small>{charactersUsingMaterial(state.entries, id).map((name) => localizedCharacterName(name, locale)).join(' · ')}</small></div>)}</Panel>
+      <h2 className="section-title">{ru ? 'Обычные материалы для полного плана' : 'Common materials for the complete plan'}</h2><Panel className="common-material-summary">{activeCommonIds.map((id) => <div key={id} className={shortages[id] === 0 ? 'complete' : ''}><span><b>{ascensionMaterials[id].name[locale]}</b>{ru ? <small>{ascensionMaterials[id].name.en}</small> : null}</span><strong>{formatNumber(shortages[id])}</strong><small>{charactersUsingMaterial(state.entries, id).map((name) => localizedCharacterName(name, locale)).join(' · ')}</small></div>)}</Panel>
     </section> : null}
 
     <Panel className="progression-source-policy"><div className="panel-title"><ShieldCheck size={20} /><div><h2>{ru ? 'Источники и границы данных' : 'Sources and data boundaries'}</h2><p>{ru ? 'Почему итог не содержит красивых, но неподтверждённых чисел' : 'Why the total excludes attractive but unsupported numbers'}</p></div></div><div>{progressionDatasetSources.map((source) => <article key={source.publisher}><div><b>{source.publisher}</b><span>{ru ? 'Источник обновлён' : 'Source updated'}: {source.updatedAt}</span><span>{ru ? 'Проверено' : 'Verified'}: {source.verifiedAt}</span></div><p>{source.scope[locale]}</p><a href={source.url} target="_blank" rel="noreferrer">{ru ? 'Открыть источник' : 'Open source'} <ExternalLink size={13} /></a></article>)}</div><p className="model-note">{ru ? 'Итог относится только к материалам прорыва с ур. 20 по ур. 70, которые открывают предел ур. 80. Он не является полной стоимостью прокачки персонажа с нуля до MAX.' : 'The total covers ascension payments at Lv. 20 through Lv. 70 that unlock the Lv. 80 cap. It is not the complete cost of raising a character from zero to MAX.'}</p></Panel>
