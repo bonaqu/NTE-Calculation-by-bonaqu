@@ -3,7 +3,9 @@ import { BookOpenText, CheckCircle2, ChevronDown, ExternalLink, Search } from 'l
 import { type ArcDirectoryRarity, type ArcDirectoryType } from '../arc-directory';
 import { arcCatalog } from '../arc-catalog';
 import { arcPresetSources } from '../arc-presets';
+import { awakeningSearchText } from '../awakening-reference';
 import { characterCatalog } from '../characters';
+import { CharacterAwakeningReference } from '../components/CharacterAwakeningReference';
 import { sources } from '../data';
 import { useI18n } from '../i18n';
 import { Panel } from '../components/UI';
@@ -62,6 +64,7 @@ export function DatabasePage() {
       ...(typeEvidence?.alternatives?.map((entry) => entry.russian) ?? []),
       row.summary.ru,
       row.summary.en,
+      awakeningSearchText(row.name),
       row.rarity,
       row.releaseVersion ?? '',
     ].join(' ');
@@ -118,16 +121,16 @@ export function DatabasePage() {
   const hasCharacterFilters = characterRarity !== 'all' || characterAttribute !== 'all' || characterRole !== 'all' || characterArcType !== 'all' || characterStatus !== 'all';
 
   return <div className="page calc-page database-page">
-    <header className="page-heading"><div><span>{ru ? 'БАЗА ДАННЫХ' : 'DATABASE'}</span><h1>{ru ? 'Персонажи и дуги NTE' : 'NTE database'}</h1><p>{ru ? 'Найди персонажа, проверь его роль и тип дуги, а затем сразу открой совместимое оружие. Основным показывается название с наиболее сильными доступными доказательствами; английское имя и конфликтующие варианты остаются доступны для проверки и поиска.' : 'Find a character, verify their role and Arc type, then open compatible weapons. The strongest supported localized label is primary while canonical and conflicting alternatives remain searchable and reviewable.'}</p></div></header>
+    <header className="page-heading"><div><span>{ru ? 'БАЗА ДАННЫХ' : 'DATABASE'}</span><h1>{ru ? 'Персонажи и дуги NTE' : 'NTE database'}</h1><p>{ru ? 'Найди персонажа, проверь его роль, тип дуги и полный справочник пробуждений. Основным показывается название с наиболее сильными доступными доказательствами; английское имя и конфликтующие варианты остаются доступны для проверки и поиска.' : 'Find a character, verify role, Arc type and the full Awakening reference. The strongest supported localized label is primary while canonical and conflicting alternatives remain searchable and reviewable.'}</p></div></header>
 
     <QuickStart title={ru ? 'Как пользоваться базой' : 'How to use the database'} steps={ru ? [
       'Открой вкладку персонажей или введи имя. Поиск понимает официальное «Шинку», старое «Синку», «Оценщик», «Зеро» и другие зафиксированные варианты.',
       'Нажми «Показать совместимые дуги» — база сама переключится на подходящий тип оружия.',
-      'Раскрой карточку дуги, чтобы увидеть характеристики, эффект, источник данных и доказательства русского названия.',
+      'Раскрой «Пробуждения A1–A6» в карточке персонажа: здесь хранится полный справочник, а калькулятор показывает только узлы, нужные выбранной формуле.',
     ] : [
       'Open Characters and filter by role, attribute or rarity. Recorded alternative names remain searchable.',
       'Select “Show compatible Arcs” to switch to matching weapons automatically.',
-      'Open an Arc card to view stats, effect, data source and Russian-label evidence.',
+      'Open the A1–A6 Awakening reference in a character card. The calculator shows only nodes required by the selected formula.',
     ]} />
 
     <LocalizationEvidenceLegend />
@@ -137,7 +140,7 @@ export function DatabasePage() {
         <button role="tab" aria-selected={tab === 'characters'} className={tab === 'characters' ? 'active' : ''} onClick={() => setTab('characters')}>{ru ? `Персонажи · ${characterCatalog.length}` : `Characters · ${characterCatalog.length}`}</button>
         <button role="tab" aria-selected={tab === 'arcs'} className={tab === 'arcs' ? 'active' : ''} onClick={() => setTab('arcs')}>{ru ? `Дуги · ${arcCatalog.length}` : `Arcs · ${arcCatalog.length}`}</button>
       </div>
-      <label className="search-field"><Search size={18} /><span className="sr-only">{ru ? 'Поиск' : 'Search'}</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tab === 'arcs' ? (ru ? 'Название, альтернативный вариант, тип, эффект…' : 'Name, alternative, type, effect…') : (ru ? 'Имя, вариант написания, роль, атрибут…' : 'Name, alternative, role, attribute…')} /></label>
+      <label className="search-field"><Search size={18} /><span className="sr-only">{ru ? 'Поиск' : 'Search'}</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tab === 'arcs' ? (ru ? 'Название, альтернативный вариант, тип, эффект…' : 'Name, alternative, type, effect…') : (ru ? 'Имя, роль, атрибут, пробуждение…' : 'Name, role, attribute, Awakening…')} /></label>
     </div>
 
     {tab === 'characters' ? <div className="character-filter-panel" aria-label={ru ? 'Фильтры персонажей' : 'Character filters'}>
@@ -173,6 +176,7 @@ export function DatabasePage() {
           <p className="character-summary">{character.summary[locale]}</p>
           {ru && nameEvidence ? <LocalizationEvidenceNote evidence={nameEvidence} subject="Имя" /> : null}
           {ru && typeEvidence ? <LocalizationEvidenceNote evidence={typeEvidence} subject="Тип дуги" /> : null}
+          <CharacterAwakeningReference characterName={character.name} locale={locale} />
           <div className="character-card-actions">
             {character.arcType ? <button className="button ghost compact-button" type="button" onClick={() => showCompatibleArcs(character.arcType!)}>{ru ? 'Показать совместимые дуги' : 'Show compatible Arcs'}</button> : <span className="character-unknown-note">{ru ? 'Совместимые дуги появятся после объявления типа.' : 'Compatible Arcs will appear after the type is announced.'}</span>}
             <a href={character.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Источник характеристик' : 'Profile source'} <ExternalLink size={14} /></a>

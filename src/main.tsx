@@ -11,6 +11,7 @@ import './resilient-images.css';
 import './guided-ux.css';
 import './database.css';
 import './character-catalog.css';
+import './awakening-reference.css';
 import './team-input.css';
 import './team-readiness.css';
 import './team-sequence-builder.css';

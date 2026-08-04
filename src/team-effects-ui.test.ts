@@ -7,6 +7,7 @@ import panelSource from './components/VerifiedTeamEffectsPanel.tsx?raw';
 import buildSource from './game-visible-build.ts?raw';
 import calculationSource from './game-visible-calculation.ts?raw';
 import effectSource from './team-effects.ts?raw';
+import awakeningReferenceSource from './awakening-reference.ts?raw';
 import mainSource from './main.tsx?raw';
 
 const css = readFileSync(new URL('./team-effects.css', import.meta.url), 'utf8');
@@ -30,12 +31,16 @@ describe('verified team effect UI contract', () => {
     expect(buildSource).toContain('activeTeamEffectIds: []');
   });
 
-  it('shows exact effect requirements and the Sakiri A4 node relationship', () => {
+  it('shows exact effect requirements through the centralized Sakiri A4 relationship', () => {
     expect(effectSource).toContain("'haniel.friendship.nova-atk-drain'");
     expect(effectSource).toContain("'sakiri.awakening-four.team-atk'");
     expect(effectSource).toContain("'sakiri.impish-trick.def-reduction'");
-    expect(pageSource).toContain("node.level === 4");
-    expect(pageSource).toContain("activeBuild.activeTeamEffectIds.includes('sakiri.awakening-four.team-atk')");
+    expect(awakeningReferenceSource).toContain("effectId: 'sakiri.awakening-four.team-atk'");
+    expect(awakeningReferenceSource).toContain("characterName: 'Sakiri'");
+    expect(awakeningReferenceSource).toContain('level: 4');
+    expect(pageSource).toContain('relevantAwakeningNodes(');
+    expect(pageSource).not.toContain('node.level === 4');
+    expect(pageSource).not.toContain("activeBuild.activeTeamEffectIds.includes('sakiri.awakening-four.team-atk')");
     expect(panelSource).toContain('effect.minimumAwakening');
   });
 
