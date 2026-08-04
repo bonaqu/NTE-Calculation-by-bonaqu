@@ -9,7 +9,7 @@ import {
 import { calculateGameVisibleTeam } from './game-visible-calculation';
 import { deriveVerifiedTeamEffects, verifiedTeamEffects } from './team-effects';
 
-function damageBuild(characterName: string, atk = 1_000): GameVisibleCharacterBuild {
+function damageBuild(characterName: string, atk = 1_000, critRate = 0): GameVisibleCharacterBuild {
   const build = createEmptyGameVisibleBuild(characterName);
   return {
     ...build,
@@ -18,7 +18,7 @@ function damageBuild(characterName: string, atk = 1_000): GameVisibleCharacterBu
     stats: {
       ...build.stats,
       atk,
-      critRate: 0,
+      critRate,
       critDamage: 100,
     },
   };
@@ -34,10 +34,10 @@ function team(builds: GameVisibleCharacterBuild[]): GameVisibleTeamState {
 }
 
 describe('verified team support effects', () => {
-  it('publishes three uniquely sourced effects', () => {
-    expect(verifiedTeamEffects).toHaveLength(3);
-    expect(new Set(verifiedTeamEffects.map((effect) => effect.id)).size).toBe(3);
-    expect(verifiedTeamEffects.map((effect) => effect.sourceCharacter)).toEqual(['Haniel', 'Sakiri', 'Sakiri']);
+  it('publishes four uniquely sourced effects', () => {
+    expect(verifiedTeamEffects).toHaveLength(4);
+    expect(new Set(verifiedTeamEffects.map((effect) => effect.id)).size).toBe(4);
+    expect(verifiedTeamEffects.map((effect) => effect.sourceCharacter)).toEqual(['Haniel', 'Sakiri', 'Sakiri', 'Hathor']);
     for (const effect of verifiedTeamEffects) {
       expect(effect.sourceUrl).toMatch(/^https:\/\//u);
       expect(effect.supportingSourceUrl).toMatch(/^https:\/\//u);
@@ -120,6 +120,52 @@ describe('verified team support effects', () => {
     expect(enabled.teamEffects[0]?.derivedAmount).toBe(10);
     expect(enabled.rows[0]?.result?.expected).toBeGreaterThan(baseline.rows[0]?.result?.expected ?? 0);
     expect(enabled.rows.every((row) => row.conditions.some((condition) => condition.id.startsWith('sakiri.impish-trick.def-reduction')))).toBe(true);
+  });
+
+  it('applies Hathor +10 CRIT Rate to every slot only when Remora is explicitly enabled', () => {
+    const baselineState = team([
+      damageBuild('Shinku', 1_000, 50),
+      damageBuild('Hathor', 1_000, 50),
+      damageBuild('Zero', 1_000, 50),
+      damageBuild('Nanally', 1_000, 50),
+    ]);
+    const baseline = calculateGameVisibleTeam(baselineState);
+    const enabledState = {
+      ...baselineState,
+      builds: baselineState.builds.map((build, index) => index === 1 ? {
+        ...build,
+        activeTeamEffectIds: ['hathor.delay-warning.remora-crit-rate'],
+      } : build),
+    };
+    const before = JSON.stringify(enabledState);
+    const enabled = calculateGameVisibleTeam(enabledState);
+    const derived = deriveVerifiedTeamEffects(enabledState);
+
+    expect(enabled.teamEffects).toHaveLength(1);
+    expect(enabled.teamEffects[0]).toMatchObject({ active: true, derivedAmount: 10, recipients: [0, 1, 2, 3] });
+    expect(derived.slotModifiers.every((modifier) => modifier.critRate === 10)).toBe(true);
+    expect(derived.slotModifiers.every((modifier) => modifier.flatAtk === 0)).toBe(true);
+    expect(derived.slotModifiers.every((modifier) => modifier.provenance.some((entry) => entry.kind === 'crit-rate'))).toBe(true);
+    expect(enabled.rows.every((row) => row.result?.totalAtk === 1_000)).toBe(true);
+    expect(enabled.rows.every((row) => row.result?.expectedCritMultiplier === 1.6)).toBe(true);
+    expect(enabled.rows.every((row, index) => (row.result?.expected ?? 0) > (baseline.rows[index]?.result?.expected ?? 0))).toBe(true);
+    expect(enabled.rows.every((row) => row.conditions.some((condition) => condition.id.startsWith('hathor.delay-warning.remora-crit-rate')))).toBe(true);
+    expect(JSON.stringify(enabledState)).toBe(before);
+    expect(enabledState.builds.every((build) => build.stats.critRate === 50)).toBe(true);
+  });
+
+  it('clamps temporary Hathor CRIT Rate through calculation-core at 100%', () => {
+    const state = team([
+      damageBuild('Shinku', 1_000, 100),
+      {
+        ...damageBuild('Hathor', 1_000, 100),
+        activeTeamEffectIds: ['hathor.delay-warning.remora-crit-rate'],
+      },
+      damageBuild('Zero', 1_000, 100),
+      damageBuild('Nanally', 1_000, 100),
+    ]);
+    const result = calculateGameVisibleTeam(state);
+    expect(result.rows.every((row) => row.result?.expectedCritMultiplier === 2)).toBe(true);
   });
 
   it('requires Base ATK only for enabled scaling effects', () => {
