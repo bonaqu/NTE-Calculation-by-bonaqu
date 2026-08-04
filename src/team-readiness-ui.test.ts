@@ -31,8 +31,11 @@ describe('Team Calculator readiness UI contract', () => {
 
   it('does not claim that player confirmation makes the model official', () => {
     expect(panel).toContain('Это по-прежнему оценочная модель');
-    expect(page).toContain('не официальную точность результата');
     expect(panel).toContain('The model remains an estimate');
+    expect(page).toContain('Сайт не выдумывает множители навыков');
+    expect(page).toContain('не подставляются как числовые пресеты');
+    expect(page).toContain('does not invent skill multipliers');
+    expect(page).toContain('are not inserted as numeric presets');
   });
 
   it('keeps the layout flat and responsive instead of adding floating dashboard cards', () => {
