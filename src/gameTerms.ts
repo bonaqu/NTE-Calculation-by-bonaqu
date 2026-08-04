@@ -34,7 +34,7 @@ export const arcRussianNames: Record<string, string> = {
   'Shiny Days': 'Блестящие дни',
   'Song of the Whale': 'Песня кита',
   'Stellar Veil': 'Звёздная вуаль',
-  'Tears Beneath the Mask': 'Слёзы с маской',
+  'Tears Beneath the Mask': 'Слезы за маской',
   "The Fools' Spring": 'Ложная весна',
   'The Forgotten': 'Забытое',
   'The Good, The Bad, The Bitter': 'Хороший, плохой, горький',
@@ -73,17 +73,17 @@ export const characterRussianNames: Record<string, string> = {
   Shinku: 'Шинку',
   Skia: 'Ския',
   Zankou: 'Занкоу',
-  Zero: 'Нулевой эспер',
+  Zero: 'Оценщик',
 };
 
 /**
- * Legacy, colloquial and search-only aliases. The first-class RU display name
- * always comes from characterRussianNames; aliases must never become primary labels.
+ * Legacy and search-only aliases. The first-class RU display name always comes
+ * from characterRussianNames; aliases must never become primary labels.
  */
 export const characterRussianAliases: Record<string, readonly string[]> = {
   Daffodill: ['Нарцисс'],
   Shinku: ['Синку'],
-  Zero: ['Оценщик', 'Зеро', 'Зеро эспер'],
+  Zero: ['Зеро', 'Зеро эспер', 'Нулевой эспер'],
 };
 
 export function localizedCharacterAliases(name: string): readonly string[] {
@@ -92,7 +92,7 @@ export function localizedCharacterAliases(name: string): readonly string[] {
 
 const arcTypeRussian: Record<ArcDirectoryType, string> = {
   Solid: 'Твёрдый',
-  Gas: 'Газовый',
+  Gas: 'Газ',
   Liquid: 'Жидкий',
   Plasma: 'Плазменный',
   Synthesis: 'Гибридный',
