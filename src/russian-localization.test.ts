@@ -54,7 +54,7 @@ function sourceRussianStrings(): SourceString[] {
     if (file.endsWith('.test.ts') || file.endsWith('.test.tsx')) return [];
     return source.split('\n').flatMap((text, index) => /[А-Яа-яЁё]/u.test(text)
       ? [{ file: file.replace(/^\.\//u, ''), line: index + 1, text }]
-      : [];
+      : []);
   });
 }
 
