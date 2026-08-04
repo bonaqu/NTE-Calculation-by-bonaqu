@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import databaseSource from './pages/DatabasePage.tsx?raw';
 import calculatorSource from './pages/GameVisibleTeamCalculatorPage.tsx?raw';
 import componentSource from './components/CharacterAwakeningReference.tsx?raw';
+import namedRequirementsSource from './components/NamedAwakeningRequirements.tsx?raw';
 import referenceSource from './awakening-reference.ts?raw';
 import mainSource from './main.tsx?raw';
 
@@ -31,13 +32,19 @@ describe('Awakening reference placement', () => {
     expect(componentSource).toContain('verifiedAt');
   });
 
-  it('prevents the complete reference from returning to Team Calculator', () => {
+  it('prevents generic Awakening input and the complete reference from returning to Team Calculator', () => {
     expect(calculatorSource).toContain('relevantAwakeningNodes(');
-    expect(calculatorSource).toContain('Требуемое пробуждение');
-    expect(calculatorSource).toContain('Полный справочник A1–A6 находится в Базе персонажей');
+    expect(calculatorSource).toContain('<NamedAwakeningRequirements');
+    expect(calculatorSource).not.toContain('nte-awakening-picker');
+    expect(calculatorSource).not.toContain("Array.from({ length: 7 }");
     expect(calculatorSource).not.toContain('awakeningNodesByCharacter');
     expect(calculatorSource).not.toContain('supportAwakeningNodesByCharacter');
     expect(calculatorSource).not.toContain('Все предыдущие считаются открытыми автоматически');
+
+    expect(namedRequirementsSource).toContain('Требуемые пробуждения');
+    expect(namedRequirementsSource).toContain('Полный список A1–A6 находится в Базе персонажей');
+    expect(namedRequirementsSource).toContain('type="checkbox"');
+    expect(namedRequirementsSource).toContain('A{node.level} · {node.title[locale]}');
     expect(referenceSource).toContain('relatedActionIds?.includes(actionId)');
     expect(referenceSource).toContain('teamEffectAwakeningRequirements');
   });
