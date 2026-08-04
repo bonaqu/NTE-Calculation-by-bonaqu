@@ -20,7 +20,7 @@ export const arcPresetSources: SourceEntry[] = [
     url: 'https://www.icy-veins.com/neverness-to-everness/weapons/the-wrong-gate',
     verifiedAt: '2026-08-04',
     scope: {
-      ru: 'Независимая проверка базовой ATK 570, дополнительной ATK 30% и эффекта M1.',
+      ru: 'Независимая проверка базовой АТК 570, дополнительной АТК 30% и эффекта M1.',
       en: 'Independent verification of 570 base ATK, 30% ATK substat and the M1 effect.',
     },
   },
@@ -31,7 +31,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'wrong-gate-m5', name: 'The Wrong Gate', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 5,
     benchmarkNote: {
-      ru: 'M5: постоянные +32% ATK; после лечения — +60% урона Анима Ирой и +30% урона союзников на 20 секунд.',
+      ru: 'M5: постоянные +32% АТК; после лечения — +60% урона Анимы Ирой и +30% урона союзников на 20 секунд.',
       en: 'M5: permanent +32% ATK; after healing, +60% Iroi Anima DMG and +30% ally damage for 20 seconds.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/47.webp',
@@ -46,7 +46,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'wrong-gate-m1', name: 'The Wrong Gate', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 1, benchmarkPercent: 100,
     benchmarkNote: {
-      ru: 'M1: постоянные +16% ATK; после лечения — +30% урона Анима Ирой и +15% урона союзников на 20 секунд.',
+      ru: 'M1: постоянные +16% АТК; после лечения — +30% урона Анимы Ирой и +15% урона союзников на 20 секунд.',
       en: 'M1: permanent +16% ATK; after healing, +30% Iroi Anima DMG and +15% ally damage for 20 seconds.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/47.webp',
@@ -61,7 +61,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'last-rose-m1', name: 'The Last Rose', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'CRIT Rate', secondaryValue: 24, mixing: 1, benchmarkPercent: 92.97,
     benchmarkNote: {
-      ru: 'Постоянные +14% ATK учитываются. Короткое окно «Шипа хаоса» до +60% крит. урона намеренно не включено в консервативную модель.',
+      ru: 'Постоянные +14% АТК учитываются. Краткий эффект «Шипа хаоса» до +60% критического урона намеренно не включён в консервативную модель.',
       en: 'The permanent +14% ATK is included. The short Chaos Thorn window of up to +60% CRIT DMG is deliberately omitted from the conservative model.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/8.webp',
@@ -76,7 +76,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'youthful-fantasy-m5', name: 'Youthful Fantasy', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 5,
     benchmarkNote: {
-      ru: 'Интенсивность разрушения и эффект «Чёрного тома» зависят от боя; частичная модель учитывает только постоянные 570 ATK и 30% ATK.',
+      ru: 'Эффективность разрушения и эффект «Чёрного тома» зависят от боя; частичная модель учитывает только постоянные 570 АТК и 30% АТК.',
       en: 'Break Intensity and Black Tome are encounter-dependent; the partial model includes only the permanent 570 ATK and 30% ATK.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/4.webp',
@@ -87,7 +87,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'youthful-fantasy-m1', name: 'Youthful Fantasy', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 1, benchmarkPercent: 92.55,
     benchmarkNote: {
-      ru: 'Интенсивность разрушения и эффект «Чёрного тома» зависят от боя; частичная модель учитывает только постоянные 570 ATK и 30% ATK.',
+      ru: 'Эффективность разрушения и эффект «Чёрного тома» зависят от боя; частичная модель учитывает только постоянные 570 АТК и 30% АТК.',
       en: 'Break Intensity and Black Tome are encounter-dependent; the partial model includes only the permanent 570 ATK and 30% ATK.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/4.webp',
@@ -98,7 +98,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'fluff-fleetness-m1', name: 'Fluff of Fleetness', rarity: 'S', type: 'Liquid', baseAtk: 512,
     secondaryLabel: 'CRIT DMG', secondaryValue: 44, mixing: 1, benchmarkPercent: 92,
     benchmarkNote: {
-      ru: 'Постоянные 44% крит. урона учитываются. Накопительные уровни ATK на поле исключены, потому что Ирой почти всегда вне поля.',
+      ru: 'Постоянные 44% критического урона учитываются. Накопительные уровни АТК на поле исключены, потому что Ирой почти всегда вне поля.',
       en: 'The permanent 44% CRIT DMG is included. On-field ATK stacks are omitted because Iroi is nearly always off-field.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/6.webp',
@@ -109,7 +109,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'shiny-days-m5', name: 'Shiny Days', rarity: 'A', type: 'Liquid', baseAtk: 475,
     secondaryLabel: 'ATK%', secondaryValue: 25, mixing: 5, benchmarkPercent: 91.88,
     benchmarkNote: {
-      ru: 'Постоянные 25% ATK учитываются. Бонус по сломленным целям исключён как зависящий от боя.',
+      ru: 'Постоянные 25% АТК учитываются. Бонус по сломленным целям исключён как зависящий от боя.',
       en: 'The permanent 25% ATK is included. The Broken-target bonus is omitted as encounter-dependent.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/1.webp',
@@ -120,7 +120,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'clear-skies-m5', name: 'Clear Skies', rarity: 'A', type: 'Liquid', baseAtk: 475,
     secondaryLabel: 'ATK%', secondaryValue: 25, mixing: 5, benchmarkPercent: 91.63,
     benchmarkNote: {
-      ru: 'Постоянные 25% ATK учитываются. Специализированный бонус навыка перенаправления и сверхспособности не применяется ко всему выбранному окну.',
+      ru: 'Постоянные 25% АТК учитываются. Специализированный бонус навыка перенаправления и сверхспособности не применяется ко всей выбранной последовательности.',
       en: 'The permanent 25% ATK is included. The specialized Redirect Skill and Ultimate bonus is not applied to the whole selected window.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/5.webp',

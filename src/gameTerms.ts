@@ -73,38 +73,38 @@ export const characterRussianNames: Record<string, string> = {
   Shinku: 'Шинку',
   Skia: 'Ския',
   Zankou: 'Занкоу',
-  Zero: 'Оценщик',
+  Zero: 'Зеро',
 };
 
 /**
- * Legacy and search-only aliases. The first-class RU display name always comes
- * from characterRussianNames; aliases must never become primary labels.
+ * Legacy, contextual and search-only aliases. The first-class RU display name
+ * always comes from characterRussianNames; aliases must never become primary labels.
  */
 export const characterRussianAliases: Record<string, readonly string[]> = {
   Daffodill: ['Нарцисс'],
   Shinku: ['Синку'],
-  Zero: ['Зеро', 'Зеро эспер', 'Нулевой эспер'],
+  Zero: ['Оценщик', 'Зеро эспер', 'Нулевой эспер'],
 };
 
 export function localizedCharacterAliases(name: string): readonly string[] {
   return characterRussianAliases[name] ?? [];
 }
 
-const arcTypeRussian: Record<ArcDirectoryType, string> = {
+export const arcTypeRussian: Record<ArcDirectoryType, string> = {
   Solid: 'Твёрдый',
-  Gas: 'Газ',
+  Gas: 'Газовый',
   Liquid: 'Жидкий',
   Plasma: 'Плазменный',
   Synthesis: 'Гибридный',
 };
 
-const statRussian: Record<string, string> = {
-  'ATK%': 'ATK',
-  'HP%': 'HP',
-  'CRIT Rate': 'Крит. шанс',
-  'CRIT DMG': 'Крит. урон',
-  'Break Intensity': 'Интенсивность разрушения',
-  'Charge Efficiency': 'Эффективность заряда',
+export const statRussian: Record<string, string> = {
+  'ATK%': 'АТК',
+  'HP%': 'ОЗ',
+  'CRIT Rate': 'Шанс критического удара',
+  'CRIT DMG': 'Критический урон',
+  'Break Intensity': 'Эффективность разрушения',
+  'Charge Efficiency': 'Эффективность зарядки',
   'DMG Bonus': 'Бонус урона',
 };
 
@@ -119,7 +119,7 @@ const sourceTitleRussian: Record<string, string> = {
   'The Wrong Gate Details and Best Characters': 'Характеристики «Неверных врат» и лучшие персонажи',
 };
 
-const attributeRussian: Record<string, string> = {
+export const attributeRussian: Record<string, string> = {
   Anima: 'Анима',
   Cosmos: 'Космос',
   Lakshana: 'Лакшана',
@@ -128,15 +128,25 @@ const attributeRussian: Record<string, string> = {
   Psyche: 'Психика',
 };
 
-const roleRussian: Record<string, string> = {
+export const roleRussian: Record<string, string> = {
   Damage: 'Урон',
-  Buff: 'Бафф',
+  Buff: 'Усиление',
   Survival: 'Выживание',
   Support: 'Поддержка',
 };
 
+export const russianAbbreviations = {
+  ATK: 'АТК',
+  DEF: 'ЗАЩ',
+  HP: 'ОЗ',
+  CRIT: 'КРИТ',
+  DPS: 'DPS',
+  MAX: 'MAX',
+  MIN: 'MIN',
+} as const;
+
 export const russianClientTerminology = {
-  version: 3,
+  version: 4,
   verifiedAt: '2026-08-04',
   sourcePriority: [
     'current-russian-client',
@@ -149,17 +159,21 @@ export const russianClientTerminology = {
   attributes: attributeRussian,
   roles: roleRussian,
   stats: statRussian,
+  abbreviations: russianAbbreviations,
   combat: {
     esperCycle: 'Цикл эспера',
+    basicAttack: 'Базовая атака',
     ultimate: 'Сверхспособность',
     redirectSkill: 'Навык перенаправления',
+    supportSkill: 'Навык поддержки',
+    criticalDodge: 'Критическое уклонение',
+    criticalCounter: 'Критический контрудар',
     progressionStage: 'Прорыв',
     breakGauge: 'Шкала разрушения',
-    breakIntensity: 'Интенсивность разрушения',
+    breakIntensity: 'Эффективность разрушения',
     brokenEnemy: 'Сломленный враг',
     breakDamage: 'Урон разрушения',
   },
-  unchangedAbbreviations: ['ATK', 'DEF', 'HP', 'CRIT', 'DPS', 'MAX', 'MIN'] as const,
 } as const;
 
 export type ProgressionMaterialKey = 'beetleCoin' | 'page' | 'fading' | 'blurred' | 'chaos';
@@ -204,6 +218,10 @@ export function localizedMaterial(key: ProgressionMaterialKey, locale: Locale): 
 
 export function localizedSourceTitle(title: string, locale: Locale): string {
   return locale === 'ru' ? sourceTitleRussian[title] ?? title : title;
+}
+
+export function localizedAbbreviation(value: keyof typeof russianAbbreviations, locale: Locale): string {
+  return locale === 'ru' ? russianAbbreviations[value] : value;
 }
 
 export function originalName(name: string, locale: Locale): string | null {

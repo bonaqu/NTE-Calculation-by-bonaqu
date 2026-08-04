@@ -6,24 +6,24 @@ const publisher = 'Prydwen Institute';
 export const rotationPresets: RotationPreset[] = [
   {
     id: 'shinku-charge',
-    title: { ru: 'Синку · команда Заряда', en: 'Shinku · Charge team' },
+    title: { ru: 'Шинку · команда Заряда', en: 'Shinku · Charge team' },
     description: {
-      ru: 'Ротация вокруг длинного окна сверхспособности Синку. Ремора подготавливается Хатор, Оценщик быстро заполняет шкалу цикла, а Наналли запускает Цветение и Заряд перед выходом Синку.',
+      ru: 'Ротация вокруг продолжительного состояния сверхспособности Шинку. Хатор подготавливает Ремору, Зеро быстро заполняет шкалу цикла, а Наналли запускает Цветение и Заряд перед выходом Шинку.',
       en: 'A rotation built around Shinku long Ultimate window. Hathor prepares Remora, Zero fills the Cycle gauge, and Nanally triggers Blossom and Charge before Shinku takes the field.',
     },
     team: ['Shinku', 'Hathor', 'Zero', 'Nanally'],
     cyclePlan: ['remora', 'blossom', 'charge'],
     assumptions: [
       {
-        ru: 'Если шкала цикла эспера не готова, сначала набери её Синку: потрать 8 зарядов навыка, затем ещё 4 заряда навыком или контратакой после идеального уклонения.',
+        ru: 'Если шкала цикла эспера не готова, сначала набери её Шинку: потрать 8 зарядов навыка, затем ещё 4 заряда навыком или контратакой после критического уклонения.',
         en: 'If the Esper Cycle gauge is not ready, prepare it on Shinku first by spending 8 skill stacks, then 4 more through Skill or a dodge counter.',
       },
       {
-        ru: 'Главная цель окна Синку — выполнить 5 усиленных навыков и 3 рывка сверхспособности до завершающего удара.',
+        ru: 'Главная цель активной последовательности Шинку — выполнить 5 усиленных навыков и 3 рывка сверхспособности до завершающего удара.',
         en: 'The main execution target is 5 enhanced Skills and 3 Ultimate dashes before the finisher.',
       },
       {
-        ru: 'Источник не публикует точную длительность каждого действия. Страница показывает порядок действий, а не воспроизводимую точную временную шкалу.',
+        ru: 'Источник не публикует точную длительность каждого действия. Страница показывает порядок действий, а не придуманную посекундную шкалу.',
         en: 'The source does not publish exact action durations. This preset represents order and conditions, not a reproducible second-by-second timeline.',
       },
     ],
@@ -39,32 +39,32 @@ export const rotationPresets: RotationPreset[] = [
       {
         id: 'hathor-open', actor: 'Hathor', phase: 'setup', action: 'swap', cycle: 'remora',
         instruction: { ru: 'Переключись на Хатор, запусти Ремору, используй сверхспособность и навык перенаправления.', en: 'Swap to Hathor to trigger Remora, then use Ultimate and Redirect Skill.' },
-        outcome: { ru: 'На цели действует Ремора; начинается подготовка окна Заряда.', en: 'Remora is active on the target and the Charge setup begins.' },
+        outcome: { ru: 'На цели действует Ремора; начинается подготовка Заряда.', en: 'Remora is active on the target and the Charge setup begins.' },
       },
       {
         id: 'zero-fill', actor: 'Zero', phase: 'setup', action: 'skill',
-        instruction: { ru: 'Во время анимации навыка Хатор переключись на Оценщика, используй сверхспособность, затем навык.', en: 'During Hathor Skill animation, swap to Zero, use Ultimate, then Skill.' },
-        outcome: { ru: 'Навык Оценщика быстро заполняет шкалу цикла эспера для следующего переключения.', en: 'Zero Skill rapidly fills the Esper Cycle gauge for the next swap.' },
+        instruction: { ru: 'Во время анимации навыка Хатор переключись на Зеро, используй сверхспособность, затем навык.', en: 'During Hathor Skill animation, swap to Zero, use Ultimate, then Skill.' },
+        outcome: { ru: 'Навык Зеро быстро заполняет шкалу цикла эспера для следующего переключения.', en: 'Zero Skill rapidly fills the Esper Cycle gauge for the next swap.' },
       },
       {
         id: 'nanally-charge', actor: 'Nanally', phase: 'setup', action: 'swap', cycle: 'blossom',
-        instruction: { ru: 'Во время навыка Оценщика переключись на Наналли, запусти Цветение и Заряд, затем используй сверхспособность и навык перенаправления.', en: 'During Zero Skill, swap to Nanally to trigger Blossom and Charge, then use Ultimate and Redirect Skill.' },
+        instruction: { ru: 'Во время навыка Зеро переключись на Наналли, запусти Цветение и Заряд, затем используй сверхспособность и навык перенаправления.', en: 'During Zero Skill, swap to Nanally to trigger Blossom and Charge, then use Ultimate and Redirect Skill.' },
         outcome: { ru: 'Цветение попадает по цели с Реморой и запускает Заряд.', en: 'Blossom reaches the Remora target and activates Charge.' },
       },
       {
         id: 'shinku-ultimate', actor: 'Shinku', phase: 'burst', action: 'ultimate', cycle: 'charge',
-        instruction: { ru: 'Во время навыка Наналли переключись на Синку и сразу используй сверхспособность.', en: 'Swap to Shinku during Nanally Skill and activate Ultimate immediately.' },
-        outcome: { ru: 'Синку получает активное окно Заряда во время состояния сверхспособности.', en: 'Shinku receives the Charge window while entering the Ultimate state.' },
+        instruction: { ru: 'Во время навыка Наналли переключись на Шинку и сразу используй сверхспособность.', en: 'Swap to Shinku during Nanally Skill and activate Ultimate immediately.' },
+        outcome: { ru: 'Шинку получает активное состояние Заряда во время сверхспособности.', en: 'Shinku receives the Charge window while entering the Ultimate state.' },
       },
       {
         id: 'shinku-enhanced-skills', actor: 'Shinku', phase: 'burst', action: 'basic',
-        instruction: { ru: 'Сделай 1–2 базовые атаки до заполнения шкалы усиленного навыка, используй его и повтори цикл, пока не выполнишь 5 усиленных навыков.', en: 'Use 1–2 Basic Attacks until the enhanced Skill gauge fills, cast it, and repeat until 5 enhanced Skills are completed.' },
-        outcome: { ru: 'Основная часть урона Синку укладывается в окно сверхспособности.', en: 'The main portion of Shinku damage is delivered inside the Ultimate window.' },
+        instruction: { ru: 'Выполняй 1–2 базовые атаки до заполнения шкалы усиленного навыка, используй его и повторяй, пока не выполнишь 5 усиленных навыков.', en: 'Use 1–2 Basic Attacks until the enhanced Skill gauge fills, cast it, and repeat until 5 enhanced Skills are completed.' },
+        outcome: { ru: 'Основная часть урона Шинку наносится во время сверхспособности.', en: 'The main portion of Shinku damage is delivered inside the Ultimate window.' },
       },
       {
         id: 'shinku-dashes', actor: 'Shinku', phase: 'burst', action: 'skill',
         instruction: { ru: 'Используй 3 доступных рывка сверхспособности, чтобы перейти к завершающему удару.', en: 'Use the 3 available Ultimate dashes to reach the finishing attack.' },
-        outcome: { ru: 'Завершается основное окно урона ротации.', en: 'The main burst window reaches its finisher.' },
+        outcome: { ru: 'Основная атакующая последовательность завершается финальным ударом.', en: 'The main burst window reaches its finisher.' },
       },
       {
         id: 'shinku-recovery', actor: 'Shinku', phase: 'recovery', action: 'recovery',
@@ -85,7 +85,7 @@ export const rotationPresets: RotationPreset[] = [
     id: 'hathor-hyper',
     title: { ru: 'Хатор · основной урон', en: 'Hathor · Hypercarry' },
     description: {
-      ru: 'Ротация Хатор через Цветение, След, Ремору и Заряд. Цзююань и Оценщик подготавливают цикл, Ханиэль даёт усиления, а Хатор тратит накопленные перья в состоянии «Срочная доставка».',
+      ru: 'Ротация Хатор через Цветение, След, Ремору и Заряд. Цзююань и Зеро подготавливают цикл, Ханиэль усиливает команду, а Хатор тратит накопленные перья в состоянии «Срочная доставка».',
       en: 'A Hathor rotation through Blossom, Stain, Remora and Charge. Jiuyuan and Zero prepare the Cycle, Haniel supplies buffs, and Hathor spends stored feathers during Emergency Delivery.',
     },
     team: ['Hathor', 'Jiuyuan', 'Zero', 'Haniel'],
@@ -100,24 +100,24 @@ export const rotationPresets: RotationPreset[] = [
         en: 'If Hathor Ultimate Energy is already full after the second Charge, the reaction energy can be routed to Haniel.',
       },
       {
-        ru: 'Порядок подтверждён гайдом, но длительность анимаций, задержки переключений и поведение конкретного босса остаются пользовательскими условиями.',
+        ru: 'Порядок подтверждён гайдом, но длительность анимаций, задержки переключений и поведение конкретного босса остаются условиями боя, а не фиксированными числами сайта.',
         en: 'The order is sourced, while animation length, swap delay, and boss-specific behavior remain user conditions.',
       },
     ],
     steps: [
       {
         id: 'jiuyuan-open', actor: 'Jiuyuan', phase: 'setup', action: 'ultimate',
-        instruction: { ru: 'Начни Цзююань: используй сверхспособность «Расплата» и навык перенаправления.', en: 'Start on Jiuyuan with Final Reckoning and her Redirect Skill.' },
+        instruction: { ru: 'Начни с Цзююань: используй сверхспособность «Расплата» и навык перенаправления.', en: 'Start on Jiuyuan with Final Reckoning and her Redirect Skill.' },
         outcome: { ru: 'Цзююань подготавливает компонент Анимы для Цветения.', en: 'Jiuyuan prepares the Anima side of Blossom.' },
       },
       {
         id: 'zero-blossom', actor: 'Zero', phase: 'setup', action: 'swap', cycle: 'blossom',
-        instruction: { ru: 'Переключись на Оценщика, запусти Цветение и используй сверхспособность.', en: 'Swap to Zero to trigger Blossom, then use Ultimate.' },
-        outcome: { ru: 'Цветение активно, а Оценщик готовит дальнейшее заполнение шкалы.', en: 'Blossom is active and Zero prepares the next Cycle fill.' },
+        instruction: { ru: 'Переключись на Зеро, запусти Цветение и используй сверхспособность.', en: 'Swap to Zero to trigger Blossom, then use Ultimate.' },
+        outcome: { ru: 'Цветение активно, а Зеро готовит дальнейшее заполнение шкалы.', en: 'Blossom is active and Zero prepares the next Cycle fill.' },
       },
       {
         id: 'haniel-buffs', actor: 'Haniel', phase: 'setup', action: 'ultimate',
-        instruction: { ru: 'Переключись на Ханиэль, используй навык перенаправления и сверхспособность, чтобы активировать её усиления ATK; при полном резонансе также действует прибавка крит. урона.', en: 'Swap to Haniel, use Redirect Skill and Ultimate to activate her ATK buffs; full Resonance also adds CRIT DMG.' },
+        instruction: { ru: 'Переключись на Ханиэль, используй навык перенаправления и сверхспособность, чтобы активировать усиления АТК; при полном резонансе также действует бонус критического урона.', en: 'Swap to Haniel, use Redirect Skill and Ultimate to activate her ATK buffs; full Resonance also adds CRIT DMG.' },
         outcome: { ru: 'Командные усиления подготовлены перед выходом Хатор.', en: 'Team buffs are active before Hathor takes the field.' },
       },
       {
@@ -127,28 +127,28 @@ export const rotationPresets: RotationPreset[] = [
       },
       {
         id: 'hathor-quickswap', actor: 'Zero', phase: 'setup', action: 'swap',
-        instruction: { ru: 'Быстро переключись с Хатор на Оценщика и сразу приготовь возврат на Хатор.', en: 'Quick-swap from Hathor to Zero and prepare to return immediately.' },
-        outcome: { ru: 'Создаётся правильный порядок атрибутов для Реморы и Заряда.', en: 'The attribute order is prepared for Remora and Charge.' },
+        instruction: { ru: 'Быстро переключись с Хатор на Зеро и сразу приготовь возврат на Хатор.', en: 'Quick-swap from Hathor to Zero and prepare to return immediately.' },
+        outcome: { ru: 'Создаётся правильный порядок типов эспера для Реморы и Заряда.', en: 'The attribute order is prepared for Remora and Charge.' },
       },
       {
         id: 'hathor-charge', actor: 'Hathor', phase: 'burst', action: 'swap', cycle: 'remora',
         instruction: { ru: 'Вернись на Хатор, чтобы запустить Ремору и затем Заряд.', en: 'Return to Hathor to trigger Remora and then Charge.' },
-        outcome: { ru: 'Хатор получает энергию Заряда и входит в усиленное окно.', en: 'Hathor receives Charge energy and enters the prepared burst window.' },
+        outcome: { ru: 'Хатор получает энергию Заряда и входит в усиленную последовательность.', en: 'Hathor receives Charge energy and enters the prepared burst window.' },
       },
       {
         id: 'hathor-ultimate', actor: 'Hathor', phase: 'burst', action: 'ultimate', cycle: 'charge',
         instruction: { ru: 'Сразу используй «Быстрый скакун», активируй «Срочную доставку» и выполни 3 усиленных «Удара циклона».', en: 'Immediately use Rider Express, enter Emergency Delivery, and perform 3 enhanced Cyclone Strikes.' },
-        outcome: { ru: 'Хатор тратит накопленные перья в основном окне урона.', en: 'Hathor spends the stored feathers during her main damage window.' },
+        outcome: { ru: 'Хатор тратит накопленные перья в основной атакующей последовательности.', en: 'Hathor spends the stored feathers during her main damage window.' },
       },
       {
         id: 'zero-third-strike', actor: 'Zero', phase: 'recovery', action: 'redirect',
-        instruction: { ru: 'Во время анимации третьего «Удара циклона» переключись на Оценщика и используй навык перенаправления.', en: 'During the third Cyclone Strike animation, swap to Zero and use Redirect Skill.' },
-        outcome: { ru: 'Оценщик быстро подготавливает следующую реакцию.', en: 'Zero rapidly prepares the next reaction.' },
+        instruction: { ru: 'Во время анимации третьего «Удара циклона» переключись на Зеро и используй навык перенаправления.', en: 'During the third Cyclone Strike animation, swap to Zero and use Redirect Skill.' },
+        outcome: { ru: 'Зеро быстро подготавливает следующую реакцию.', en: 'Zero rapidly prepares the next reaction.' },
       },
       {
         id: 'jiuyuan-second-charge', actor: 'Jiuyuan', phase: 'recovery', action: 'swap', cycle: 'blossom',
         instruction: { ru: 'Переключись на Цзююань, снова запусти Цветение и последующий Заряд.', en: 'Swap to Jiuyuan to trigger Blossom and the following Charge again.' },
-        outcome: { ru: 'Второй Заряд создаёт дополнительное окно восстановления энергии.', en: 'A second Charge creates another Ultimate Energy recovery window.' },
+        outcome: { ru: 'Второй Заряд создаёт дополнительное восстановление энергии сверхспособности.', en: 'A second Charge creates another Ultimate Energy recovery window.' },
       },
       {
         id: 'energy-routing', actor: 'Hathor', phase: 'recovery', action: 'recovery', cycle: 'charge',

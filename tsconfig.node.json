@@ -17,6 +17,7 @@
     "src/data.ts",
     "src/characters.ts",
     "src/gameTerms.ts",
+    "src/russian-game-text.ts",
     "src/arc-directory.ts",
     "src/arc-catalog.ts",
     "src/arc-presets.ts",

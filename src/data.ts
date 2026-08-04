@@ -41,7 +41,7 @@ export const sources: SourceEntry[] = [
     url: 'https://nte.wiki/tools/damage-calculator/',
     verifiedAt: '2026-08-04',
     scope: {
-      ru: 'Публичная базовая формула урона, защиты, сопротивления и ожидаемого крита.',
+      ru: 'Публичная базовая формула урона, защиты, сопротивления и среднего критического множителя.',
       en: 'Public baseline formula for damage, defence, resistance and expected crit.',
     },
   },
@@ -52,7 +52,7 @@ export const sources: SourceEntry[] = [
     url: 'https://www.icy-veins.com/neverness-to-everness/iroi-profile-skills',
     verifiedAt: '2026-08-04',
     scope: {
-      ru: 'Стоимость прорыва Ирой по порогам уровня.',
+      ru: 'Стоимость прорыва Ирой по пределам уровня.',
       en: 'Iroi character ascension material costs by level breakpoint.',
     },
   },
@@ -80,16 +80,16 @@ export const arcBenchmarkScenarios: ArcBenchmarkScenario[] = [
     sourceId: 'prydwen-iroi',
     verifiedAt: '2026-08-04',
     meta: [
-      { ru: 'Персонаж: Ирой · роль поддержки', en: 'Character: Iroi · support role' },
+      { ru: 'Персонаж: Ирой · функция поддержки команды', en: 'Character: Iroi · support role' },
       { ru: 'Версия гайда: патч 1.2', en: 'Guide version: Patch 1.2' },
       { ru: 'База сравнения: «Неверные врата» M1 = 100%', en: 'Baseline: The Wrong Gate M1 = 100%' },
     ],
     rows: [
       { arcId: 'wrong-gate-m1', percent: 100, note: { ru: 'Фирменная дуга и публичная база сравнения.', en: 'Signature Arc and public comparison baseline.' } },
       { arcId: 'last-rose-m1', percent: 92.97, note: { ru: 'Ирой не может реалистично поддерживать активный эффект периодического урона.', en: 'The active DoT effect is unrealistic to maintain on Iroi.' } },
-      { arcId: 'youthful-fantasy-m1', percent: 92.55, note: { ru: 'В основном работает как 570 базовой ATK и ещё 30% ATK.', en: 'Mainly functions as 570 Base ATK plus 30% ATK.' } },
+      { arcId: 'youthful-fantasy-m1', percent: 92.55, note: { ru: 'В основном работает как 570 базовой АТК и ещё 30% АТК.', en: 'Mainly functions as 570 Base ATK plus 30% ATK.' } },
       { arcId: 'fluff-fleetness-m1', percent: 92, note: { ru: 'Короткое время на поле мешает накопить все уровни эффекта.', en: 'Low field time makes stacking difficult.' } },
-      { arcId: 'shiny-days-m5', percent: 91.88, note: { ru: 'Окно по сломленной цели сложно реализовать до её гибели.', en: 'The Break window is difficult to realize before the target dies.' } },
+      { arcId: 'shiny-days-m5', percent: 91.88, note: { ru: 'Эффект по сломленной цели сложно реализовать до её гибели.', en: 'The Break window is difficult to realize before the target dies.' } },
       { arcId: 'clear-skies-m5', percent: 91.63, note: { ru: 'Усиление покрывает не весь профиль урона Ирой.', en: 'The buff does not cover Iroi full damage profile.' } },
     ],
   },
@@ -103,9 +103,9 @@ export const arcBenchmarkScenarios: ArcBenchmarkScenario[] = [
     sourceId: 'user-rivyn-chart',
     verifiedAt: '2026-08-04',
     meta: [
-      { ru: 'Команда: Ирой («Выходной») + Синку («Алеющий мираж») + Хатор («Бушующее пламя»)', en: 'Team: Iroi MC (Day Off) + Shinku (Blushing Mirage) + Hathor (Raging Flames)' },
+      { ru: 'Команда: Ирой («Выходной») + Шинку («Алеющий мираж») + Хатор («Бушующее пламя»)', en: 'Team: Iroi MC (Day Off) + Shinku (Blushing Mirage) + Hathor (Raging Flames)' },
       { ru: 'Быстрый ёж · интенсивность цикла · 22 эффективные дополнительные характеристики', en: 'Speedy Hedgehog · Cycle Intensity · 22 effective substats' },
-      { ru: 'Босс ур. 82 · одна цель · 1032 DEF · сопротивление всем типам 20% · 35 секунд', en: 'Boss Lv82 · single target · 1032 DEF · All-Type RES 20% · 35 seconds' },
+      { ru: 'Босс ур. 82 · одна цель · 1032 ЗАЩ · сопротивление всем типам 20% · 35 секунд', en: 'Boss Lv82 · single target · 1032 DEF · All-Type RES 20% · 35 seconds' },
       { ru: 'Вклад Ирой в урон команды: 10,51% без урона разрушения', en: 'Iroi team damage contribution: 10.51% excluding Break DMG' },
     ],
     rows: [
