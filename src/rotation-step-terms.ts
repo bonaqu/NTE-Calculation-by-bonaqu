@@ -79,9 +79,15 @@ export const rotationStepTermRefs: Readonly<Record<string, readonly string[]>> =
     'daffodill.ultimate.witness-this-finale',
     'daffodill.redirect.resonance',
   ],
-  'lacrimosa-discord-dot:lacrimosa-ultimate': [
+  'lacrimosa-discord-dot:lacrimosa-transform': [
+    'lacrimosa.redirect.morning-tomato',
     'lacrimosa.ultimate.devilish-gift',
-    'lacrimosa.effect.nightmare',
+  ],
+  'lacrimosa-discord-dot:lacrimosa-discord': ['lacrimosa.effect.nightmare'],
+  'lacrimosa-discord-dot:lacrimosa-basic-five': [
+    'lacrimosa.basic.sweet-and-sour',
+    'lacrimosa.sub-action.tomato-metal',
+    'lacrimosa.sub-action.tomato-percussion',
   ],
   'lacrimosa-discord-dot:lacrimosa-redirect-five': ['lacrimosa.redirect.morning-tomato'],
   'lacrimosa-discord-dot:lacrimosa-phantom-one': ['daffodill.sub-action.phantom-step'],
