@@ -1,0 +1,30 @@
+name: Data freshness
+
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-freshness-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  data-health:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck data graph
+        run: npm run typecheck
+      - name: Enforce current freshness deadlines
+        run: npm test -- src/data-health.test.ts
