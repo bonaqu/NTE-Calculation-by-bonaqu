@@ -5,7 +5,7 @@ import type { RouteKey } from './types';
 import { HomePage } from './pages/HomePage';
 import { TeamCalculatorPage } from './pages/TeamCalculatorPage';
 import { RotationLabPage } from './pages/RotationLabPage';
-import { ArcCalculatorPage } from './pages/ArcCalculatorPage';
+import { ArcExperiencePage } from './pages/ArcExperiencePage';
 import { ProgressionPage } from './pages/ProgressionPage';
 import { DatabasePage } from './pages/DatabasePage';
 import { MethodologyPage } from './pages/MethodologyPage';
@@ -50,7 +50,7 @@ export default function App() {
   const page = route === 'home' ? <HomePage navigate={navigate} />
     : route === 'team' ? <TeamCalculatorPage />
       : route === 'rotations' ? <RotationLabPage />
-        : route === 'arcs' ? <ArcCalculatorPage />
+        : route === 'arcs' ? <ArcExperiencePage />
           : route === 'progression' ? <ProgressionPage />
             : route === 'database' ? <DatabasePage />
               : <MethodologyPage />;

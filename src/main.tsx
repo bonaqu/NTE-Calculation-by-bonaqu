@@ -5,6 +5,8 @@ import { I18nProvider } from './i18n';
 import './styles.css';
 import './arc-scenarios.css';
 import './arc-state.css';
+import './arc-recommendations.css';
+import './arc-experience.css';
 import './resilient-images.css';
 import './guided-ux.css';
 import './database.css';
