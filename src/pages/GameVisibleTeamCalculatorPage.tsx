@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Activity, BarChart3, CheckCircle2, CircleDot, Shield, Sparkles, Swords, Target, Users } from 'lucide-react';
 import { arcDirectory } from '../arc-directory';
-import { awakeningNodesByCharacter } from '../awakening-data';
+import { relevantAwakeningNodes } from '../awakening-reference';
 import { characterByName, characterCatalog } from '../characters';
 import { VerifiedTeamEffectsPanel } from '../components/VerifiedTeamEffectsPanel';
 import {
@@ -30,7 +30,6 @@ import {
 } from '../gameTerms';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useI18n } from '../i18n';
-import { supportAwakeningNodesByCharacter } from '../support-awakening-data';
 import { teamEffectsForCharacter } from '../team-effects';
 
 const tabs = ['overview', 'damage', 'conditions', 'test'] as const;
@@ -155,9 +154,11 @@ export function GameVisibleTeamCalculatorPage() {
   const selectedNames = useMemo(() => new Set(state.builds.map((build) => build.characterName)), [state.builds]);
   const verifiedActions = useMemo(() => actionsForCharacter(activeBuild.characterName), [activeBuild.characterName]);
   const selectedAction = verifiedActions.find((action) => action.id === activeBuild.verifiedActionId);
-  const awakeningNodes = awakeningNodesByCharacter.get(activeBuild.characterName)
-    ?? supportAwakeningNodesByCharacter.get(activeBuild.characterName)
-    ?? [];
+  const awakeningNodes = relevantAwakeningNodes(
+    activeBuild.characterName,
+    selectedAction?.id,
+    activeBuild.activeTeamEffectIds,
+  );
   const availableTeamEffects = teamEffectsForCharacter(activeBuild.characterName);
   const showArcCondition = activeBuild.characterName === 'Shinku' && activeBuild.testMode === 'burst-reference';
   const showTarget = activeBuild.testMode === 'training-target'
@@ -282,22 +283,17 @@ export function GameVisibleTeamCalculatorPage() {
           </div> : null}
 
           {awakeningNodes.length ? <div className="nte-condition-section">
-            <h3>{ru ? 'Открытые пробуждения' : 'Unlocked Awakenings'}</h3>
-            <p className="nte-condition-copy">{ru ? 'Выбери максимальный открытый узел. Все предыдущие считаются открытыми автоматически; сам номер не является скрытым множителем урона.' : 'Select the highest unlocked node. Previous nodes are unlocked automatically; the number itself is not a hidden damage multiplier.'}</p>
-            <div className="nte-awakening-picker" role="group" aria-label={ru ? 'Уровень пробуждения' : 'Awakening level'}>
+            <h3>{ru ? 'Требуемое пробуждение' : 'Required Awakening'}</h3>
+            <p className="nte-condition-copy">{ru ? 'Показывается только узел, от которого зависит выбранное действие или командный эффект. Полный справочник A1–A6 находится в Базе персонажей.' : 'Only nodes required by the selected action or team effect are shown. The full A1–A6 reference lives in the Character Database.'}</p>
+            <div className="nte-awakening-picker" role="group" aria-label={ru ? 'Максимальное открытое пробуждение' : 'Highest unlocked Awakening'}>
               {Array.from({ length: 7 }, (_, level) => <button key={level} className={activeBuild.awakeningLevel === level ? 'active' : ''} onClick={() => updateBuild((build) => ({ ...build, awakeningLevel: level }))}>{level === 0 ? 'A0' : `A${level}`}</button>)}
             </div>
-            <div className="nte-awakening-list">{awakeningNodes.map((node) => {
+            <div className="nte-awakening-list required-only">{awakeningNodes.map((node) => {
               const unlocked = node.level <= activeBuild.awakeningLevel;
-              const usedByAction = Boolean(selectedAction && node.relatedActionIds?.includes(selectedAction.id));
-              const usedByTeamEffect = activeBuild.characterName === 'Sakiri'
-                && node.level === 4
-                && activeBuild.activeTeamEffectIds.includes('sakiri.awakening-four.team-atk');
-              const used = usedByAction || usedByTeamEffect;
-              return <article key={`${node.characterName}-${node.level}`} className={`${unlocked ? 'unlocked' : 'locked'} ${used ? 'used' : ''}`}>
+              return <article key={`${node.characterName}-${node.level}`} className={`${unlocked ? 'unlocked' : 'locked'} used`}>
                 <b>A{node.level}</b>
                 <div><strong>{node.title[locale]}</strong><p>{node.description[locale]}</p><small>{node.evidence === 'current-russian-reference' ? (ru ? 'текущая русская карточка' : 'current Russian record') : (ru ? 'русское название не подтверждено — показано английское' : 'English current reference')}</small></div>
-                <span>{used ? (ru ? 'участвует в тесте' : 'used by test') : unlocked ? (ru ? 'открыто' : 'unlocked') : (ru ? 'закрыто' : 'locked')}</span>
+                <span>{unlocked ? (ru ? 'требование выполнено' : 'requirement met') : (ru ? `нужно открыть A${node.level}` : `requires A${node.level}`)}</span>
               </article>;
             })}</div>
           </div> : null}
