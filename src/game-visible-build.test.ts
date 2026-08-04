@@ -13,11 +13,15 @@ import { calculateGameVisibleBuild } from './game-visible-calculation';
 describe('game-visible build profile', () => {
   it('covers every released character without pretending every kit is verified', () => {
     const released = characterCatalog.filter((character) => character.releaseStatus === 'released');
+    const partialNames = ['Shinku', 'Nanally', 'Chaos', 'Lacrimosa', 'Zero'];
     expect(characterCombatCoverage).toHaveLength(released.length);
     expect(new Set(characterCombatCoverage.map((record) => record.characterName)).size).toBe(released.length);
-    expect(characterCombatCoverage.find((record) => record.characterName === 'Shinku')?.coverage).toBe('partial');
-    expect(characterCombatCoverage.filter((record) => record.characterName !== 'Shinku')
+    expect(characterCombatCoverage.filter((record) => record.coverage === 'partial').map((record) => record.characterName).sort())
+      .toEqual([...partialNames].sort());
+    expect(characterCombatCoverage.filter((record) => !partialNames.includes(record.characterName))
       .every((record) => record.coverage === 'relative-only')).toBe(true);
+    expect(characterCombatCoverage.filter((record) => record.coverage === 'partial')
+      .every((record) => record.supportedModes.includes('verified-action'))).toBe(true);
   });
 
   it('uses the screenshot-confirmed Shinku values and exact current-client labels', () => {
