@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import appSource from './App.tsx?raw';
+import namedRequirementsSource from './components/NamedAwakeningRequirements.tsx?raw';
 import pageSource from './pages/GameVisibleTeamCalculatorPage.tsx?raw';
 import modelSource from './game-visible-build.ts?raw';
 import calculationSource from './game-visible-calculation.ts?raw';
@@ -54,16 +55,21 @@ describe('formula-driven Team Calculator product contract', () => {
     expect(pageSource).toContain("activeBuild.arc.arcName === 'Blushing Mirage'");
   });
 
-  it('shows only formula-required Awakening nodes instead of the complete reference', () => {
+  it('uses only named formula-required Awakening confirmations', () => {
     expect(pageSource).toContain('relevantAwakeningNodes(');
+    expect(pageSource).toContain('<NamedAwakeningRequirements');
     expect(pageSource).not.toContain('awakeningNodesByCharacter');
     expect(pageSource).not.toContain('supportAwakeningNodesByCharacter');
-    expect(pageSource).toContain("Array.from({ length: 7 }");
-    expect(pageSource).toContain('Показывается только узел, от которого зависит выбранное действие или командный эффект');
-    expect(pageSource).toContain('Полный справочник A1–A6 находится в Базе персонажей');
-    expect(pageSource).toContain('nte-awakening-list required-only');
-    expect(pageSource).toContain('требование выполнено');
-    expect(pageSource).not.toContain('Все предыдущие считаются открытыми автоматически');
+    expect(pageSource).not.toContain("Array.from({ length: 7 }");
+    expect(pageSource).not.toContain('nte-awakening-picker');
+    expect(pageSource).not.toContain('Максимальное открытое пробуждение');
+
+    expect(namedRequirementsSource).toContain('type="checkbox"');
+    expect(namedRequirementsSource).toContain('A{node.level} · {node.title[locale]}');
+    expect(namedRequirementsSource).toContain('Полный список A1–A6 находится в Базе персонажей');
+    expect(namedRequirementsSource).toContain('Само по себе оно не добавляет урон');
+    expect(namedRequirementsSource).toContain('Math.max(build.awakeningLevel, node.level)');
+
     expect(awakeningReferenceSource).toContain('teamEffectAwakeningRequirements');
     expect(awakeningSource).toContain("'current-russian-reference'");
     expect(awakeningSource).toContain("'current-english-reference'");
@@ -97,8 +103,6 @@ describe('formula-driven Team Calculator product contract', () => {
     expect(mainSource).toContain("import './game-visible-calculator.css'");
     expect(mainSource).toContain("import './game-visible-minimal-inputs.css'");
     expect(baseCss).toContain('.nte-team-rail');
-    expect(minimalCss).toContain('.nte-awakening-picker');
-    expect(minimalCss).toContain('.nte-awakening-list article.used');
     expect(minimalCss).toContain('@media(max-width:620px)');
     expect(`${baseCss}\n${minimalCss}`).not.toMatch(/(?:linear|radial|conic)-gradient\s*\(/iu);
     expect(`${baseCss}\n${minimalCss}`).not.toMatch(/box-shadow\s*:/iu);

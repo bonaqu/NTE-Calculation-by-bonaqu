@@ -3,6 +3,7 @@ import { Activity, BarChart3, CheckCircle2, CircleDot, Shield, Sparkles, Swords,
 import { arcDirectory } from '../arc-directory';
 import { relevantAwakeningNodes } from '../awakening-reference';
 import { characterByName, characterCatalog } from '../characters';
+import { NamedAwakeningRequirements } from '../components/NamedAwakeningRequirements';
 import { VerifiedTeamEffectsPanel } from '../components/VerifiedTeamEffectsPanel';
 import {
   actionsForCharacter,
@@ -282,21 +283,12 @@ export function GameVisibleTeamCalculatorPage() {
             />
           </div> : null}
 
-          {awakeningNodes.length ? <div className="nte-condition-section">
-            <h3>{ru ? 'Требуемое пробуждение' : 'Required Awakening'}</h3>
-            <p className="nte-condition-copy">{ru ? 'Показывается только узел, от которого зависит выбранное действие или командный эффект. Полный справочник A1–A6 находится в Базе персонажей.' : 'Only nodes required by the selected action or team effect are shown. The full A1–A6 reference lives in the Character Database.'}</p>
-            <div className="nte-awakening-picker" role="group" aria-label={ru ? 'Максимальное открытое пробуждение' : 'Highest unlocked Awakening'}>
-              {Array.from({ length: 7 }, (_, level) => <button key={level} className={activeBuild.awakeningLevel === level ? 'active' : ''} onClick={() => updateBuild((build) => ({ ...build, awakeningLevel: level }))}>{level === 0 ? 'A0' : `A${level}`}</button>)}
-            </div>
-            <div className="nte-awakening-list required-only">{awakeningNodes.map((node) => {
-              const unlocked = node.level <= activeBuild.awakeningLevel;
-              return <article key={`${node.characterName}-${node.level}`} className={`${unlocked ? 'unlocked' : 'locked'} used`}>
-                <b>A{node.level}</b>
-                <div><strong>{node.title[locale]}</strong><p>{node.description[locale]}</p><small>{node.evidence === 'current-russian-reference' ? (ru ? 'текущая русская карточка' : 'current Russian record') : (ru ? 'русское название не подтверждено — показано английское' : 'English current reference')}</small></div>
-                <span>{unlocked ? (ru ? 'требование выполнено' : 'requirement met') : (ru ? `нужно открыть A${node.level}` : `requires A${node.level}`)}</span>
-              </article>;
-            })}</div>
-          </div> : null}
+          <NamedAwakeningRequirements
+            nodes={awakeningNodes}
+            build={activeBuild}
+            locale={locale}
+            onChange={(build) => updateBuild(() => build)}
+          />
 
           <VerifiedTeamEffectsPanel
             build={activeBuild}
