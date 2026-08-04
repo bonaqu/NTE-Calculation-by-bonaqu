@@ -2,6 +2,7 @@ import type { DamageInput } from '../../packages/calculation-core/src';
 
 export type AttackBreakdown = Pick<DamageInput, 'baseAtk' | 'arcAtk' | 'flatAtk' | 'atkPercent' | 'teamAtkPercent'>;
 export type DamageBonusBreakdown = Pick<DamageInput, 'damageBonus' | 'teamDamageBonus'>;
+export type HitBreakdown = Pick<DamageInput, 'skillMultiplier' | 'hits'>;
 
 const finite = (value: number, fallback = 0): number => Number.isFinite(value) ? value : fallback;
 
@@ -16,6 +17,27 @@ export function effectiveAtk(input: AttackBreakdown): number {
 
 export function combinedDamageBonus(input: DamageBonusBreakdown): number {
   return finite(input.damageBonus) + finite(input.teamDamageBonus);
+}
+
+/**
+ * The calculation core stores one multiplier and a count of identical hits.
+ * Quick entry exposes their product so a player can paste the total percentage
+ * for one skill, attack or sequence without counting the same hits twice.
+ */
+export function totalMultiplierPerUse(input: HitBreakdown): number {
+  return Math.max(0, finite(input.skillMultiplier)) * Math.max(0, finite(input.hits, 1));
+}
+
+/**
+ * Flatten the displayed total into one virtual hit. This keeps the existing
+ * storage/API shape and preserves the calculation result exactly.
+ */
+export function withTotalMultiplierPerUse<T extends HitBreakdown>(input: T, value: number): T {
+  return {
+    ...input,
+    skillMultiplier: Math.max(0, finite(value)),
+    hits: 1,
+  };
 }
 
 /**
