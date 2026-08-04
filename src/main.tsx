@@ -18,6 +18,7 @@ import './team-sequence-builder.css';
 import './game-visible-calculator.css';
 import './game-visible-minimal-inputs.css';
 import './team-effects.css';
+import './combat-scenario.css';
 import './home-tools.css';
 import './rotation-lab.css';
 import './rotation-catalog.css';

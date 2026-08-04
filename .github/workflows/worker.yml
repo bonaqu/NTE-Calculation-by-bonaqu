@@ -7,6 +7,7 @@ on:
       - 'workers/**'
       - 'packages/**'
       - 'scripts/verify-worker-production.mjs'
+      - 'scripts/verify-combat-scenario-production.mjs'
       - 'src/data.ts'
       - 'src/characters.ts'
       - 'src/types.ts'
@@ -21,6 +22,7 @@ on:
       - 'src/game-visible-calculation.ts'
       - 'src/verified-visible-actions.ts'
       - 'src/team-effects.ts'
+      - 'src/combat-scenario.ts'
       - 'src/progression-data.ts'
       - 'src/progression-engine.ts'
       - 'package.json'
@@ -42,6 +44,7 @@ jobs:
       deployment_url: ${{ steps.deploy.outputs.deployment-url }}
       health_url: ${{ steps.verify.outputs.health_url }}
       combat_models_url: ${{ steps.verify.outputs.combat_models_url }}
+      combat_scenario_url: ${{ steps.verify.outputs.combat_scenario_url }}
       progression_url: ${{ steps.verify.outputs.progression_url }}
     steps:
       - uses: actions/checkout@v6
@@ -68,24 +71,28 @@ jobs:
         id: verify
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
-          EXPECTED_SERVICE_VERSION: '0.8.0'
+          EXPECTED_SERVICE_VERSION: '0.9.0'
           EXPECTED_FORMULA_VERSION: '0.2'
           EXPECTED_VISIBLE_BUILD_VERSION: '1'
+          EXPECTED_COMBAT_SCENARIO_VERSION: '1'
         run: |
           node scripts/verify-worker-production.mjs
+          node scripts/verify-combat-scenario-production.mjs
           BASE="${DEPLOYMENT_URL%/}"
           echo "health_url=$BASE/api/v1/health" >> "$GITHUB_OUTPUT"
           echo "combat_models_url=$BASE/api/v1/data/combat-models" >> "$GITHUB_OUTPUT"
+          echo "combat_scenario_url=$BASE/api/v1/calculate/combat-scenario" >> "$GITHUB_OUTPUT"
           echo "progression_url=$BASE/api/v1/data/progression/characters" >> "$GITHUB_OUTPUT"
           {
-            echo '### API 0.8.0 production contract'
+            echo '### API 0.9.0 production contract'
             echo
             echo '- 20 released-character coverage records'
             echo '- 9 verified standalone actions across 5 partial models'
             echo '- 3 verified conditional team effects'
+            echo '- versioned combat-scenario endpoint with action/effect/wait steps'
             echo '- Shinku final ATK remains 2026; Arc ATK 570 is not added again'
             echo '- Haniel +40 all-slot ATK and Sakiri +180 excluding self POST checks passed'
-            echo '- Sakiri 10% target DEF reduction provenance passed'
+            echo '- Sakiri A4 applies at 19.9s and expires exactly at 20s'
           } >> "$GITHUB_STEP_SUMMARY"
 
   report:
@@ -103,18 +110,20 @@ jobs:
           DEPLOYMENT_URL: ${{ needs.deploy.outputs.deployment_url }}
           HEALTH_URL: ${{ needs.deploy.outputs.health_url }}
           COMBAT_MODELS_URL: ${{ needs.deploy.outputs.combat_models_url }}
+          COMBAT_SCENARIO_URL: ${{ needs.deploy.outputs.combat_scenario_url }}
           PROGRESSION_URL: ${{ needs.deploy.outputs.progression_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$COMBAT_MODELS_URL" ]]; then
+          if [[ "$JOB_RESULT" == "success" && -n "$HEALTH_URL" && -n "$COMBAT_MODELS_URL" && -n "$COMBAT_SCENARIO_URL" ]]; then
             BODY="### Cloudflare Worker deployment: successful ✅
 
           - Worker URL: $DEPLOYMENT_URL
           - Health endpoint: $HEALTH_URL
           - Combat model coverage: $COMBAT_MODELS_URL
+          - Combat scenario endpoint: $COMBAT_SCENARIO_URL
           - Roster ascension dataset: $PROGRESSION_URL
-          - API 0.8.0 contract: 9 verified actions and 3 conditional team effects
-          - Shinku no-double-count, Haniel Base ATK and Sakiri A4/DEF reduction POST checks: success
+          - API 0.9.0 contract: 9 verified actions, 3 conditional team effects and scenario schema v1
+          - Shinku no-double-count, Haniel Base ATK, Sakiri A4/DEF reduction and 20-second expiry POST checks: success
           - Workflow evidence: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌

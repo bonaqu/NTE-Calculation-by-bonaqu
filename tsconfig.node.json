@@ -28,6 +28,7 @@
     "src/game-visible-calculation.ts",
     "src/verified-visible-actions.ts",
     "src/team-effects.ts",
+    "src/combat-scenario.ts",
     "src/arc-directory.ts",
     "src/arc-catalog.ts",
     "src/arc-presets.ts",
