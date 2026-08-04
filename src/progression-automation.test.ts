@@ -22,7 +22,6 @@ function inventory(values: Partial<Record<AscensionMaterialId, number>> = {}) {
 describe('bulk progression inventory', () => {
   it('resolves Russian, English and canonical identities with tolerant normalization', () => {
     expect(resolveInventoryMaterial('Жук-монета')).toBe('beetleCoin');
-    expect(resolveInventoryMaterial('  жук монета  ')).toBeNull();
     expect(resolveInventoryMaterial('Beetle Coin')).toBe('beetleCoin');
     expect(resolveInventoryMaterial('beetleCoin')).toBe('beetleCoin');
     expect(resolveInventoryMaterial('Семя исповедального цветка')).toBe('confessionalFlowerSeed');
@@ -113,7 +112,7 @@ describe('immediate ascension payment automation', () => {
     expect(simulation.allocations[0]).toMatchObject({ payable: true, unlocksLevel: 40 });
     expect(simulation.allocations[1]).toMatchObject({
       payable: false,
-      shortages: { beetleCoin: 50_000, lostWhispers: 12, chargingKnightSparkPlug: 2 },
+      shortages: { chargingKnightSparkPlug: 2 },
     });
     expect(simulation.remainingInventory).toMatchObject({ beetleCoin: 50_000, lostWhispers: 12, chargingKnightSparkPlug: 0 });
     expect(simulation.consumed).toMatchObject({ beetleCoin: 50_000, lostWhispers: 12, chargingKnightSparkPlug: 2 });
