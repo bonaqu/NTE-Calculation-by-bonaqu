@@ -14,6 +14,7 @@ import {
   localizedArcName,
   localizedArcType,
   localizedAttribute,
+  localizedCharacterAliases,
   localizedCharacterName,
   localizedRole,
   localizedStatLabel,
@@ -38,13 +39,15 @@ export function DatabasePage() {
   const [characterRole, setCharacterRole] = useState<CharacterRole | 'all'>('all');
   const [characterArcType, setCharacterArcType] = useState<ArcDirectoryType | 'all'>('all');
   const [characterStatus, setCharacterStatus] = useState<CharacterReleaseStatus | 'all'>('all');
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizeSearch = (value: string) => value.trim().toLocaleLowerCase('ru').replaceAll('ё', 'е');
+  const normalizedQuery = normalizeSearch(query);
   const sourceMap = useMemo(() => new Map([...sources, ...arcPresetSources].map((source) => [source.id, source])), []);
 
   const characters = useMemo(() => characterCatalog.filter((row) => {
     const searchable = [
       row.name,
       localizedCharacterName(row.name, 'ru'),
+      ...localizedCharacterAliases(row.name),
       row.attribute,
       localizedAttribute(row.attribute, 'ru'),
       row.role ?? '',
@@ -55,8 +58,9 @@ export function DatabasePage() {
       row.summary.en,
       row.rarity,
       row.releaseVersion ?? '',
-    ].join(' ').toLowerCase();
-    return searchable.includes(normalizedQuery)
+    ].join(' ');
+    const normalizedSearchable = normalizeSearch(searchable);
+    return normalizedSearchable.includes(normalizedQuery)
       && (characterRarity === 'all' || row.rarity === characterRarity)
       && (characterAttribute === 'all' || row.attribute === characterAttribute)
       && (characterRole === 'all' || row.role === characterRole)
@@ -75,8 +79,9 @@ export function DatabasePage() {
       localizedStatLabel(row.secondaryLabel, 'ru'),
       row.effect.ru,
       row.effect.en,
-    ].join(' ').toLowerCase();
-    return searchable.includes(normalizedQuery) && (rarity === 'all' || row.rarity === rarity) && (arcType === 'all' || row.type === arcType);
+    ].join(' ');
+    const normalizedSearchable = normalizeSearch(searchable);
+    return normalizedSearchable.includes(normalizedQuery) && (rarity === 'all' || row.rarity === rarity) && (arcType === 'all' || row.type === arcType);
   }), [arcType, normalizedQuery, rarity]);
 
   const resetArcFilters = () => {
@@ -103,10 +108,10 @@ export function DatabasePage() {
   const hasCharacterFilters = characterRarity !== 'all' || characterAttribute !== 'all' || characterRole !== 'all' || characterArcType !== 'all' || characterStatus !== 'all';
 
   return <div className="page calc-page database-page">
-    <header className="page-heading"><div><span>{ru ? 'БАЗА ДАННЫХ' : 'DATABASE'}</span><h1>{ru ? 'Персонажи и дуги NTE' : 'NTE database'}</h1><p>{ru ? 'Найди персонажа, проверь его роль и тип дуги, а затем сразу открой совместимое оружие. Поиск понимает русские и английские названия.' : 'Find a character, verify their role and Arc type, then open compatible weapons. Search works with both localized and canonical names.'}</p></div></header>
+    <header className="page-heading"><div><span>{ru ? 'БАЗА ДАННЫХ' : 'DATABASE'}</span><h1>{ru ? 'Персонажи и дуги NTE' : 'NTE database'}</h1><p>{ru ? 'Найди персонажа, проверь его роль и тип дуги, а затем сразу открой совместимое оружие. Основными показаны названия из русского клиента; поиск также понимает английские и старые варианты написания.' : 'Find a character, verify their role and Arc type, then open compatible weapons. Search works with both localized and canonical names.'}</p></div></header>
 
     <QuickStart title={ru ? 'Как пользоваться базой' : 'How to use the database'} steps={ru ? [
-      'Открой вкладку персонажей и отфильтруй список по роли, атрибуту или редкости.',
+      'Открой вкладку персонажей или введи имя из клиента. Старые варианты вроде «Шинку» и «Зеро» тоже находятся поиском.',
       'Нажми «Показать совместимые дуги» — база сама переключится на подходящий тип оружия.',
       'Раскрой карточку дуги, чтобы увидеть характеристики, эффект от M1 до M5 и источник.',
     ] : [

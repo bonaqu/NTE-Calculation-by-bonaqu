@@ -1,4 +1,4 @@
-import { characterRussianNames } from './gameTerms';
+import { characterRussianAliases, characterRussianNames } from './gameTerms';
 import type {
   CharacterArcType,
   CharacterAttribute,
@@ -9,7 +9,7 @@ import type {
   LocalizedText,
 } from './types';
 
-const verifiedAt = '2026-08-03';
+const verifiedAt = '2026-08-04';
 const prydwen = 'Prydwen Institute';
 const gameWith = 'GameWith';
 
@@ -61,7 +61,7 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Aurelia', rarity: 'A', attribute: 'Psyche', role: 'Damage', arcType: 'Plasma',
     summary: {
-      ru: 'Полевой персонаж урона: раскрывается во время длинного активного окна и атак медузами.',
+      ru: 'Активный персонаж урона: раскрывается во время длинного окна на поле и атак медузами.',
       en: 'An on-field damage dealer who benefits from longer active windows and jellyfish attacks.',
     },
   }),
@@ -89,7 +89,7 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Daffodill', pageSlug: 'daffodil', imageSlug: 'daffodil', rarity: 'S', attribute: 'Chaos', role: 'Damage', arcType: 'Liquid',
     summary: {
-      ru: 'Взрывной дополнительный DPS: быстро снижает шкалу пробития и любит частые переключения.',
+      ru: 'Дополнительный персонаж взрывного урона: быстро снижает шкалу сломления и любит частые переключения.',
       en: 'A burst-oriented secondary damage dealer who shreds Break and rewards frequent swapping.',
     },
   }),
@@ -110,21 +110,21 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Haniel', rarity: 'A', attribute: 'Psyche', role: 'Buff', arcType: 'Solid',
     summary: {
-      ru: 'Универсальный баффер, который повышает ATK команды и хорошо работает без долгого времени на поле.',
+      ru: 'Универсальный персонаж усиления: повышает ATK команды и не требует долгого времени на поле.',
       en: 'A universal buffer who raises team ATK without demanding much field time.',
     },
   }),
   profile({
     name: 'Hathor', rarity: 'S', attribute: 'Lakshana', role: 'Damage', arcType: 'Plasma',
     summary: {
-      ru: 'Взрывной DPS Лакшаны для команд Реморы; главный урон приходит из ультимейта.',
+      ru: 'Персонаж взрывного урона Лакшаны для команд Реморы; основное окно урона создаёт сверхспособность.',
       en: 'A burst Lakshana damage dealer for Remora teams whose Ultimate is the main damage window.',
     },
   }),
   profile({
     name: 'Hotori', rarity: 'S', attribute: 'Cosmos', role: 'Buff', arcType: 'Solid',
     summary: {
-      ru: 'Баффер Космоса с сильным коротким окном собственного урона во время ультимейта.',
+      ru: 'Персонаж усиления Космоса с сильным коротким окном собственного урона во время сверхспособности.',
       en: 'A Cosmos buffer with a strong short personal damage window during the Ultimate.',
     },
   }),
@@ -168,14 +168,14 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Nanally', rarity: 'S', attribute: 'Anima', role: 'Damage', arcType: 'Plasma',
     summary: {
-      ru: 'Основной DPS Анимы с последующими атаками и простой связкой навыка, ультимейта и базовых атак.',
+      ru: 'Основной персонаж урона Анимы с последующими атаками и простой связкой навыка, сверхспособности и базовых атак.',
       en: 'An Anima main DPS with follow-up attacks and a simple Skill–Ultimate–Basic flow.',
     },
   }),
   profile({
     name: 'Sakiri', rarity: 'S', attribute: 'Incantation', role: 'Buff', arcType: 'Gas',
     summary: {
-      ru: 'Универсальный баффер Заклинания, особенно полезный для Поджога и периодического урона.',
+      ru: 'Универсальный персонаж усиления Чар, особенно полезный для Поджога и периодического урона.',
       en: 'A universal Incantation buffer with extra value in Scorch and damage-over-time teams.',
     },
   }),
@@ -205,14 +205,20 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Zero', rarity: 'S', attribute: 'Cosmos', role: 'Damage', arcType: 'Solid',
     summary: {
-      ru: 'Гибкий бесплатный DPS Космоса, который часто запускает Esper Cycle и помогает всей команде.',
+      ru: 'Гибкий бесплатный персонаж урона Космоса: быстро заполняет шкалу цикла эспера и помогает всей команде.',
       en: 'A flexible free Cosmos DPS who triggers Esper Cycles frequently and supports the whole team.',
     },
   }),
 ];
 
 export const characterByName = new Map(characterCatalog.map((character) => [character.name, character]));
-const russianToCanonical = new Map(Object.entries(characterRussianNames).map(([canonical, russian]) => [russian.toLocaleLowerCase('ru'), canonical]));
+const russianToCanonical = new Map<string, string>();
+for (const [canonical, russian] of Object.entries(characterRussianNames)) {
+  russianToCanonical.set(russian.toLocaleLowerCase('ru'), canonical);
+  for (const alias of characterRussianAliases[canonical] ?? []) {
+    russianToCanonical.set(alias.toLocaleLowerCase('ru'), canonical);
+  }
+}
 
 export function canonicalCharacterName(value: string): string | null {
   const trimmed = value.trim();

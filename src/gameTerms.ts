@@ -2,53 +2,53 @@ import type { Locale } from './types';
 import type { ArcDirectoryType } from './arc-directory';
 
 export const arcRussianNames: Record<string, string> = {
-  'A Time Will Come': 'Время придёт',
+  'A Time Will Come': 'Время придет',
   'Be Happy': 'Будь счастлив',
-  'Blow up the Crowd': 'Взорви толпу',
-  'Blushing Mirage': 'Румяный мираж',
-  'Call of the Twisted City': 'Зов искажённого города',
-  'Camellia Society': 'Общество камелии',
-  'Clear Skies': 'Ясное небо',
-  'Contemplative Cat': 'Созерцающий кот',
-  'Cosmos Daze, Wild Reverie': 'Космический дурман, дикая грёза',
+  'Blow up the Crowd': 'Взорвать толпу',
+  'Blushing Mirage': 'Алеющий мираж',
+  'Call of the Twisted City': 'Зов искаженного города',
+  'Camellia Society': 'Сообщество Камелии',
+  'Clear Skies': 'Чистое небо',
+  'Contemplative Cat': 'Созерцательная кошка',
+  'Cosmos Daze, Wild Reverie': 'Космический восторг, дикая греза',
   'Dangerous Game': 'Опасная игра',
   'Day Off': 'Выходной',
-  'Drawn Blade': 'Обнажённый клинок',
+  'Drawn Blade': 'Обнаженный клинок',
   'Eternal Waltz': 'Вечный вальс',
-  'Failing You, Heavy in My Heart': 'Подвёл тебя — тяжесть на сердце',
+  'Failing You, Heavy in My Heart': 'Я подвожу тебя с тяжестью в сердце',
   'First Step to Success': 'Первый шаг к успеху',
   'Fluff of Fearlessness': 'Пух бесстрашия',
-  'Fluff of Ferocity': 'Пух свирепости',
-  'Fluff of Finesse': 'Пух искусности',
-  'Fluff of Fleetness': 'Пух стремительности',
+  'Fluff of Ferocity': 'Пух ярости',
+  'Fluff of Finesse': 'Пух изящества',
+  'Fluff of Fleetness': 'Пух проворности',
   'Fluff of Fortitude': 'Пух стойкости',
-  "Good Boy's Grand Adventure": 'Большое приключение хорошего мальчика',
-  "Hethereau's Keeper": 'Хранитель Хетерео',
-  'Marching Beyond Time': 'Шествие сквозь время',
-  'Mind Royale': 'Королевская игра разума',
+  "Good Boy's Grand Adventure": 'Большой квест хорошего мальчика',
+  "Hethereau's Keeper": 'Хранитель Этеро',
+  'Marching Beyond Time': 'За пределы времени',
+  'Mind Royale': 'Королевский разум',
   'Oraora!': 'Ора-ора!',
   'Raging Flames': 'Бушующее пламя',
-  'Ready-Ready': 'Готово-готово',
+  'Ready-Ready': 'Полная готовность',
   'Real Music': 'Настоящая музыка',
   'Reality Refuge': 'Убежище реальности',
-  'Shiny Days': 'Сияющие дни',
-  'Song of the Whale': 'Песнь кита',
+  'Shiny Days': 'Блестящие дни',
+  'Song of the Whale': 'Песня кита',
   'Stellar Veil': 'Звёздная вуаль',
-  'Tears Beneath the Mask': 'Слёзы под маской',
-  "The Fools' Spring": 'Весна дураков',
-  'The Forgotten': 'Забытый',
-  'The Good, The Bad, The Bitter': 'Хорошее, плохое и горькое',
+  'Tears Beneath the Mask': 'Слезы за маской',
+  "The Fools' Spring": 'Ложная весна',
+  'The Forgotten': 'Забытое',
+  'The Good, The Bad, The Bitter': 'Хороший, плохой, горький',
   'The Great Thief': 'Великий вор',
   'The Last Rose': 'Последняя роза',
-  'The Rain That Shook the World': 'Дождь, потрясший мир',
+  'The Rain That Shook the World': 'Дождь, сотрясший мир',
   'The Wrong Gate': 'Неверные врата',
-  'Time Bandit': 'Похититель времени',
-  'Umbrella': 'Зонт',
+  'Time Bandit': 'Бандит времени',
+  'Umbrella': 'Зонтик',
   'Us.': 'Мы.',
   'Watch Your Heads!': 'Берегите головы!',
-  "What's Desired": 'Желанное',
-  'Your Happiness is Priceless': 'Твоё счастье бесценно',
-  'Youthful Fantasy': 'Юношеская фантазия',
+  "What's Desired": 'Заветное желание',
+  'Your Happiness is Priceless': 'Твое счастье бесценно',
+  'Youthful Fantasy': 'Ребяческая фантазия',
 };
 
 export const characterRussianNames: Record<string, string> = {
@@ -76,12 +76,26 @@ export const characterRussianNames: Record<string, string> = {
   Zero: 'Оценщик',
 };
 
+/**
+ * Legacy and search-only aliases. The first-class RU display name always comes
+ * from characterRussianNames; aliases must never become primary labels.
+ */
+export const characterRussianAliases: Record<string, readonly string[]> = {
+  Daffodill: ['Нарцисс'],
+  Shinku: ['Шинку'],
+  Zero: ['Зеро', 'Зеро эспер', 'Нулевой эспер'],
+};
+
+export function localizedCharacterAliases(name: string): readonly string[] {
+  return characterRussianAliases[name] ?? [];
+}
+
 const arcTypeRussian: Record<ArcDirectoryType, string> = {
-  Solid: 'Твёрдая',
-  Gas: 'Газовая',
-  Liquid: 'Жидкая',
-  Plasma: 'Плазменная',
-  Synthesis: 'Синтез',
+  Solid: 'Твёрдый',
+  Gas: 'Газовый',
+  Liquid: 'Жидкий',
+  Plasma: 'Плазменный',
+  Synthesis: 'Гибридный',
 };
 
 const statRussian: Record<string, string> = {
@@ -90,16 +104,16 @@ const statRussian: Record<string, string> = {
   'CRIT Rate': 'Крит. шанс',
   'CRIT DMG': 'Крит. урон',
   'Break Intensity': 'Интенсивность сломления',
-  'Charge Efficiency': 'Эффективность зарядки',
+  'Charge Efficiency': 'Эффективность заряда',
   'DMG Bonus': 'Бонус урона',
 };
 
 const sourceTitleRussian: Record<string, string> = {
-  'Iroi Best Build Guide': 'Лучший билд Ирой',
+  'Iroi Best Build Guide': 'Лучшая сборка Ирой',
   'Arcs (Weapons) Database': 'База дуг (оружия)',
-  'NTE Characters & Build Guides': 'Персонажи и билды NTE',
+  'NTE Characters & Build Guides': 'Персонажи и сборки NTE',
   'NTE Damage Calculator': 'Калькулятор урона NTE',
-  'Iroi Guide, Skills, Kit, and Awakenings': 'Гайд по Ирой: навыки, набор и пробуждения',
+  'Iroi Guide, Skills, Kit, and Awakenings': 'Гайд по Ирой: навыки и пробуждения',
   'Rivyn Elowen Iroi Arc comparison screenshot': 'Скриншот сравнения дуг Ирой от Rivyn Elowen',
   'The Wrong Gate Release Date and Arc Effect': 'Дата выхода и эффект дуги «Неверные врата»',
   'The Wrong Gate Details and Best Characters': 'Характеристики «Неверных врат» и лучшие персонажи',
@@ -110,25 +124,52 @@ const attributeRussian: Record<string, string> = {
   Cosmos: 'Космос',
   Lakshana: 'Лакшана',
   Chaos: 'Хаос',
-  Incantation: 'Заклинание',
+  Incantation: 'Чары',
   Psyche: 'Психика',
 };
 
 const roleRussian: Record<string, string> = {
   Damage: 'Урон',
   Buff: 'Усиление',
-  Survival: 'Выживаемость',
+  Survival: 'Выживание',
   Support: 'Поддержка',
 };
+
+export const russianClientTerminology = {
+  version: 1,
+  verifiedAt: '2026-08-04',
+  sourcePriority: [
+    'current-russian-client',
+    'owner-confirmed-client-spelling',
+    'official-russian-publication',
+    'current-russian-reference',
+    'project-fallback',
+  ] as const,
+  arcTypes: arcTypeRussian,
+  attributes: attributeRussian,
+  roles: roleRussian,
+  stats: statRussian,
+  combat: {
+    esperCycle: 'Цикл эспера',
+    ultimate: 'Сверхспособность',
+    redirectSkill: 'Навык перенаправления',
+    progressionStage: 'Прорыв',
+    breakGauge: 'Шкала сломления',
+    breakIntensity: 'Интенсивность сломления',
+    brokenEnemy: 'Сломленный враг',
+    breakDamage: 'Урон сломления',
+  },
+  unchangedAbbreviations: ['ATK', 'DEF', 'HP', 'CRIT', 'DPS', 'MAX', 'MIN'] as const,
+} as const;
 
 export type ProgressionMaterialKey = 'beetleCoin' | 'page' | 'fading' | 'blurred' | 'chaos';
 
 export const progressionMaterials: Record<ProgressionMaterialKey, { ru: string; en: string }> = {
-  beetleCoin: { ru: 'Жучиная монета', en: 'Beetle Coin' },
+  beetleCoin: { ru: 'Жук-монета', en: 'Beetle Coin' },
   page: { ru: 'Страница с Брегов Заблуждений', en: "A Page from Delusion's Shore" },
-  fading: { ru: 'Тусклый силуэт', en: 'Fading Silhouette' },
+  fading: { ru: 'Исчезающий силуэт', en: 'Fading Silhouette' },
   blurred: { ru: 'Размытый силуэт', en: 'Blurred Silhouette' },
-  chaos: { ru: 'Силуэт хаоса', en: 'Chaos Silhouette' },
+  chaos: { ru: 'Хаотичный силуэт', en: 'Chaos Silhouette' },
 };
 
 export function localizedArcName(name: string, locale: Locale): string {

@@ -189,7 +189,7 @@ export function ArcCalculatorPage() {
     </div><FieldHelp title={ru ? 'Что означают необычные поля?' : 'What do the unusual fields mean?'} terms={ru ? [
       { term: 'Множитель окна', description: 'Суммарный процент урона всех попаданий выбранного навыка или связки.' },
       { term: 'Урон союзников', description: 'Урон остальных трёх персонажей до бонуса, который даёт выбранная дуга.' },
-      { term: 'Доля времени эффекта', description: 'Какую часть боя условная пассивка реально активна: 100% означает постоянное действие.' },
+      { term: 'Доля времени эффекта', description: 'Какую часть боя условный пассивный эффект действительно активен: 100% означает постоянное действие.' },
       { term: 'От лучшего результата', description: 'Лидер равен 100%, остальные показаны относительно него в этом же расчёте.' },
     ] : [
       { term: 'Window multiplier', description: 'Combined damage percentage of all hits in the selected skill or combo.' },
