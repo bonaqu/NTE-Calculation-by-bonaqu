@@ -28,8 +28,8 @@ function team(includePsyche = true): GameVisibleTeamState {
     activeSlot: 0,
     duration: 20,
     builds: [
-      build('Lacrimosa'),
-      includePsyche ? build('Nanally') : build('Hathor'),
+      build('Chaos'),
+      includePsyche ? build('Haniel') : build('Hathor'),
       build('Shinku', { skills: { basic: 11, skill: 1, ultimate: 1, support: 1 } }),
       build('Zero'),
     ],
@@ -62,7 +62,7 @@ const scenario: CombatScenarioState = {
       at: 11.9,
       kind: 'action',
       sourceSlot: 0,
-      actionId: 'lacrimosa.discord-enhancement.broken-target',
+      actionId: 'chaos.remora-enhancement.maximum-twelve-seconds',
       effectId: '',
       cycleId: '',
       note: '',
@@ -82,7 +82,7 @@ const scenario: CombatScenarioState = {
       at: 12,
       kind: 'action',
       sourceSlot: 0,
-      actionId: 'lacrimosa.discord-enhancement.broken-target',
+      actionId: 'chaos.remora-enhancement.maximum-twelve-seconds',
       effectId: '',
       cycleId: '',
       note: '',
@@ -123,7 +123,7 @@ describe('Stain numerical Esper Cycle model', () => {
     expect(result.activatedCycleCount).toBe(0);
   });
 
-  it('blocks cycles without a safe numerical scenario model', () => {
+  it('blocks cycles without a confirmed numerical scenario model', () => {
     const unsupported: CombatScenarioState = {
       version: 1,
       name: 'Unsupported Blossom',
@@ -140,7 +140,7 @@ describe('Stain numerical Esper Cycle model', () => {
     };
     const result = calculateCombatScenario(team(), unsupported);
     expect(result.steps[0]?.status).toBe('blocked');
-    expect(result.steps[0]?.blockedReason?.ru).toContain('нет безопасной числовой модели');
+    expect(result.steps[0]?.blockedReason?.ru).toContain('нет подтверждённой числовой модели сценария');
   });
 
   it('keeps old v1 payloads valid and normalizes the new optional cycle field', () => {
@@ -152,7 +152,7 @@ describe('Stain numerical Esper Cycle model', () => {
         at: 1,
         kind: 'action',
         sourceSlot: 0,
-        actionId: 'lacrimosa.discord-enhancement.broken-target',
+        actionId: 'chaos.remora-enhancement.maximum-twelve-seconds',
         effectId: '',
         note: '',
       }],
