@@ -24,6 +24,8 @@
     "src/rotation-step-terms.ts",
     "src/team-sequence-builder.ts",
     "src/state/teamForm.ts",
+    "src/game-visible-build.ts",
+    "src/game-visible-calculation.ts",
     "src/arc-directory.ts",
     "src/arc-catalog.ts",
     "src/arc-presets.ts",
