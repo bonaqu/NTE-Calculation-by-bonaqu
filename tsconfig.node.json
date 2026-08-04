@@ -27,6 +27,7 @@
     "src/game-visible-build.ts",
     "src/game-visible-calculation.ts",
     "src/verified-visible-actions.ts",
+    "src/verified-visible-actions-batch-b.ts",
     "src/team-effects.ts",
     "src/combat-scenario.ts",
     "src/arc-directory.ts",

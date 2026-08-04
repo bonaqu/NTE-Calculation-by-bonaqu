@@ -1,4 +1,5 @@
 import { awakeningNodes, type AwakeningNode } from './awakening-data';
+import { jiuyuanAwakeningNodes } from './awakening-data-batch-b';
 import { supportAwakeningNodes } from './support-awakening-data';
 import type { VerifiedTeamEffectId } from './team-effects';
 
@@ -11,6 +12,7 @@ export interface TeamEffectAwakeningRequirement {
 export const allAwakeningNodes: readonly AwakeningNode[] = [
   ...awakeningNodes,
   ...supportAwakeningNodes,
+  ...jiuyuanAwakeningNodes,
 ];
 
 export const awakeningReferenceByCharacter = new Map<string, readonly AwakeningNode[]>(

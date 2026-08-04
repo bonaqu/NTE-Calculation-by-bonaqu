@@ -10,11 +10,12 @@ import {
 } from './awakening-reference';
 
 describe('central Awakening reference', () => {
-  it('combines 42 sourced nodes across seven covered characters', () => {
-    expect(allAwakeningNodes).toHaveLength(42);
+  it('combines 48 sourced nodes across eight covered characters', () => {
+    expect(allAwakeningNodes).toHaveLength(48);
     expect([...awakeningReferenceByCharacter.keys()].sort()).toEqual([
       'Chaos',
       'Haniel',
+      'Jiuyuan',
       'Lacrimosa',
       'Nanally',
       'Sakiri',
@@ -36,11 +37,14 @@ describe('central Awakening reference', () => {
     const nanally = relevantAwakeningNodes('Nanally', 'nanally.awakening-three-follow-up.level-11', []);
     const zeroA1 = relevantAwakeningNodes('Zero', 'zero.blooming-gaze.awakening-one', []);
     const zeroA6 = relevantAwakeningNodes('Zero', 'zero.appraise-and-engrave-extra.awakening-six', []);
+    const jiuyuanA6 = relevantAwakeningNodes('Jiuyuan', 'jiuyuan.know-every-secret.awakening-six', []);
 
     expect(nanally.map((node) => node.level)).toEqual([3]);
     expect(nanally[0]?.title.ru).toBe('Называйте меня боссом');
     expect(zeroA1.map((node) => node.level)).toEqual([1]);
     expect(zeroA6.map((node) => node.level)).toEqual([6]);
+    expect(jiuyuanA6.map((node) => node.level)).toEqual([6]);
+    expect(jiuyuanA6[0]?.title.en).toBe('Know Every Secret');
   });
 
   it('links Sakiri A4 to the enabled verified team effect', () => {
@@ -65,11 +69,14 @@ describe('central Awakening reference', () => {
     const sakiri = awakeningSearchText('Sakiri');
     const zero = awakeningSearchText('Zero');
     const shinku = awakeningSearchText('Shinku');
+    const jiuyuan = awakeningSearchText('Jiuyuan');
 
     expect(sakiri).toContain('Жажда уверенности');
     expect(sakiri).toContain('30% базовой Атаки Сакири');
     expect(zero).toContain('Цветущий взгляд');
     expect(shinku).toContain('Dragon\'s Treasure');
+    expect(jiuyuan).toContain('Know Every Secret');
+    expect(jiuyuan).toContain('5 секунд');
     expect(awakeningSearchText('Hathor')).toBe('');
   });
 });

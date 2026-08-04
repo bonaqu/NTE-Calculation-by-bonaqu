@@ -2,9 +2,15 @@ const base = String(process.env.DEPLOYMENT_URL || '').replace(/\/$/u, '');
 if (!base) throw new Error('DEPLOYMENT_URL is required');
 
 const expected = {
-  serviceVersion: process.env.EXPECTED_SERVICE_VERSION || '0.8.0',
+  serviceVersion: process.env.EXPECTED_SERVICE_VERSION || '0.9.0',
   formulaVersion: process.env.EXPECTED_FORMULA_VERSION || '0.2',
   visibleBuildVersion: Number(process.env.EXPECTED_VISIBLE_BUILD_VERSION || 1),
+  verifiedActionCount: Number(process.env.EXPECTED_VERIFIED_ACTION_COUNT || 14),
+  partialCharacters: String(process.env.EXPECTED_PARTIAL_CHARACTERS || 'Chaos,Hathor,Jiuyuan,Lacrimosa,Nanally,Shinku,Zero')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .sort(),
 };
 
 const endpoints = {
@@ -128,6 +134,24 @@ const zeroPayload = teamPayload(build('Zero', {
   verifiedActionId: 'zero.blooming-gaze.awakening-one',
 }), 60);
 
+const hathorPayload = teamPayload(build('Hathor', {
+  level: 80,
+  maxLevel: 80,
+  stats: emptyStats(2000),
+  skills: { basic: 1, skill: 10, ultimate: 10, support: 1 },
+  testMode: 'verified-action',
+  verifiedActionId: 'hathor.cyclone-strike-third.level-10',
+}));
+
+const jiuyuanPayload = teamPayload(build('Jiuyuan', {
+  level: 80,
+  maxLevel: 80,
+  awakeningLevel: 6,
+  stats: emptyStats(2000),
+  testMode: 'verified-action',
+  verifiedActionId: 'jiuyuan.know-every-secret.awakening-six',
+}));
+
 const hanielPayload = payload([
   build('Shinku', { level: 80, maxLevel: 80, stats: emptyStats(1000) }),
   build('Haniel', {
@@ -189,6 +213,8 @@ async function verifyOnce() {
     shinku,
     nanally,
     zero,
+    hathor,
+    jiuyuan,
     haniel,
     sakiri,
   ] = await Promise.all([
@@ -203,6 +229,8 @@ async function verifyOnce() {
     postVisible(shinkuPayload),
     postVisible(nanallyPayload),
     postVisible(zeroPayload),
+    postVisible(hathorPayload),
+    postVisible(jiuyuanPayload),
     postVisible(hanielPayload),
     postVisible(sakiriPayload),
   ]);
@@ -221,7 +249,7 @@ async function verifyOnce() {
 
   assert(combatModels.count === 20, `expected 20 combat coverage records, got ${combatModels.count}`);
   assert(combatModels.visibleBuildVersion === 1, 'combat model visible version mismatch');
-  assert(combatModels.verifiedActionCount === 9, `expected 9 verified actions, got ${combatModels.verifiedActionCount}`);
+  assert(combatModels.verifiedActionCount === expected.verifiedActionCount, `expected ${expected.verifiedActionCount} verified actions, got ${combatModels.verifiedActionCount}`);
   assert(combatModels.verifiedTeamEffectCount === 3, `expected 3 verified team effects, got ${combatModels.verifiedTeamEffectCount}`);
   assert(combatModels.verifiedTeamEffects.some((effect) => effect.id === 'haniel.friendship.nova-atk-drain' && effect.baseAtkPercent === 8), 'Haniel team effect missing');
   assert(combatModels.verifiedTeamEffects.some((effect) => effect.id === 'sakiri.awakening-four.team-atk' && effect.baseAtkPercent === 30), 'Sakiri A4 effect missing');
@@ -231,9 +259,11 @@ async function verifyOnce() {
     .filter((record) => record.coverage === 'partial')
     .map((record) => record.characterName)
     .sort();
-  assert(JSON.stringify(partial) === JSON.stringify(['Chaos', 'Lacrimosa', 'Nanally', 'Shinku', 'Zero']), `partial coverage mismatch: ${partial.join(', ')}`);
+  assert(JSON.stringify(partial) === JSON.stringify(expected.partialCharacters), `partial coverage mismatch: ${partial.join(', ')}`);
   assert(combatModels.verifiedActions.some((action) => action.id === 'chaos.remora-enhancement.maximum-twelve-seconds' && action.multiplier === 3200), 'Chaos capped Remora action missing');
   assert(combatModels.verifiedActions.some((action) => action.id === 'zero.blooming-gaze.awakening-one' && action.defenceIgnore === 75), 'Zero A1 action missing DEF Ignore');
+  assert(combatModels.verifiedActions.some((action) => action.id === 'hathor.cyclone-strike-third.level-10' && Math.abs(action.multiplier - 1099.4) < 1e-9), 'Hathor third Cyclone Strike missing');
+  assert(combatModels.verifiedActions.some((action) => action.id === 'jiuyuan.know-every-secret.awakening-six' && action.multiplier === 200 && action.minimumAwakening === 6), 'Jiuyuan A6 action missing');
 
   const shinkuRow = shinku.result.rows[0];
   assert(shinku.policy === 'game-visible-input-only', 'visible calculation policy mismatch');
@@ -249,6 +279,15 @@ async function verifyOnce() {
   assert(zeroRow.supported === true, 'Zero Awakening 1 hit must be supported against a lower-level target');
   assert(zeroRow.multiplier === 200, `Zero multiplier mismatch: ${zeroRow.multiplier}`);
   assert(zeroRow.conditions.some((condition) => condition.id.endsWith('.defence-ignore')), 'Zero DEF Ignore provenance condition missing');
+
+  const hathorRow = hathor.result.rows[0];
+  assert(hathorRow.supported === true, 'Hathor third Cyclone Strike must be supported at Skill Lv.10');
+  assert(Math.abs(hathorRow.multiplier - 1099.4) < 1e-9, `Hathor multiplier mismatch: ${hathorRow.multiplier}`);
+
+  const jiuyuanRow = jiuyuan.result.rows[0];
+  assert(jiuyuanRow.supported === true, 'Jiuyuan A6 trigger must be supported at A6');
+  assert(jiuyuanRow.multiplier === 200, `Jiuyuan multiplier mismatch: ${jiuyuanRow.multiplier}`);
+  assert(jiuyuanRow.conditions.some((condition) => condition.label.ru.includes('5 секунд')), 'Jiuyuan cooldown provenance missing');
 
   assert(haniel.result.teamEffects.length === 1 && haniel.result.teamEffects[0].active === true, 'Haniel effect evaluation missing');
   assert(haniel.result.teamEffects[0].derivedAmount === 40, `Haniel flat ATK mismatch: ${haniel.result.teamEffects[0].derivedAmount}`);
@@ -271,6 +310,8 @@ async function verifyOnce() {
     shinkuAtk: shinkuRow.result.totalAtk,
     nanallyMultiplier: nanallyRow.multiplier,
     zeroMultiplier: zeroRow.multiplier,
+    hathorMultiplier: hathorRow.multiplier,
+    jiuyuanMultiplier: jiuyuanRow.multiplier,
     hanielFlatAtk: haniel.result.teamEffects[0].derivedAmount,
     sakiriFlatAtk: sakiriEffects.find((effect) => effect.effect.id === 'sakiri.awakening-four.team-atk')?.derivedAmount,
   };
