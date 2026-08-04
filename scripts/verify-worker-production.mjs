@@ -2,7 +2,7 @@ const base = String(process.env.DEPLOYMENT_URL || '').replace(/\/$/u, '');
 if (!base) throw new Error('DEPLOYMENT_URL is required');
 
 const expected = {
-  serviceVersion: process.env.EXPECTED_SERVICE_VERSION || '0.7.0',
+  serviceVersion: process.env.EXPECTED_SERVICE_VERSION || '0.8.0',
   formulaVersion: process.env.EXPECTED_FORMULA_VERSION || '0.2',
   visibleBuildVersion: Number(process.env.EXPECTED_VISIBLE_BUILD_VERSION || 1),
 };
@@ -48,6 +48,8 @@ const build = (characterName, overrides = {}) => ({
   level: 1,
   maxLevel: 20,
   awakeningLevel: 0,
+  baseAtk: 0,
+  activeTeamEffectIds: [],
   stats: emptyStats(),
   arc: emptyArc(),
   skills: { basic: 1, skill: 1, ultimate: 1, support: 1 },
@@ -57,11 +59,11 @@ const build = (characterName, overrides = {}) => ({
   ...overrides,
 });
 
-const teamPayload = (primary, targetLevel = 80) => ({
+const payload = (builds, targetLevel = 80) => ({
   version: 1,
   activeSlot: 0,
   duration: 30,
-  builds: [primary, build('Hathor'), build('Zero'), build('Nanally')],
+  builds,
   target: {
     level: targetLevel,
     resistance: 10,
@@ -70,6 +72,13 @@ const teamPayload = (primary, targetLevel = 80) => ({
     boss: true,
   },
 });
+
+const teamPayload = (primary, targetLevel = 80) => payload([
+  primary,
+  build('Hathor'),
+  build('Zero'),
+  build('Nanally'),
+], targetLevel);
 
 const shinkuPayload = teamPayload(build('Shinku', {
   level: 70,
@@ -119,17 +128,47 @@ const zeroPayload = teamPayload(build('Zero', {
   verifiedActionId: 'zero.blooming-gaze.awakening-one',
 }), 60);
 
+const hanielPayload = payload([
+  build('Shinku', { level: 80, maxLevel: 80, stats: emptyStats(1000) }),
+  build('Haniel', {
+    level: 80,
+    maxLevel: 80,
+    baseAtk: 500,
+    activeTeamEffectIds: ['haniel.friendship.nova-atk-drain'],
+    stats: emptyStats(1000),
+  }),
+  build('Zero', { level: 80, maxLevel: 80, stats: emptyStats(1000) }),
+  build('Nanally', { level: 80, maxLevel: 80, stats: emptyStats(1000) }),
+]);
+
+const sakiriPayload = payload([
+  build('Shinku', { level: 80, maxLevel: 80, stats: emptyStats(1000) }),
+  build('Sakiri', {
+    level: 80,
+    maxLevel: 80,
+    awakeningLevel: 4,
+    baseAtk: 600,
+    activeTeamEffectIds: [
+      'sakiri.awakening-four.team-atk',
+      'sakiri.impish-trick.def-reduction',
+    ],
+    stats: emptyStats(1000),
+  }),
+  build('Zero', { level: 80, maxLevel: 80, stats: emptyStats(1000) }),
+  build('Nanally', { level: 80, maxLevel: 80, stats: emptyStats(1000) }),
+]);
+
 async function readJson(url, init) {
   const response = await fetch(url, init);
   if (!response.ok) throw new Error(`${url} returned ${response.status}`);
   return response.json();
 }
 
-async function postVisible(payload) {
+async function postVisible(value) {
   return readJson(endpoints.visibleCalculation, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(value),
   });
 }
 
@@ -150,6 +189,8 @@ async function verifyOnce() {
     shinku,
     nanally,
     zero,
+    haniel,
+    sakiri,
   ] = await Promise.all([
     readJson(endpoints.health),
     readJson(endpoints.arcs),
@@ -162,6 +203,8 @@ async function verifyOnce() {
     postVisible(shinkuPayload),
     postVisible(nanallyPayload),
     postVisible(zeroPayload),
+    postVisible(hanielPayload),
+    postVisible(sakiriPayload),
   ]);
 
   assert(health.ok === true, 'health.ok must be true');
@@ -179,6 +222,11 @@ async function verifyOnce() {
   assert(combatModels.count === 20, `expected 20 combat coverage records, got ${combatModels.count}`);
   assert(combatModels.visibleBuildVersion === 1, 'combat model visible version mismatch');
   assert(combatModels.verifiedActionCount === 9, `expected 9 verified actions, got ${combatModels.verifiedActionCount}`);
+  assert(combatModels.verifiedTeamEffectCount === 3, `expected 3 verified team effects, got ${combatModels.verifiedTeamEffectCount}`);
+  assert(combatModels.verifiedTeamEffects.some((effect) => effect.id === 'haniel.friendship.nova-atk-drain' && effect.baseAtkPercent === 8), 'Haniel team effect missing');
+  assert(combatModels.verifiedTeamEffects.some((effect) => effect.id === 'sakiri.awakening-four.team-atk' && effect.baseAtkPercent === 30), 'Sakiri A4 effect missing');
+  assert(combatModels.verifiedTeamEffects.some((effect) => effect.id === 'sakiri.impish-trick.def-reduction' && effect.enemyDefenceReduction === 10), 'Sakiri DEF reduction missing');
+
   const partial = combatModels.data
     .filter((record) => record.coverage === 'partial')
     .map((record) => record.characterName)
@@ -202,13 +250,29 @@ async function verifyOnce() {
   assert(zeroRow.multiplier === 200, `Zero multiplier mismatch: ${zeroRow.multiplier}`);
   assert(zeroRow.conditions.some((condition) => condition.id.endsWith('.defence-ignore')), 'Zero DEF Ignore provenance condition missing');
 
+  assert(haniel.result.teamEffects.length === 1 && haniel.result.teamEffects[0].active === true, 'Haniel effect evaluation missing');
+  assert(haniel.result.teamEffects[0].derivedAmount === 40, `Haniel flat ATK mismatch: ${haniel.result.teamEffects[0].derivedAmount}`);
+  assert(haniel.result.rows.every((row) => row.result.totalAtk === 1040), 'Haniel +40 ATK must reach all four slots');
+  assert(haniel.result.rows.every((row) => row.conditions.some((condition) => condition.id.startsWith('haniel.friendship.nova-atk-drain'))), 'Haniel provenance missing');
+
+  const sakiriEffects = sakiri.result.teamEffects;
+  assert(sakiriEffects.length === 2 && sakiriEffects.every((effect) => effect.active === true), 'Sakiri effects must both be active');
+  assert(sakiriEffects.find((effect) => effect.effect.id === 'sakiri.awakening-four.team-atk')?.derivedAmount === 180, 'Sakiri A4 +180 mismatch');
+  assert(sakiri.result.rows[0].result.totalAtk === 1180, 'Sakiri A4 must buff slot 1');
+  assert(sakiri.result.rows[1].result.totalAtk === 1000, 'Sakiri A4 must exclude Sakiri');
+  assert(sakiri.result.rows[2].result.totalAtk === 1180 && sakiri.result.rows[3].result.totalAtk === 1180, 'Sakiri A4 must buff the other slots');
+  assert(sakiri.result.rows.every((row) => row.conditions.some((condition) => condition.id.startsWith('sakiri.impish-trick.def-reduction'))), 'Sakiri DEF reduction provenance missing');
+
   return {
     combatModelCount: combatModels.count,
     verifiedActionCount: combatModels.verifiedActionCount,
+    verifiedTeamEffectCount: combatModels.verifiedTeamEffectCount,
     partialCharacters: partial,
     shinkuAtk: shinkuRow.result.totalAtk,
     nanallyMultiplier: nanallyRow.multiplier,
     zeroMultiplier: zeroRow.multiplier,
+    hanielFlatAtk: haniel.result.teamEffects[0].derivedAmount,
+    sakiriFlatAtk: sakiriEffects.find((effect) => effect.effect.id === 'sakiri.awakening-four.team-atk')?.derivedAmount,
   };
 }
 
