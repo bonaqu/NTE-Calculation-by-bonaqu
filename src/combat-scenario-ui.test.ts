@@ -24,16 +24,19 @@ describe('verified team combat scenario product contract', () => {
     expect(engineSource).toContain("COMBAT_SCENARIO_STORAGE_KEY = 'nte.team.scenario.v1'");
     expect(engineSource).toContain('COMBAT_SCENARIO_VERSION = 1');
     expect(engineSource).toContain('normalizeCombatScenarioState');
+    expect(engineSource).toContain("cycleId: text(input.cycleId, '', 80)");
     expect(componentSource).toContain('COMBAT_SCENARIO_STORAGE_KEY');
     expect(componentSource).toContain('{ normalize: normalizeCombatScenarioState }');
   });
 
-  it('exposes only verified actions, effects and timing instead of hidden formula inputs', () => {
+  it('exposes only verified actions, effects, supported cycles and timing instead of hidden formula inputs', () => {
     expect(componentSource).toContain("addStep('action')");
     expect(componentSource).toContain("addStep('activate-effect')");
+    expect(componentSource).toContain("addStep('activate-cycle')");
     expect(componentSource).toContain("addStep('wait')");
     expect(componentSource).toContain('actionsForCharacter');
     expect(componentSource).toContain('teamEffectsForCharacter');
+    expect(componentSource).toContain('verifiedCombatCycleModels');
     expect(componentSource).toContain('Коэффициенты вручную вводить не нужно');
     expect(componentSource).not.toContain('skillMultiplier');
     expect(componentSource).not.toContain('actionsPerRotation');
@@ -43,6 +46,7 @@ describe('verified team combat scenario product contract', () => {
   it('states partial verified coverage instead of claiming full rotation DPS', () => {
     expect(componentSource).toContain('Это не полный DPS ротации');
     expect(componentSource).toContain('Покрытие действий');
+    expect(componentSource).toContain('Остальные циклы не превращаются в выдуманный урон');
     expect(engineSource).toContain('coveragePercent');
     expect(engineSource).toContain("status: 'blocked'");
     expect(engineSource).toContain("status: 'wait'");
@@ -52,16 +56,20 @@ describe('verified team combat scenario product contract', () => {
     expect(wranglerSource).toContain('src/index-v0.9.ts');
     expect(workerSource).toContain("SERVICE_VERSION = '0.9.0'");
     expect(workerSource).toContain("'/api/v1/calculate/combat-scenario'");
+    expect(workerSource).toContain("'activate-cycle'");
+    expect(workerSource).toContain('verifiedCombatCycleModelCount');
     expect(workerSource).toContain('normalizeGameVisibleTeamState(input.team)');
     expect(workerSource).toContain('normalizeCombatScenarioState(input.scenario)');
     expect(workerSource).toContain('calculateCombatScenario(team, scenario)');
-    expect(workerSource).toContain("policy: 'verified-actions-and-timed-effects-only'");
+    expect(workerSource).toContain("policy: 'verified-actions-timed-effects-and-supported-cycles-only'");
   });
 
   it('loads a responsive border-led scenario interface without gradients or shadows', () => {
     expect(mainSource).toContain("import './combat-scenario.css'");
     expect(css).toContain('.combat-scenario-editor-row');
     expect(css).toContain('.combat-scenario-results li');
+    expect(css).toContain('.combat-scenario-cycle-policy');
+    expect(css).toContain('.combat-scenario-shared-target');
     expect(css).toContain('.nte-calc-layout.scenario-active');
     expect(css).toContain('@media(max-width:620px)');
     expect(css).not.toMatch(/(?:linear|radial|conic)-gradient\s*\(/iu);
