@@ -23,6 +23,7 @@
     "src/character-terms.ts",
     "src/rotation-step-terms.ts",
     "src/team-sequence-builder.ts",
+    "src/state/teamForm.ts",
     "src/arc-directory.ts",
     "src/arc-catalog.ts",
     "src/arc-presets.ts",
