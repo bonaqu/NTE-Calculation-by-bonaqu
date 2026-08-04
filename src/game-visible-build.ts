@@ -301,16 +301,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function initialGameVisibleTeamState(): GameVisibleTeamState {
-  const fallbackNames = ['Shinku', 'Hathor', 'Zero', 'Nanally'];
   return {
     version: GAME_VISIBLE_BUILD_VERSION,
     activeSlot: 0,
     duration: 30,
     builds: [
       shinkuScreenshotBuild,
-      createEmptyGameVisibleBuild(fallbackNames[1]),
-      createEmptyGameVisibleBuild(fallbackNames[2]),
-      createEmptyGameVisibleBuild(fallbackNames[3]),
+      createEmptyGameVisibleBuild('Hathor'),
+      createEmptyGameVisibleBuild('Zero'),
+      createEmptyGameVisibleBuild('Nanally'),
     ],
     target: {
       level: 80,
@@ -324,9 +323,10 @@ export function initialGameVisibleTeamState(): GameVisibleTeamState {
 
 export function normalizeGameVisibleTeamState(value: unknown): GameVisibleTeamState | null {
   if (!isRecord(value) || value.version !== GAME_VISIBLE_BUILD_VERSION || !Array.isArray(value.builds)) return null;
+  const inputBuilds = value.builds;
   const fallback = initialGameVisibleTeamState();
   const builds = Array.from({ length: GAME_VISIBLE_TEAM_SLOTS }, (_, index) => normalizeBuild(
-    value.builds[index],
+    inputBuilds[index],
     fallback.builds[index]?.characterName ?? 'Zero',
   ));
   const target = isRecord(value.target) ? value.target : {};
