@@ -5,19 +5,24 @@ const replacements: readonly [RegExp, string][] = [
   [/\bHP\b/gu, 'ОЗ'],
   [/крит\. урон/giu, 'критический урон'],
   [/крит\. шанс/giu, 'шанс критического удара'],
-  [/интенсивност(?:ь|и|ью) сломления/giu, (match) => match.toLocaleLowerCase('ru').endsWith('и') ? 'эффективности разрушения' : match.toLocaleLowerCase('ru').endsWith('ью') ? 'эффективностью разрушения' : 'эффективность разрушения'],
-  [/интенсивност(?:ь|и|ью) разрушения/giu, (match) => match.toLocaleLowerCase('ru').endsWith('и') ? 'эффективности разрушения' : match.toLocaleLowerCase('ru').endsWith('ью') ? 'эффективностью разрушения' : 'эффективность разрушения'],
-  [/шкал(?:а|ы|е|у|ой) сломления/giu, (match) => {
-    const lower = match.toLocaleLowerCase('ru');
-    if (lower.startsWith('шкалы')) return 'шкалы разрушения';
-    if (lower.startsWith('шкале')) return 'шкале разрушения';
-    if (lower.startsWith('шкалу')) return 'шкалу разрушения';
-    if (lower.startsWith('шкалой')) return 'шкалой разрушения';
-    return 'шкала разрушения';
-  }],
-  [/эффективност(?:ь|и|ью) заряда/giu, (match) => match.toLocaleLowerCase('ru').endsWith('и') ? 'эффективности зарядки' : match.toLocaleLowerCase('ru').endsWith('ью') ? 'эффективностью зарядки' : 'эффективность зарядки'],
-  [/идеальн(?:ого|ый|ом) уклонени(?:я|е|и)/giu, 'критического уклонения'],
-  [/идеальн(?:ого|ый|ом) контрудар(?:а|е|ом)?/giu, 'критического контрудара'],
+  [/интенсивность сломления/giu, 'эффективность разрушения'],
+  [/интенсивности сломления/giu, 'эффективности разрушения'],
+  [/интенсивностью сломления/giu, 'эффективностью разрушения'],
+  [/интенсивность разрушения/giu, 'эффективность разрушения'],
+  [/интенсивности разрушения/giu, 'эффективности разрушения'],
+  [/интенсивностью разрушения/giu, 'эффективностью разрушения'],
+  [/шкала сломления/giu, 'шкала разрушения'],
+  [/шкалы сломления/giu, 'шкалы разрушения'],
+  [/шкале сломления/giu, 'шкале разрушения'],
+  [/шкалу сломления/giu, 'шкалу разрушения'],
+  [/шкалой сломления/giu, 'шкалой разрушения'],
+  [/эффективность заряда/giu, 'эффективность зарядки'],
+  [/эффективности заряда/giu, 'эффективности зарядки'],
+  [/эффективностью заряда/giu, 'эффективностью зарядки'],
+  [/идеального уклонения/giu, 'критического уклонения'],
+  [/идеальное уклонение/giu, 'критическое уклонение'],
+  [/идеального контрудара/giu, 'критического контрудара'],
+  [/идеальный контрудар/giu, 'критический контрудар'],
   [/урон при сломлении/giu, 'урон разрушения'],
 ];
 
@@ -27,5 +32,5 @@ const replacements: readonly [RegExp, string][] = [
  * Numeric values, conditions and English source text are never changed here.
  */
 export function normalizeRussianGameText(value: string): string {
-  return replacements.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement as string), value);
+  return replacements.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), value);
 }
