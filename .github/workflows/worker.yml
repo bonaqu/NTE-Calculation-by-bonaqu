@@ -77,10 +77,10 @@ jobs:
           EXPECTED_FORMULA_VERSION: '0.2'
           EXPECTED_VISIBLE_BUILD_VERSION: '1'
           EXPECTED_COMBAT_SCENARIO_VERSION: '1'
-          EXPECTED_VERIFIED_ACTION_COUNT: '14'
+          EXPECTED_VERIFIED_ACTION_COUNT: '35'
           EXPECTED_VERIFIED_TEAM_EFFECT_COUNT: '4'
           EXPECTED_VERIFIED_COMBAT_CYCLE_MODEL_COUNT: '1'
-          EXPECTED_PARTIAL_CHARACTERS: 'Chaos,Hathor,Jiuyuan,Lacrimosa,Nanally,Shinku,Zero'
+          EXPECTED_PARTIAL_CHARACTERS: 'Baicang,Chaos,Daffodill,Haniel,Hathor,Jiuyuan,Lacrimosa,Nanally,Sakiri,Shinku,Zero'
         run: |
           node scripts/verify-worker-production.mjs
           node scripts/verify-combat-scenario-production.mjs
@@ -93,12 +93,13 @@ jobs:
             echo '### API 0.9.0 production contract'
             echo
             echo '- 20 released-character coverage records'
-            echo '- 14 verified standalone actions across 7 partial models'
+            echo '- 35 verified standalone actions across 11 partial models'
             echo '- 4 verified conditional team effects'
             echo '- 1 verified numerical Esper Cycle model: Stain'
             echo '- scenario step kinds: action, character effect, Esper Cycle, wait'
             echo '- Shinku final ATK remains 2026; Arc ATK 570 is not added again'
             echo '- Hathor third Cyclone Strike 1099.4% and Jiuyuan A6 200% POST checks passed'
+            echo '- Haniel 599.7%, Sakiri 1799.2%, Baicang 799.6% and Daffodill 1598.7% Batch C POST checks passed'
             echo '- Sakiri A4 applies at 19.9s and expires exactly at 20s'
             echo '- Hathor Remora raises effective CRIT Rate through 11.9s and expires at 12s'
             echo '- Stain adds exactly 20% Lakshana/Psyche damage through 11.9s, ignores Cosmos and expires at 12s'
@@ -131,8 +132,8 @@ jobs:
           - Combat model coverage: $COMBAT_MODELS_URL
           - Combat scenario endpoint: $COMBAT_SCENARIO_URL
           - Roster ascension dataset: $PROGRESSION_URL
-          - API 0.9.0 contract: 14 verified actions, 4 conditional team effects, 1 numerical Esper Cycle model and scenario schema v1
-          - Shinku no-double-count, Hathor/Jiuyuan actions, Sakiri/Hathor timed effects and Stain 12-second attribute-gated window POST checks: success
+          - API 0.9.0 contract: 35 verified actions, 4 conditional team effects, 1 numerical Esper Cycle model and scenario schema v1
+          - Shinku no-double-count, eleven partial action models, Sakiri/Hathor timed effects and Stain 12-second attribute-gated window POST checks: success
           - Workflow evidence: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌
