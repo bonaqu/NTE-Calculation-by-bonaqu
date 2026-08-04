@@ -1,4 +1,7 @@
 import type { DamageResult } from '../packages/calculation-core/src';
+import { verifiedCombatCycleModelById, type VerifiedCombatCycleModel } from './combat-cycle-models';
+import { characterByName } from './characters';
+import { esperCycleById } from './esper-cycles';
 import { calculateGameVisibleBuild, type VisibleBuildCalculation } from './game-visible-calculation';
 import type { GameVisibleTeamState } from './game-visible-build';
 import {
@@ -8,14 +11,14 @@ import {
   type VerifiedTeamEffect,
   type VerifiedTeamEffectId,
 } from './team-effects';
-import type { LocalizedText } from './types';
+import type { EsperCycleId, LocalizedText } from './types';
 import { visibleActionById } from './verified-visible-actions';
 
 export const COMBAT_SCENARIO_VERSION = 1 as const;
 export const COMBAT_SCENARIO_STORAGE_KEY = 'nte.team.scenario.v1';
 export const COMBAT_SCENARIO_MAX_STEPS = 64;
 
-export type CombatScenarioStepKind = 'action' | 'activate-effect' | 'wait';
+export type CombatScenarioStepKind = 'action' | 'activate-effect' | 'activate-cycle' | 'wait';
 
 export interface CombatScenarioStep {
   id: string;
@@ -24,6 +27,7 @@ export interface CombatScenarioStep {
   sourceSlot: number;
   actionId: string;
   effectId: string;
+  cycleId: string;
   note: string;
 }
 
@@ -43,6 +47,16 @@ export interface ActiveScenarioEffect {
   title: LocalizedText;
 }
 
+export interface ActiveScenarioCycle {
+  key: string;
+  cycleId: EsperCycleId;
+  startedAt: number;
+  expiresAt: number;
+  name: LocalizedText;
+  affectedAttributes: VerifiedCombatCycleModel['affectedAttributes'];
+  damageBonus: number;
+}
+
 export type CombatScenarioStepStatus = 'calculated' | 'activated' | 'wait' | 'blocked';
 
 export interface CombatScenarioStepResult {
@@ -52,7 +66,9 @@ export interface CombatScenarioStepResult {
   sourceCharacter?: string;
   calculation?: VisibleBuildCalculation;
   effectEvaluation?: TeamEffectEvaluation;
+  activatedCycle?: ActiveScenarioCycle;
   activeEffects: readonly ActiveScenarioEffect[];
+  activeCycles: readonly ActiveScenarioCycle[];
   blockedReason?: LocalizedText;
 }
 
@@ -66,9 +82,11 @@ export interface CombatScenarioResult {
   calculatedActionCount: number;
   blockedActionCount: number;
   activatedEffectCount: number;
+  activatedCycleCount: number;
   blockedStepCount: number;
   coveragePercent: number;
   finalActiveEffects: readonly ActiveScenarioEffect[];
+  finalActiveCycles: readonly ActiveScenarioCycle[];
 }
 
 const finite = (value: unknown, fallback = 0): number => typeof value === 'number' && Number.isFinite(value) ? value : fallback;
@@ -82,7 +100,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function normalizeKind(value: unknown): CombatScenarioStepKind {
-  if (value === 'activate-effect' || value === 'wait') return value;
+  if (value === 'activate-effect' || value === 'activate-cycle' || value === 'wait') return value;
   return 'action';
 }
 
@@ -94,6 +112,7 @@ export function createCombatScenarioStep(index = 0, kind: CombatScenarioStepKind
     sourceSlot: 0,
     actionId: '',
     effectId: '',
+    cycleId: '',
     note: '',
   };
 }
@@ -126,6 +145,7 @@ export function normalizeCombatScenarioState(value: unknown): CombatScenarioStat
       sourceSlot: Math.trunc(clamp(input.sourceSlot, 0, 3)),
       actionId: text(input.actionId, '', 160),
       effectId: text(input.effectId, '', 160),
+      cycleId: text(input.cycleId, '', 80),
       note: text(input.note, '', 400),
     } satisfies CombatScenarioStep;
   });
@@ -140,7 +160,7 @@ function blockedReason(ru: string, en: string): LocalizedText {
   return { ru, en };
 }
 
-function activeAt(window: ActiveScenarioEffect, timestamp: number): boolean {
+function activeAt(window: { expiresAt: number | null }, timestamp: number): boolean {
   return window.expiresAt === null || timestamp < window.expiresAt;
 }
 
@@ -148,6 +168,12 @@ function snapshotActiveEffects(windows: Map<string, ActiveScenarioEffect>, times
   return [...windows.values()]
     .filter((window) => activeAt(window, timestamp))
     .sort((left, right) => left.startedAt - right.startedAt || left.sourceSlot - right.sourceSlot || left.effectId.localeCompare(right.effectId));
+}
+
+function snapshotActiveCycles(windows: Map<string, ActiveScenarioCycle>, timestamp: number): ActiveScenarioCycle[] {
+  return [...windows.values()]
+    .filter((window) => activeAt(window, timestamp))
+    .sort((left, right) => left.startedAt - right.startedAt || left.cycleId.localeCompare(right.cycleId));
 }
 
 function stateWithActiveEffects(
@@ -184,19 +210,56 @@ function validateEffectActivation(
   )) ?? null;
 }
 
+function teamCanTriggerCycle(team: GameVisibleTeamState, cycleId: EsperCycleId): boolean {
+  const cycle = esperCycleById.get(cycleId);
+  if (!cycle) return false;
+  const attributes = new Set(team.builds
+    .map((build) => characterByName.get(build.characterName)?.attribute)
+    .filter((attribute): attribute is NonNullable<typeof attribute> => Boolean(attribute)));
+  return cycle.attributes.every((attribute) => attributes.has(attribute));
+}
+
+function cycleModifierForAction(
+  characterName: string,
+  cycles: readonly ActiveScenarioCycle[],
+): { damageBonus: number; conditions: VisibleCalculationConditionForCycle[] } {
+  const attribute = characterByName.get(characterName)?.attribute;
+  if (!attribute) return { damageBonus: 0, conditions: [] };
+  const applicable = cycles.filter((cycle) => cycle.affectedAttributes.includes(attribute));
+  return {
+    damageBonus: applicable.reduce((sum, cycle) => sum + cycle.damageBonus, 0),
+    conditions: applicable.map((cycle) => ({
+      id: `cycle.${cycle.cycleId}.target-window`,
+      label: {
+        ru: `${cycle.name.ru}: +${cycle.damageBonus}% урона ${cycle.affectedAttributes.join(' / ')} по цели`,
+        en: `${cycle.name.en}: +${cycle.damageBonus}% ${cycle.affectedAttributes.join(' / ')} damage against the target`,
+      },
+      source: 'verified-data' as const,
+    })),
+  };
+}
+
+type VisibleCalculationConditionForCycle = VisibleBuildCalculation['conditions'][number];
+
 function calculateActionAt(
   team: GameVisibleTeamState,
   sourceSlot: number,
   actionId: string,
-  windows: readonly ActiveScenarioEffect[],
+  effectWindows: readonly ActiveScenarioEffect[],
+  cycleWindows: readonly ActiveScenarioCycle[],
 ): VisibleBuildCalculation | null {
   const sourceBuild = team.builds[sourceSlot];
   const action = visibleActionById.get(actionId);
   if (!sourceBuild || !action || action.characterName !== sourceBuild.characterName) return null;
 
-  const activeState = stateWithActiveEffects(team, windows);
+  const activeState = stateWithActiveEffects(team, effectWindows);
+  const cycleModifier = cycleModifierForAction(sourceBuild.characterName, cycleWindows);
   const actionBuild = {
     ...activeState.builds[sourceSlot]!,
+    stats: {
+      ...activeState.builds[sourceSlot]!.stats,
+      damageBonus: activeState.builds[sourceSlot]!.stats.damageBonus + cycleModifier.damageBonus,
+    },
     testMode: 'verified-action' as const,
     verifiedActionId: action.id,
   };
@@ -206,7 +269,12 @@ function calculateActionAt(
     builds: activeState.builds.map((build, slot) => slot === sourceSlot ? actionBuild : build),
   };
   const modifiers = deriveVerifiedTeamEffects(calculationState).slotModifiers[sourceSlot];
-  return calculateGameVisibleBuild(actionBuild, calculationState, modifiers);
+  const calculation = calculateGameVisibleBuild(actionBuild, calculationState, modifiers);
+  if (!calculation.supported || !cycleModifier.conditions.length) return calculation;
+  return {
+    ...calculation,
+    conditions: [...calculation.conditions, ...cycleModifier.conditions],
+  };
 }
 
 function damageOf(calculation: VisibleBuildCalculation | undefined): DamageResult | null {
@@ -220,22 +288,28 @@ export function calculateCombatScenario(
   const ordered = scenario.steps
     .map((step, originalIndex) => ({ step, originalIndex }))
     .sort((left, right) => left.step.at - right.step.at || left.originalIndex - right.originalIndex);
-  const windows = new Map<string, ActiveScenarioEffect>();
+  const effectWindows = new Map<string, ActiveScenarioEffect>();
+  const cycleWindows = new Map<string, ActiveScenarioCycle>();
   const results: CombatScenarioStepResult[] = [];
 
   ordered.forEach(({ step, originalIndex }) => {
-    [...windows.entries()].forEach(([key, window]) => {
-      if (!activeAt(window, step.at)) windows.delete(key);
+    [...effectWindows.entries()].forEach(([key, window]) => {
+      if (!activeAt(window, step.at)) effectWindows.delete(key);
+    });
+    [...cycleWindows.entries()].forEach(([key, window]) => {
+      if (!activeAt(window, step.at)) cycleWindows.delete(key);
     });
     const sourceBuild = team.builds[step.sourceSlot];
-    const before = snapshotActiveEffects(windows, step.at);
+    const beforeEffects = snapshotActiveEffects(effectWindows, step.at);
+    const beforeCycles = snapshotActiveCycles(cycleWindows, step.at);
 
     if (!sourceBuild) {
       results.push({
         step,
         originalIndex,
         status: 'blocked',
-        activeEffects: before,
+        activeEffects: beforeEffects,
+        activeCycles: beforeCycles,
         blockedReason: blockedReason('В сценарии указан отсутствующий слот команды.', 'The scenario references a missing team slot.'),
       });
       return;
@@ -247,7 +321,63 @@ export function calculateCombatScenario(
         originalIndex,
         status: 'wait',
         sourceCharacter: sourceBuild.characterName,
-        activeEffects: before,
+        activeEffects: beforeEffects,
+        activeCycles: beforeCycles,
+      });
+      return;
+    }
+
+    if (step.kind === 'activate-cycle') {
+      const cycle = esperCycleById.get(step.cycleId as EsperCycleId);
+      const model = verifiedCombatCycleModelById.get(step.cycleId as EsperCycleId);
+      if (!cycle || !model) {
+        results.push({
+          step,
+          originalIndex,
+          status: 'blocked',
+          sourceCharacter: sourceBuild.characterName,
+          activeEffects: beforeEffects,
+          activeCycles: beforeCycles,
+          blockedReason: blockedReason(
+            'Для выбранного цикла эспера ещё нет безопасной числовой модели сценария.',
+            'The selected Esper Cycle does not have a safe numerical scenario model yet.',
+          ),
+        });
+        return;
+      }
+      if (!teamCanTriggerCycle(team, cycle.id)) {
+        results.push({
+          step,
+          originalIndex,
+          status: 'blocked',
+          sourceCharacter: sourceBuild.characterName,
+          activeEffects: beforeEffects,
+          activeCycles: beforeCycles,
+          blockedReason: blockedReason(
+            `Для цикла «${cycle.name.ru}» в команде нужны атрибуты ${cycle.attributes.join(' + ')}.`,
+            `${cycle.name.en} requires ${cycle.attributes.join(' + ')} attributes in the team.`,
+          ),
+        });
+        return;
+      }
+      const activeCycle: ActiveScenarioCycle = {
+        key: cycle.id,
+        cycleId: cycle.id,
+        startedAt: step.at,
+        expiresAt: step.at + model.durationSeconds,
+        name: cycle.name,
+        affectedAttributes: model.affectedAttributes,
+        damageBonus: model.damageBonus,
+      };
+      cycleWindows.set(activeCycle.key, activeCycle);
+      results.push({
+        step,
+        originalIndex,
+        status: 'activated',
+        sourceCharacter: sourceBuild.characterName,
+        activatedCycle: activeCycle,
+        activeEffects: beforeEffects,
+        activeCycles: snapshotActiveCycles(cycleWindows, step.at),
       });
       return;
     }
@@ -260,7 +390,8 @@ export function calculateCombatScenario(
           originalIndex,
           status: 'blocked',
           sourceCharacter: sourceBuild.characterName,
-          activeEffects: before,
+          activeEffects: beforeEffects,
+          activeCycles: beforeCycles,
           blockedReason: blockedReason(
             'Выбранный эффект не принадлежит персонажу в этом слоте или ещё не подтверждён.',
             'The selected effect does not belong to this slot character or is not verified.',
@@ -276,7 +407,8 @@ export function calculateCombatScenario(
           status: 'blocked',
           sourceCharacter: sourceBuild.characterName,
           effectEvaluation: evaluation ?? undefined,
-          activeEffects: before,
+          activeEffects: beforeEffects,
+          activeCycles: beforeCycles,
           blockedReason: evaluation?.blockedReason ?? blockedReason(
             'Не удалось подтвердить обязательные условия эффекта.',
             'The effect requirements could not be validated.',
@@ -285,7 +417,7 @@ export function calculateCombatScenario(
         return;
       }
       const key = `${step.sourceSlot}:${effect.id}`;
-      windows.set(key, {
+      effectWindows.set(key, {
         key,
         effectId: effect.id,
         sourceSlot: step.sourceSlot,
@@ -300,7 +432,8 @@ export function calculateCombatScenario(
         status: 'activated',
         sourceCharacter: sourceBuild.characterName,
         effectEvaluation: evaluation,
-        activeEffects: snapshotActiveEffects(windows, step.at),
+        activeEffects: snapshotActiveEffects(effectWindows, step.at),
+        activeCycles: beforeCycles,
       });
       return;
     }
@@ -312,7 +445,8 @@ export function calculateCombatScenario(
         originalIndex,
         status: 'blocked',
         sourceCharacter: sourceBuild.characterName,
-        activeEffects: before,
+        activeEffects: beforeEffects,
+        activeCycles: beforeCycles,
         blockedReason: blockedReason(
           'Выбранное действие не принадлежит персонажу в этом слоте или ещё не подтверждено.',
           'The selected action does not belong to this slot character or is not verified.',
@@ -320,7 +454,7 @@ export function calculateCombatScenario(
       });
       return;
     }
-    const calculation = calculateActionAt(team, step.sourceSlot, action.id, before);
+    const calculation = calculateActionAt(team, step.sourceSlot, action.id, beforeEffects, beforeCycles);
     if (!calculation?.supported || !calculation.result) {
       results.push({
         step,
@@ -328,7 +462,8 @@ export function calculateCombatScenario(
         status: 'blocked',
         sourceCharacter: sourceBuild.characterName,
         calculation: calculation ?? undefined,
-        activeEffects: before,
+        activeEffects: beforeEffects,
+        activeCycles: beforeCycles,
         blockedReason: calculation?.blockedReason ?? blockedReason(
           'Действие не удалось рассчитать по текущим видимым данным.',
           'The action could not be calculated from the current visible inputs.',
@@ -342,7 +477,8 @@ export function calculateCombatScenario(
       status: 'calculated',
       sourceCharacter: sourceBuild.characterName,
       calculation,
-      activeEffects: before,
+      activeEffects: beforeEffects,
+      activeCycles: beforeCycles,
     });
   });
 
@@ -360,9 +496,11 @@ export function calculateCombatScenario(
     actionStepCount: actionResults.length,
     calculatedActionCount: calculated.length,
     blockedActionCount: actionResults.length - calculated.length,
-    activatedEffectCount: results.filter((result) => result.status === 'activated').length,
+    activatedEffectCount: results.filter((result) => result.status === 'activated' && result.step.kind === 'activate-effect').length,
+    activatedCycleCount: results.filter((result) => result.status === 'activated' && result.step.kind === 'activate-cycle').length,
     blockedStepCount: results.filter((result) => result.status === 'blocked').length,
     coveragePercent: actionResults.length ? Math.round(calculated.length / actionResults.length * 1_000) / 10 : 0,
-    finalActiveEffects: snapshotActiveEffects(windows, durationSeconds),
+    finalActiveEffects: snapshotActiveEffects(effectWindows, durationSeconds),
+    finalActiveCycles: snapshotActiveCycles(cycleWindows, durationSeconds),
   };
 }
