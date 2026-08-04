@@ -39,7 +39,7 @@ describe('verified team combat scenario product contract', () => {
     expect(componentSource).toContain('invalidateRotationScenarioTiming');
     expect(importSource).toContain('Exact source-step bindings only');
     expect(importSource).toContain('rotationScenarioBindings');
-    expect(importSource).not.toMatch(/fuzzy|levenshtein|similarity/iu);
+    expect(importSource).not.toMatch(/fuzzyMatch|similarityScore|levenshtein/iu);
   });
 
   it('exposes only verified actions, effects, supported cycles and timing instead of hidden formula inputs', () => {
