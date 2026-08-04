@@ -69,8 +69,9 @@ const forbiddenPrimaryTerms: RegExp[] = [
   /\bЗаклинани(?:е|я|ю|ем|и)\b/iu,
   /\bСинтез\b/iu,
   /сломлени(?:е|я|ю|ем|и|й|ям|ями|ях)/iu,
-  /интенсивност(?:ь|и|ью) (?:сломления|разрушения)/iu,
-  /эффективност(?:ь|и|ью) заряда/iu,
+  /интенсивност(?:ь|и|ью) сломления/iu,
+  /эффективност(?:ь|и|ью) разрушения/iu,
+  /эффективност(?:ь|и|ью) заряд(?:а|ки)/iu,
   /перенаправленн(?:ый|ого|ым) навык/iu,
   /\bультимейт(?:а|е|ом|ы|ов)?\b/iu,
   /Emergency Delivery|Aerial Command|Cyclone Strike|Rider Express|Final Reckoning/iu,
@@ -101,19 +102,23 @@ describe('Russian localization regression contract', () => {
     expect(localizedArcType('Gas', 'ru')).toBe('Газовый');
     expect(localizedArcType('Plasma', 'ru')).toBe('Плазменный');
     expect(localizedRole('Buff', 'ru')).toBe('Усиление');
-    expect(localizedStatLabel('Break Intensity', 'ru')).toBe('Эффективность разрушения');
-    expect(localizedStatLabel('Charge Efficiency', 'ru')).toBe('Эффективность зарядки');
+    expect(localizedStatLabel('Break Intensity', 'ru')).toBe('Интенсивность разрушения');
+    expect(localizedStatLabel('Charge Efficiency', 'ru')).toBe('Скорость зарядки');
+    expect(localizedStatLabel('CRIT Rate', 'ru')).toBe('Шанс крит. удара');
+    expect(localizedStatLabel('CRIT DMG', 'ru')).toBe('Крит. урон');
   });
 
   it('normalizes imported Arc copy without changing sourced numeric values', () => {
     const corpus = arcCatalog.map((arc) => arc.effect.ru).join('\n');
     expect(corpus).toContain('шкалы разрушения');
-    expect(corpus).toContain('эффективность разрушения');
+    expect(corpus).toContain('интенсивность разрушения');
     expect(corpus).toContain('урон разрушения');
     expect(corpus).toContain('сломленным');
     expect(corpus).toContain('АТК');
     expect(corpus).toContain('ОЗ');
     expect(corpus).not.toMatch(/\bATK\b|\bDEF\b|\bHP\b/u);
+    expect(corpus).not.toContain('эффективность разрушения');
+    expect(corpus).not.toContain('эффективность зарядки');
     expect(arcCatalog.find((arc) => arc.name === 'Dangerous Game')?.effect.ru).toContain('60/66/72/78/84');
     expect(arcCatalog.find((arc) => arc.name === "Good Boy's Grand Adventure")?.effect.ru).toContain('18/21/24/27/30%');
   });
