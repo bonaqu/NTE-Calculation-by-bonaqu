@@ -53,8 +53,27 @@ const levelLabels: Record<LocalizationEvidenceLevel, LocalizedText> = {
   'project-fallback': { ru: 'Рабочий перевод проекта', en: 'Project fallback translation' },
 };
 
+const evidenceStrength: Record<LocalizationEvidenceLevel, number> = {
+  'official-russian': 4,
+  'owner-confirmed-client': 4,
+  'current-russian-reference': 2,
+  'project-fallback': 1,
+};
+
 export function localizationEvidenceLabel(level: LocalizationEvidenceLevel, locale: Locale): string {
   return levelLabels[level][locale];
+}
+
+/**
+ * Automatic replacement is intentionally conservative. Official Russian and
+ * current-client confirmation are equal top-tier evidence and conflicts between
+ * them require explicit review instead of silent last-write-wins behavior.
+ */
+export function canReplaceLocalizationPrimary(
+  current: LocalizationEvidenceLevel,
+  candidate: LocalizationEvidenceLevel,
+): boolean {
+  return evidenceStrength[candidate] > evidenceStrength[current];
 }
 
 function characterEvidence(canonical: string, russian: string): LocalizationEvidence {
