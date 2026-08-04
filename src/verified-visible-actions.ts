@@ -1,4 +1,5 @@
 import type { LocalizedText } from './types';
+import { verifiedVisibleActionsBatchB } from './verified-visible-actions-batch-b';
 
 export interface VerifiedVisibleAction {
   id: string;
@@ -24,7 +25,7 @@ const source = (character: string) => `https://www.prydwen.gg/neverness-to-evern
  * One record is one explicitly sourced standalone trigger. Records are not
  * silently expanded into animation strings, burst windows or rotations.
  */
-export const verifiedVisibleActions: readonly VerifiedVisibleAction[] = [
+const verifiedVisibleActionsBase: readonly VerifiedVisibleAction[] = [
   {
     id: 'shinku.charge-enhancement.level-11',
     characterName: 'Shinku',
@@ -199,6 +200,11 @@ export const verifiedVisibleActions: readonly VerifiedVisibleAction[] = [
     sourceUpdatedAt: '2026-05-31',
     verifiedAt: '2026-08-04',
   },
+];
+
+export const verifiedVisibleActions: readonly VerifiedVisibleAction[] = [
+  ...verifiedVisibleActionsBase,
+  ...verifiedVisibleActionsBatchB,
 ];
 
 export const visibleActionById = new Map(verifiedVisibleActions.map((action) => [action.id, action]));
