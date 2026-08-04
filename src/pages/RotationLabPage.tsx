@@ -10,6 +10,7 @@ import { esperCycleById, localizedCycleName } from '../esper-cycles';
 import { localizedArcType, localizedAttribute, localizedCharacterName, localizedRole } from '../gameTerms';
 import { useLocalStorage, parseStoredJson } from '../hooks/useLocalStorage';
 import { useI18n } from '../i18n';
+import { rotationCoverage } from '../rotation-coverage';
 import { availableEsperCycles, applyTeamIdentities, normalizeExplorerTeam, normalizePresetProgress } from '../rotation-engine';
 import { rotationPresetById, rotationPresets } from '../rotation-presets';
 import { defaultMembers } from '../team-defaults';
@@ -92,17 +93,19 @@ export function RotationLabPage() {
     <header className="page-heading"><div><span>{ru ? 'ЛАБОРАТОРИЯ РОТАЦИЙ' : 'ROTATION LAB'}</span><h1>{ru ? 'Понятный порядок действий без выдуманных таймингов' : 'Readable action order without invented timing'}</h1><p>{ru ? 'Смотри весь план или включай пошаговую тренировку: сайт показывает, что сделать сейчас, роль шага и ожидаемый результат. Точные секунды не выдумываются там, где источник их не публикует.' : 'Review the full plan or enter focused practice: the site shows what to do now, the step purpose and the expected result. Exact seconds are never invented when the source does not publish them.'}</p></div></header>
 
     <QuickStart title={ru ? 'Как пользоваться' : 'How to use it'} steps={ru ? [
-      'Выбери готовую ротацию и проверь источник, состав и ограничения.',
+      'Выбери готовую ротацию и проверь источник, состав и дату обновления гайда.',
       'В режиме «План» прочитай всю последовательность по колонкам: действие, роль шага и ожидаемый результат.',
       'В режиме «Тренировка» выполняй по одному шагу; необязательные действия можно пропустить.',
     ] : [
-      'Choose a sourced preset and review its source, team and limitations.',
+      'Choose a sourced preset and review its source, team and guide update date.',
       'Use Plan to read the whole sequence as action, purpose and expected result.',
       'Use Practice to perform one step at a time; optional actions may be skipped.',
     ]} />
 
+    <div className="summary-strip rotation-catalog-summary"><Metric label={ru ? 'Готовых ротаций' : 'Sourced presets'} value={rotationCoverage.presetCount} /><Metric label={ru ? 'Главных персонажей' : 'Featured carries'} value={rotationCoverage.representedMainCharacters.length} note={rotationCoverage.representedMainCharacters.map((name) => localizedCharacterName(name, locale)).join(' · ')} /><Metric label={ru ? 'Самый свежий гайд' : 'Newest guide'} value={rotationCoverage.newestGuideDate} /><Metric label={ru ? 'Проверка каталога' : 'Catalog verified'} value={rotationCoverage.verifiedAt} note={ru ? `${rotationCoverage.missingReleasedCharacters.length} выпущенных персонажей ещё без воспроизводимой ротации` : `${rotationCoverage.missingReleasedCharacters.length} released characters still lack a reproducible preset`} /></div>
+
     <div className="rotation-preset-switch" role="tablist" aria-label={ru ? 'Готовые ротации' : 'Rotation presets'}>
-      {rotationPresets.map((entry) => <button key={entry.id} role="tab" aria-selected={preset.id === entry.id} className={preset.id === entry.id ? 'active' : ''} onClick={() => setPresetId(entry.id)}><Route size={18} /><span><b>{entry.title[locale]}</b><small>{entry.team.map((name) => localizedCharacterName(name, locale)).join(' · ')}</small></span></button>)}
+      {rotationPresets.map((entry) => <button key={entry.id} role="tab" aria-selected={preset.id === entry.id} className={preset.id === entry.id ? 'active' : ''} onClick={() => setPresetId(entry.id)}><Route size={18} /><span><b>{entry.title[locale]}</b><small>{entry.team.map((name) => localizedCharacterName(name, locale)).join(' · ')}</small><em>{ru ? 'Гайд' : 'Guide'}: {entry.sourceUpdatedAt}</em></span></button>)}
     </div>
 
     <div className="summary-strip rotation-summary"><Metric label={ru ? 'Персонажей' : 'Characters'} value={preset.team.length} /><Metric label={ru ? 'Шагов' : 'Steps'} value={preset.steps.length} /><Metric label={ru ? 'Реакций в плане' : 'Planned Cycles'} value={preset.cyclePlan.length} /><Metric label={ru ? 'Прогресс тренировки' : 'Training progress'} value={`${completedCount}/${preset.steps.length}`} note={`${completionPercent}%`} /></div>

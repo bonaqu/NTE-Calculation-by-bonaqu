@@ -15,6 +15,7 @@ import './team-input.css';
 import './team-readiness.css';
 import './home-tools.css';
 import './rotation-lab.css';
+import './rotation-catalog.css';
 import './rotation-practice.css';
 import './progression-roster.css';
 import './progression-next.css';
