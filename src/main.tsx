@@ -16,6 +16,7 @@ import './home-tools.css';
 import './rotation-lab.css';
 import './rotation-practice.css';
 import './progression-roster.css';
+import './progression-next.css';
 import './imageFallbackRuntime';
 
 createRoot(document.getElementById('root')!).render(<StrictMode><I18nProvider><App /></I18nProvider></StrictMode>);
