@@ -22,6 +22,7 @@
     "src/localization-evidence.ts",
     "src/character-terms.ts",
     "src/rotation-step-terms.ts",
+    "src/team-sequence-builder.ts",
     "src/arc-directory.ts",
     "src/arc-catalog.ts",
     "src/arc-presets.ts",
