@@ -26,10 +26,16 @@ describe('verified game-visible actions batch A', () => {
     expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(9);
     expect(new Set(verifiedVisibleActions.map((action) => action.characterName)))
       .toEqual(new Set(['Shinku', 'Nanally', 'Chaos', 'Lacrimosa', 'Zero']));
-    expect(verifiedVisibleActions.every((action) => action.description.ru.includes('ротаци')
-      || action.characterName === 'Nanally'
-      || action.characterName === 'Lacrimosa'
-      || action.characterName === 'Zero')).toBe(true);
+    for (const action of verifiedVisibleActions) {
+      expect(action.multiplier).toBeGreaterThan(0);
+      expect(action.title.ru.trim()).not.toBe('');
+      expect(action.title.en.trim()).not.toBe('');
+      expect(action.description.ru.trim()).not.toBe('');
+      expect(action.description.en.trim()).not.toBe('');
+      expect(action).not.toHaveProperty('actionsPerRotation');
+      expect(action).not.toHaveProperty('duration');
+      expect(action).not.toHaveProperty('hitCount');
+    }
   });
 
   it('uses Nanally level-11 passive values and enforces Awakening 3 separately', () => {
