@@ -28,6 +28,7 @@
     "src/game-visible-calculation.ts",
     "src/verified-visible-actions.ts",
     "src/verified-visible-actions-batch-b.ts",
+    "src/verified-visible-actions-batch-c.ts",
     "src/team-effects.ts",
     "src/combat-cycle-models.ts",
     "src/combat-scenario.ts",
