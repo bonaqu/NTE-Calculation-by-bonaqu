@@ -159,7 +159,8 @@ export function evaluateAttackSequence(draft: AttackSequenceDraft): AttackSequen
   if (usesPerRotation === 0) errors.push({ code: 'invalid-uses' });
 
   const totalPerUse = rows.reduce((sum, row) => sum + row.subtotalPerUse, 0);
-  if (rows.length > 0 && totalPerUse <= 0) errors.push({ code: 'zero-total' });
+  const hasRowErrors = rows.some((row) => row.errors.length > 0);
+  if (rows.length > 0 && totalPerUse <= 0 && !hasRowErrors) errors.push({ code: 'zero-total' });
 
   return {
     valid: errors.length === 0,
