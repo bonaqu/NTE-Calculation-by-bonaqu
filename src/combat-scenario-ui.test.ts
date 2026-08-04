@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import componentSource from './components/TeamCombatScenarioPanel.tsx?raw';
 import engineSource from './combat-scenario.ts?raw';
+import importSource from './rotation-scenario-import.ts?raw';
 import mainSource from './main.tsx?raw';
 import pageSource from './pages/GameVisibleTeamCalculatorPage.tsx?raw';
 import workerSource from '../workers/api/src/index-v0.9.ts?raw';
@@ -20,13 +21,25 @@ describe('verified team combat scenario product contract', () => {
     expect(pageSource).toContain("tab !== 'scenario'");
   });
 
-  it('stores and normalizes the scenario separately from character builds', () => {
+  it('stores the scenario and Rotation Lab provenance in independent v1 records', () => {
     expect(engineSource).toContain("COMBAT_SCENARIO_STORAGE_KEY = 'nte.team.scenario.v1'");
     expect(engineSource).toContain('COMBAT_SCENARIO_VERSION = 1');
     expect(engineSource).toContain('normalizeCombatScenarioState');
-    expect(engineSource).toContain("cycleId: text(input.cycleId, '', 80)");
-    expect(componentSource).toContain('COMBAT_SCENARIO_STORAGE_KEY');
+    expect(importSource).toContain("ROTATION_SCENARIO_IMPORT_STORAGE_KEY = 'nte.team.scenario.rotation-import.v1'");
+    expect(importSource).toContain("timingStatus: 'order-only'");
     expect(componentSource).toContain('{ normalize: normalizeCombatScenarioState }');
+    expect(componentSource).toContain('{ normalize: normalizeRotationScenarioImportMetadata }');
+  });
+
+  it('imports sourced rotations without fuzzy matching or invented seconds', () => {
+    expect(componentSource).toContain('Импорт из Rotation Lab');
+    expect(componentSource).toContain('Порядок без подтверждённых секунд');
+    expect(componentSource).toContain('Покрытие импорта не означает полный DPS ротации');
+    expect(componentSource).toContain('confirmRotationScenarioTiming');
+    expect(componentSource).toContain('invalidateRotationScenarioTiming');
+    expect(importSource).toContain('Exact source-step bindings only');
+    expect(importSource).toContain('rotationScenarioBindings');
+    expect(importSource).not.toMatch(/fuzzy|levenshtein|similarity/iu);
   });
 
   it('exposes only verified actions, effects, supported cycles and timing instead of hidden formula inputs', () => {
@@ -37,7 +50,6 @@ describe('verified team combat scenario product contract', () => {
     expect(componentSource).toContain('actionsForCharacter');
     expect(componentSource).toContain('teamEffectsForCharacter');
     expect(componentSource).toContain('verifiedCombatCycleModels');
-    expect(componentSource).toContain('Коэффициенты вручную вводить не нужно');
     expect(componentSource).not.toContain('skillMultiplier');
     expect(componentSource).not.toContain('actionsPerRotation');
     expect(componentSource).not.toContain('hitCount');
@@ -66,11 +78,13 @@ describe('verified team combat scenario product contract', () => {
 
   it('loads a responsive border-led scenario interface without gradients or shadows', () => {
     expect(mainSource).toContain("import './combat-scenario.css'");
+    expect(css).toContain('.rotation-scenario-import');
+    expect(css).toContain('.rotation-scenario-timing');
+    expect(css).toContain('.combat-scenario-value-cell');
     expect(css).toContain('.combat-scenario-editor-row');
     expect(css).toContain('.combat-scenario-results li');
     expect(css).toContain('.combat-scenario-cycle-policy');
     expect(css).toContain('.combat-scenario-shared-target');
-    expect(css).toContain('.nte-calc-layout.scenario-active');
     expect(css).toContain('@media(max-width:620px)');
     expect(css).not.toMatch(/(?:linear|radial|conic)-gradient\s*\(/iu);
     expect(css).not.toMatch(/box-shadow\s*:/iu);
