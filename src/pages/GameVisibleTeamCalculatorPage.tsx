@@ -4,6 +4,7 @@ import { arcDirectory } from '../arc-directory';
 import { relevantAwakeningNodes } from '../awakening-reference';
 import { characterByName, characterCatalog } from '../characters';
 import { NamedAwakeningRequirements } from '../components/NamedAwakeningRequirements';
+import { TeamCombatScenarioPanel } from '../components/TeamCombatScenarioPanel';
 import { VerifiedTeamEffectsPanel } from '../components/VerifiedTeamEffectsPanel';
 import {
   actionsForCharacter,
@@ -33,7 +34,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useI18n } from '../i18n';
 import { teamEffectsForCharacter } from '../team-effects';
 
-const tabs = ['overview', 'damage', 'conditions', 'test'] as const;
+const tabs = ['overview', 'damage', 'conditions', 'test', 'scenario'] as const;
 type CalculatorTab = typeof tabs[number];
 type DamageStatKey = 'atk' | 'critRate' | 'critDamage' | 'damageBonus' | 'attributeDamageBonus';
 
@@ -42,6 +43,7 @@ const tabLabels: Record<CalculatorTab, { ru: string; en: string }> = {
   damage: { ru: 'Урон', en: 'Damage' },
   conditions: { ru: 'Условия', en: 'Conditions' },
   test: { ru: 'Тест', en: 'Test' },
+  scenario: { ru: 'Сценарий', en: 'Scenario' },
 };
 
 const modeLabels: Record<VisibleTestModeId, { ru: string; en: string }> = {
@@ -231,7 +233,7 @@ export function GameVisibleTeamCalculatorPage() {
       })}
     </section>
 
-    <div className="nte-calc-layout">
+    <div className={`nte-calc-layout ${tab === 'scenario' ? 'scenario-active' : ''}`}>
       <aside className="nte-character-stage">
         <div className="nte-character-art">{character ? <img src={character.image} alt={localizedCharacterName(character.name, locale)} /> : null}</div>
         <div className="nte-character-identity">
@@ -329,9 +331,13 @@ export function GameVisibleTeamCalculatorPage() {
 
           <div className="nte-model-note"><Shield size={18} /><span>{ru ? 'Контрольный удар нужен для сравнения сборок. Он не объявляется уроном конкретного навыка или полной ротации.' : 'The reference hit compares builds. It is not presented as a skill or full-rotation result.'}</span></div>
         </section> : null}
+
+        {tab === 'scenario' ? <section className="nte-editor-section nte-scenario-section">
+          <TeamCombatScenarioPanel team={state} locale={locale} />
+        </section> : null}
       </main>
 
-      <aside className="nte-results-panel">
+      {tab !== 'scenario' ? <aside className="nte-results-panel">
         <div className="nte-results-heading"><Target size={21} /><div><span>{ru ? 'РЕЗУЛЬТАТ ТЕСТА' : 'TEST RESULT'}</span><h2>{localizedCharacterName(activeBuild.characterName, locale)}</h2></div></div>
         <CharacterResult calculation={activeCalculation} ru={ru} locale={locale} />
         <div className="nte-team-result">
@@ -340,7 +346,7 @@ export function GameVisibleTeamCalculatorPage() {
           <small>{ru ? `${teamCalculation.comparableRows} из 4 слотов рассчитано` : `${teamCalculation.comparableRows} of 4 slots calculated`}</small>
         </div>
         <div className="nte-trust-footer"><Shield size={17} /><span>{ru ? 'Сайт применяет только подтверждённые эффекты выбранного теста. Исходные итоговые атрибуты не перезаписываются.' : 'Only verified effects for the selected test are applied. Saved final Attributes are never overwritten.'}</span></div>
-      </aside>
+      </aside> : null}
     </div>
   </div>;
 }
