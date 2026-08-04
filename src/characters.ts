@@ -61,70 +61,70 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Aurelia', rarity: 'A', attribute: 'Psyche', role: 'Damage', arcType: 'Plasma',
     summary: {
-      ru: 'Активный персонаж урона: раскрывается во время длинного окна на поле и атак медузами.',
+      ru: 'Активный персонаж урона Психики: дольше остаётся на поле и атакует призванными медузами.',
       en: 'An on-field damage dealer who benefits from longer active windows and jellyfish attacks.',
     },
   }),
   profile({
     name: 'Baicang', rarity: 'S', attribute: 'Incantation', role: 'Damage', arcType: 'Synthesis',
     summary: {
-      ru: 'Основной персонаж урона со сложными комбинациями и периодическим уроном через Поджог.',
+      ru: 'Основной персонаж урона Чар со сложными комбинациями и периодическим уроном от Поджога.',
       en: 'A main damage dealer built around deliberate combos and Scorch damage over time.',
     },
   }),
   profile({
     name: 'Chaos', rarity: 'S', attribute: 'Lakshana', role: 'Damage', arcType: 'Synthesis',
     summary: {
-      ru: 'Основной персонаж урона Лакшаны с понятной ротацией и сильными реакциями команды.',
+      ru: 'Основной персонаж урона Лакшаны с понятной ротацией и сильным взаимодействием с циклами эспера.',
       en: 'A straightforward Lakshana main damage dealer with strong team reaction access.',
     },
   }),
   profile({
     name: 'Chiz', rarity: 'S', attribute: 'Cosmos', role: 'Damage', arcType: 'Gas',
     summary: {
-      ru: 'Персонаж урона Космоса, рассчитанный на активное нанесение урона и атаки по области.',
+      ru: 'Персонаж урона Космоса для активного боя и атак по области.',
       en: 'A Cosmos damage dealer focused on active combat and area damage.',
     },
   }),
   profile({
     name: 'Daffodill', pageSlug: 'daffodil', imageSlug: 'daffodil', rarity: 'S', attribute: 'Chaos', role: 'Damage', arcType: 'Liquid',
     summary: {
-      ru: 'Дополнительный персонаж взрывного урона: быстро снижает шкалу разрушения и любит частые переключения.',
+      ru: 'Дополнительный персонаж взрывного урона: быстро снижает шкалу разрушения и хорошо работает при частых переключениях.',
       en: 'A burst-oriented secondary damage dealer who shreds Break and rewards frequent swapping.',
     },
   }),
   profile({
     name: 'Edgar', rarity: 'A', attribute: 'Cosmos', role: 'Survival', arcType: 'Liquid',
     summary: {
-      ru: 'Простой лекарь Космоса. Его главная задача — восстанавливать HP команды.',
+      ru: 'Простой лекарь Космоса. Его главная задача — восстанавливать ОЗ команды.',
       en: 'A straightforward Cosmos healer whose main job is restoring team HP.',
     },
   }),
   profile({
     name: 'Fadia', rarity: 'S', attribute: 'Psyche', role: 'Survival', arcType: 'Synthesis',
     summary: {
-      ru: 'Перенаправляет входящий урон союзников на себя и помогает переживать ошибки в бою.',
+      ru: 'Перенаправляет входящий урон союзников на себя и помогает команде переживать ошибки в бою.',
       en: 'Redirects ally damage to herself and makes the team much more forgiving to play.',
     },
   }),
   profile({
     name: 'Haniel', rarity: 'A', attribute: 'Psyche', role: 'Buff', arcType: 'Solid',
     summary: {
-      ru: 'Универсальный баффер: повышает ATK команды и не требует долгого времени на поле.',
+      ru: 'Универсальный персонаж усиления: повышает АТК команды и не требует долгого времени на поле.',
       en: 'A universal buffer who raises team ATK without demanding much field time.',
     },
   }),
   profile({
     name: 'Hathor', rarity: 'S', attribute: 'Lakshana', role: 'Damage', arcType: 'Plasma',
     summary: {
-      ru: 'Персонаж взрывного урона Лакшаны для команд Реморы; основное окно урона создаёт сверхспособность.',
+      ru: 'Персонаж взрывного урона Лакшаны для команд Реморы; основную часть урона наносит во время сверхспособности.',
       en: 'A burst Lakshana damage dealer for Remora teams whose Ultimate is the main damage window.',
     },
   }),
   profile({
     name: 'Hotori', rarity: 'S', attribute: 'Cosmos', role: 'Buff', arcType: 'Solid',
     summary: {
-      ru: 'Баффер Космоса с сильным коротким окном собственного урона во время сверхспособности.',
+      ru: 'Усиливает команды Космоса и сама наносит заметный урон во время сверхспособности.',
       en: 'A Cosmos buffer with a strong short personal damage window during the Ultimate.',
     },
   }),
@@ -161,35 +161,35 @@ export const characterCatalog: CharacterProfile[] = [
   profile({
     name: 'Mint', rarity: 'A', attribute: 'Anima', role: 'Damage', arcType: 'Liquid',
     summary: {
-      ru: 'Доступный персонаж урона Анимы для активных быстрых атак и раннего развития аккаунта.',
+      ru: 'Доступный персонаж урона Анимы для быстрых активных атак и раннего развития аккаунта.',
       en: 'An accessible Anima damage dealer for fast active attacks and early account progression.',
     },
   }),
   profile({
     name: 'Nanally', rarity: 'S', attribute: 'Anima', role: 'Damage', arcType: 'Plasma',
     summary: {
-      ru: 'Основной персонаж урона Анимы с последующими атаками и простой связкой навыка, сверхспособности и базовых атак.',
+      ru: 'Основной персонаж урона Анимы с последующими атаками и простой последовательностью навыка, сверхспособности и базовых атак.',
       en: 'An Anima main DPS with follow-up attacks and a simple Skill–Ultimate–Basic flow.',
     },
   }),
   profile({
     name: 'Sakiri', rarity: 'S', attribute: 'Incantation', role: 'Buff', arcType: 'Gas',
     summary: {
-      ru: 'Универсальный баффер Чар, особенно полезный для Поджога и периодического урона.',
+      ru: 'Универсальный персонаж усиления Чар, особенно полезный для Поджога и периодического урона.',
       en: 'A universal Incantation buffer with extra value in Scorch and damage-over-time teams.',
     },
   }),
   profile({
     name: 'Shinku', rarity: 'S', attribute: 'Cosmos', role: 'Damage', arcType: 'Synthesis',
     summary: {
-      ru: 'Основной персонаж урона Космоса с продолжительным активным окном и высоким личным уроном.',
+      ru: 'Основной персонаж урона Космоса с продолжительной активной последовательностью и высоким личным уроном.',
       en: 'A Cosmos main damage dealer with an extended active window and high personal damage.',
     },
   }),
   profile({
     name: 'Skia', rarity: 'A', attribute: 'Lakshana', role: 'Damage', arcType: 'Gas',
     summary: {
-      ru: 'Доступный персонаж урона Лакшаны и бюджетный участник команд с реакциями.',
+      ru: 'Доступный персонаж урона Лакшаны и бюджетный участник команд с циклами эспера.',
       en: 'An accessible Lakshana damage dealer and budget reaction-team option.',
     },
   }),
