@@ -50,7 +50,7 @@ describe('verified team effect UI contract', () => {
     expect(effectSource).toContain('critRate: 10');
     expect(effectSource).toContain('На проверяемую цель наложена Ремора');
     expect(panelSource).toContain('effect.critRate');
-    expect(panelSource).toContain('+${effect.critRate}%');
+    expect(panelSource).toContain('+${amount}%');
     expect(panelSource).toContain('к шансу крит. удара');
     expect(panelSource).toContain('по цели под Реморой');
     expect(panelSource).not.toContain("build.characterName === 'Hathor'");
