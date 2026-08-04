@@ -1,3 +1,4 @@
+import { verifiedCombatCycleModels } from '../../../src/combat-cycle-models';
 import {
   calculateCombatScenario,
   COMBAT_SCENARIO_VERSION,
@@ -82,6 +83,7 @@ export default {
         ...body,
         version: SERVICE_VERSION,
         combatScenarioVersion: COMBAT_SCENARIO_VERSION,
+        verifiedCombatCycleModelCount: verifiedCombatCycleModels.length,
       }));
     }
 
@@ -89,8 +91,10 @@ export default {
       return augmentBaseJson(request, (body) => ({
         ...body,
         combatScenarioVersion: COMBAT_SCENARIO_VERSION,
-        combatScenarioStepKinds: ['action', 'activate-effect', 'wait'],
-        combatScenarioPolicy: 'Only verified actions and explicitly activated timed effects are calculated.',
+        combatScenarioStepKinds: ['action', 'activate-effect', 'activate-cycle', 'wait'],
+        verifiedCombatCycleModelCount: verifiedCombatCycleModels.length,
+        verifiedCombatCycleModels,
+        combatScenarioPolicy: 'Only verified actions, explicitly activated timed effects and explicitly supported Esper Cycle windows are calculated.',
       }));
     }
 
@@ -107,7 +111,8 @@ export default {
           result: calculateCombatScenario(team, scenario),
           visibleBuildVersion: GAME_VISIBLE_BUILD_VERSION,
           combatScenarioVersion: COMBAT_SCENARIO_VERSION,
-          policy: 'verified-actions-and-timed-effects-only',
+          verifiedCombatCycleModelCount: verifiedCombatCycleModels.length,
+          policy: 'verified-actions-timed-effects-and-supported-cycles-only',
         }, 200, requestId);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR';

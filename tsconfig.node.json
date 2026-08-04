@@ -29,6 +29,7 @@
     "src/verified-visible-actions.ts",
     "src/verified-visible-actions-batch-b.ts",
     "src/team-effects.ts",
+    "src/combat-cycle-models.ts",
     "src/combat-scenario.ts",
     "src/arc-directory.ts",
     "src/arc-catalog.ts",
