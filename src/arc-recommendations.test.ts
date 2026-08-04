@@ -72,7 +72,9 @@ describe('character Arc recommendations', () => {
 
   it('keeps specialist recommendations visibly separate from the main ranking', () => {
     const zero = characterArcGuides.find((entry) => entry.characterName === 'Zero');
-    expect(zero?.recommendations.filter((entry) => entry.category === 'specialist'))
-      .toEqual([expect.objectContaining({ arcName: 'Your Happiness is Priceless', relativePercent: undefined })]);
+    const specialist = zero?.recommendations.filter((entry) => entry.category === 'specialist') ?? [];
+    expect(specialist).toHaveLength(1);
+    expect(specialist[0]).toMatchObject({ arcName: 'Your Happiness is Priceless', mixing: 1, category: 'specialist' });
+    expect(specialist[0]?.relativePercent).toBeUndefined();
   });
 });
