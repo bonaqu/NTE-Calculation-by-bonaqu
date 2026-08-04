@@ -70,7 +70,7 @@ export const characterRussianNames: Record<string, string> = {
   Mint: 'Минт',
   Nanally: 'Наналли',
   Sakiri: 'Сакири',
-  Shinku: 'Синку',
+  Shinku: 'Шинку',
   Skia: 'Ския',
   Zankou: 'Занкоу',
   Zero: 'Оценщик',
@@ -82,7 +82,7 @@ export const characterRussianNames: Record<string, string> = {
  */
 export const characterRussianAliases: Record<string, readonly string[]> = {
   Daffodill: ['Нарцисс'],
-  Shinku: ['Шинку'],
+  Shinku: ['Синку'],
   Zero: ['Зеро', 'Зеро эспер', 'Нулевой эспер'],
 };
 
@@ -94,7 +94,7 @@ const arcTypeRussian: Record<ArcDirectoryType, string> = {
   Solid: 'Твёрдый',
   Gas: 'Газ',
   Liquid: 'Жидкий',
-  Plasma: 'Плазма',
+  Plasma: 'Плазменный',
   Synthesis: 'Гибридный',
 };
 
@@ -136,12 +136,12 @@ const roleRussian: Record<string, string> = {
 };
 
 export const russianClientTerminology = {
-  version: 1,
+  version: 2,
   verifiedAt: '2026-08-04',
   sourcePriority: [
     'current-russian-client',
-    'owner-confirmed-client-spelling',
     'official-russian-publication',
+    'owner-confirmed-client-spelling',
     'current-russian-reference',
     'project-fallback',
   ] as const,
