@@ -1,36 +1,39 @@
+/// <reference types="vite/client" />
+// @ts-expect-error Vitest runs this source contract in Node; the browser app intentionally omits Node types.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import workflowSource from './components/RotationWorkflow.tsx?raw';
+import stepTermsSource from './components/RotationStepTerms.tsx?raw';
+import glossarySource from './components/TerminologyEvidenceTable.tsx?raw';
+import termsSource from './character-terms.ts?raw';
+import bindingsSource from './rotation-step-terms.ts?raw';
 
-const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+const css = readFileSync(new URL('./character-terms.css', import.meta.url), 'utf8');
 
 describe('character terminology UI contracts', () => {
   it('renders bound terms in both plan and practice views', () => {
-    const workflow = read('./components/RotationWorkflow.tsx');
-    expect(workflow).toContain("import { RotationStepTerms } from './RotationStepTerms'");
-    expect(workflow.match(/<RotationStepTerms /gu)).toHaveLength(2);
-    expect(workflow).toContain('presetId={preset.id} step={step} compact');
-    expect(workflow).toContain('presetId={preset.id} step={currentStep}');
+    expect(workflowSource).toContain("import { RotationStepTerms } from './RotationStepTerms'");
+    expect(workflowSource.match(/<RotationStepTerms /gu)).toHaveLength(2);
+    expect(workflowSource).toContain('presetId={preset.id} step={step} compact');
+    expect(workflowSource).toContain('presetId={preset.id} step={currentStep}');
   });
 
   it('discloses unresolved Russian labels rather than hiding them', () => {
-    const component = read('./components/RotationStepTerms.tsx');
-    expect(component).toContain("characterTermCoverage.get(step.actor) === 'unresolved'");
-    expect(component).toContain('точное русское название действия');
-    expect(component).toContain('Exact Russian label');
-    expect(component).toContain('term.sourceUrl');
+    expect(stepTermsSource).toContain("characterTermCoverage.get(step.actor) === 'unresolved'");
+    expect(stepTermsSource).toContain('точное русское название действия');
+    expect(stepTermsSource).toContain('Exact Russian label');
+    expect(stepTermsSource).toContain('term.sourceUrl');
   });
 
   it('adds character terms to the same searchable Methodology glossary', () => {
-    const glossary = read('./components/TerminologyEvidenceTable.tsx');
-    expect(glossary).toContain("character-specific");
-    expect(glossary).toContain('characterTerms');
-    expect(glossary).toContain('entry.alternatives');
-    expect(glossary).toContain('Русская карточка');
-    expect(glossary).toContain('English record');
+    expect(glossarySource).toContain('character-specific');
+    expect(glossarySource).toContain('characterTerms');
+    expect(glossarySource).toContain('entry.alternatives');
+    expect(glossarySource).toContain('Русская карточка');
+    expect(glossarySource).toContain('English record');
   });
 
   it('uses a flat, responsive treatment without gradients or hover motion', () => {
-    const css = read('./character-terms.css');
     expect(css).toContain('.rotation-step-terms');
     expect(css).toContain('@media(max-width:760px)');
     expect(css).toContain('@media(prefers-reduced-motion:reduce)');
@@ -39,12 +42,10 @@ describe('character terminology UI contracts', () => {
     expect(css).not.toMatch(/box-shadow\s*:/iu);
   });
 
-  it('keeps all existing storage keys and rotation ids outside the new registry', () => {
-    const terms = read('./character-terms.ts');
-    const bindings = read('./rotation-step-terms.ts');
-    expect(terms).not.toContain('localStorage');
-    expect(bindings).not.toContain('localStorage');
-    expect(bindings).not.toContain('setItem(');
-    expect(bindings).not.toContain('actionsPerRotation');
+  it('keeps all existing storage keys and calculations outside the new registry', () => {
+    expect(termsSource).not.toContain('localStorage');
+    expect(bindingsSource).not.toContain('localStorage');
+    expect(bindingsSource).not.toContain('setItem(');
+    expect(bindingsSource).not.toContain('actionsPerRotation');
   });
 });
