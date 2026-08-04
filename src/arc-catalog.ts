@@ -9,10 +9,13 @@ const russianEffectCorrections: Partial<Record<string, string>> = {
   'Time Bandit': 'После навыка перенаправления повышает интенсивность сломления на 90/108/126/144/162 на 10 секунд. Также открывает Отмычку, который способен открывать ближайшие запираемые объекты.',
 };
 
-export const arcCatalog: ArcCatalogEntry[] = arcDirectory.map((arc) => ({
-  ...arc,
-  effect: russianEffectCorrections[arc.name] ? { ...arc.effect, ru: russianEffectCorrections[arc.name] } : arc.effect,
-  sourceId: arc.name === 'The Wrong Gate' ? 'gamewith-wrong-gate' : arc.sourceId,
-}));
+export const arcCatalog: ArcCatalogEntry[] = arcDirectory.map((arc): ArcCatalogEntry => {
+  const correctedRussianEffect = russianEffectCorrections[arc.name];
+  return {
+    ...arc,
+    effect: correctedRussianEffect ? { ...arc.effect, ru: correctedRussianEffect } : arc.effect,
+    sourceId: arc.name === 'The Wrong Gate' ? 'gamewith-wrong-gate' : arc.sourceId,
+  };
+});
 
 export const arcCatalogSourceIds = ['prydwen-arcs', 'gamewith-wrong-gate'] as const;
