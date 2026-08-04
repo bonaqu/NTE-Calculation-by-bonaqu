@@ -1,5 +1,6 @@
 import { CheckCircle2, Shield, Sparkles, Users } from 'lucide-react';
 import type { GameVisibleCharacterBuild } from '../game-visible-build';
+import { supportAwakeningNodesByCharacter } from '../support-awakening-data';
 import {
   teamEffectsForCharacter,
   type TeamEffectEvaluation,
@@ -41,6 +42,8 @@ export function VerifiedTeamEffectsPanel({
   const effects = teamEffectsForCharacter(build.characterName);
   if (!effects.length) return null;
 
+  const awakeningNodes = supportAwakeningNodesByCharacter.get(build.characterName) ?? [];
+
   const toggleEffect = (effect: VerifiedTeamEffect, enabled: boolean) => {
     const next = enabled
       ? [...new Set([...build.activeTeamEffectIds, effect.id])]
@@ -63,6 +66,12 @@ export function VerifiedTeamEffectsPanel({
       const enabled = build.activeTeamEffectIds.includes(effect.id);
       const evaluation = evaluations.find((entry) => entry.sourceSlot === sourceSlot && entry.effect.id === effect.id);
       const active = evaluation?.active === true;
+      const awakeningNode = effect.minimumAwakening
+        ? awakeningNodes.find((node) => node.level === effect.minimumAwakening)
+        : undefined;
+      const awakeningConfirmed = effect.minimumAwakening === undefined
+        || build.awakeningLevel >= effect.minimumAwakening;
+
       return <article key={effect.id} className={`${enabled ? 'enabled' : ''} ${active ? 'active' : ''}`}>
         <label className="nte-team-effect-toggle">
           <input type="checkbox" checked={enabled} onChange={(event) => toggleEffect(effect, event.target.checked)} />
@@ -71,10 +80,29 @@ export function VerifiedTeamEffectsPanel({
         <p>{effect.description[locale]}</p>
         <div className="nte-team-effect-meta">
           <span><Users size={14} /> {recipientLabel(effect, ru)}</span>
-          {effect.minimumAwakening ? <span><Shield size={14} /> A{effect.minimumAwakening}+</span> : null}
+          {effect.minimumAwakening ? <span><Shield size={14} /> A{effect.minimumAwakening} · {awakeningNode?.title[locale] ?? (ru ? 'требуемое пробуждение' : 'required Awakening')}</span> : null}
           {effect.baseAtkPercent ? <span><Sparkles size={14} /> {effect.baseAtkPercent}% {ru ? 'базовой Атаки' : 'Base ATK'}</span> : null}
           {effect.enemyDefenceReduction ? <span><Shield size={14} /> −{effect.enemyDefenceReduction}% {ru ? 'защиты' : 'DEF'}</span> : null}
         </div>
+
+        {enabled && effect.minimumAwakening !== undefined ? <label className="nte-condition-toggle nte-team-effect-awakening">
+          <input
+            type="checkbox"
+            checked={awakeningConfirmed}
+            onChange={(event) => onChange({
+              ...build,
+              awakeningLevel: event.target.checked
+                ? Math.max(build.awakeningLevel, effect.minimumAwakening ?? 0)
+                : 0,
+            })}
+          />
+          <span>
+            <b>A{effect.minimumAwakening} · {awakeningNode?.title[locale] ?? (ru ? 'Пробуждение открыто' : 'Awakening unlocked')}</b>
+            <small>{ru
+              ? 'Подтверди только это требование командного эффекта. Остальные узлы не применяются автоматически.'
+              : 'Confirm only this team-effect requirement. Other nodes are not applied automatically.'}</small>
+          </span>
+        </label> : null}
 
         {enabled && effect.baseAtkPercent !== undefined ? <label className="nte-team-effect-base-atk">
           <span>{ru ? `Базовая Атака ${build.characterName === 'Haniel' ? 'Ханиэль' : 'Сакири'}` : `${build.characterName} Base ATK`}</span>
