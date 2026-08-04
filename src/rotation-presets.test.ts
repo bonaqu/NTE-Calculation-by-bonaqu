@@ -24,9 +24,10 @@ describe('rotation datasets', () => {
     }
   });
 
-  it('uses slomlenie terminology instead of proboy in Russian cycle copy', () => {
+  it('uses destruction terminology instead of proboy or slomlenie nouns in Russian cycle copy', () => {
     const russian = esperCycles.map((cycle) => `${cycle.name.ru} ${cycle.effect.ru}`).join(' ').toLowerCase();
-    expect(russian).toContain('сломления');
+    expect(russian).toContain('шкалу разрушения');
     expect(russian).not.toContain('пробой');
+    expect(russian).not.toMatch(/сломлени(?:е|я|ю|ем|и)/u);
   });
 });
