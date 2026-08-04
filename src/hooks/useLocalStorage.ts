@@ -7,6 +7,13 @@ export interface LocalStorageOptions<T> {
   syncTabs?: boolean;
 }
 
+interface SameTabStorageDetail {
+  key: string;
+  raw: string;
+}
+
+const SAME_TAB_STORAGE_EVENT = 'nte:local-storage-change';
+
 export function parseStoredJson<T>(
   raw: string | null,
   fallback: T,
@@ -44,29 +51,54 @@ export function useLocalStorage<T>(
 ): readonly [T, Dispatch<SetStateAction<T>>] {
   const fallbackRef = useRef(initialValue);
   const normalizeRef = useRef(options.normalize);
+  const serializedRef = useRef('');
   fallbackRef.current = initialValue;
   normalizeRef.current = options.normalize;
 
   const [value, setValue] = useState<T>(() => readStoredValue(key, initialValue, options.normalize));
+  let serialized = '';
+  try {
+    serialized = JSON.stringify(value);
+  } catch {
+    serialized = '';
+  }
+  serializedRef.current = serialized;
 
   useEffect(() => {
+    if (!serialized) return;
     try {
-      window.localStorage.setItem(key, JSON.stringify(value));
+      window.localStorage.setItem(key, serialized);
+      window.dispatchEvent(new CustomEvent<SameTabStorageDetail>(SAME_TAB_STORAGE_EVENT, {
+        detail: { key, raw: serialized },
+      }));
     } catch {
-      // Storage can be unavailable in private or restricted browser contexts.
+      // Storage or custom events can be unavailable in restricted browser contexts.
     }
-  }, [key, value]);
+  }, [key, serialized]);
 
   useEffect(() => {
     if (options.syncTabs === false) return undefined;
 
+    const applyRaw = (raw: string | null) => {
+      if (raw === null || raw === serializedRef.current) return;
+      setValue(parseStoredJson(raw, fallbackRef.current, normalizeRef.current));
+    };
     const handleStorage = (event: StorageEvent) => {
       if (event.storageArea !== window.localStorage || event.key !== key) return;
-      setValue(parseStoredJson(event.newValue, fallbackRef.current, normalizeRef.current));
+      applyRaw(event.newValue);
+    };
+    const handleSameTabStorage = (event: Event) => {
+      const detail = (event as CustomEvent<SameTabStorageDetail>).detail;
+      if (!detail || detail.key !== key) return;
+      applyRaw(detail.raw);
     };
 
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener(SAME_TAB_STORAGE_EVENT, handleSameTabStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(SAME_TAB_STORAGE_EVENT, handleSameTabStorage);
+    };
   }, [key, options.syncTabs]);
 
   return [value, setValue] as const;
