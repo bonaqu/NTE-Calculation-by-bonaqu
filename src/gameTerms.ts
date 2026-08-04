@@ -92,9 +92,9 @@ export function localizedCharacterAliases(name: string): readonly string[] {
 
 const arcTypeRussian: Record<ArcDirectoryType, string> = {
   Solid: 'Твёрдый',
-  Gas: 'Газовый',
+  Gas: 'Газ',
   Liquid: 'Жидкий',
-  Plasma: 'Плазменный',
+  Plasma: 'Плазма',
   Synthesis: 'Гибридный',
 };
 
@@ -103,7 +103,7 @@ const statRussian: Record<string, string> = {
   'HP%': 'HP',
   'CRIT Rate': 'Крит. шанс',
   'CRIT DMG': 'Крит. урон',
-  'Break Intensity': 'Интенсивность сломления',
+  'Break Intensity': 'Интенсивность разрушения',
   'Charge Efficiency': 'Эффективность заряда',
   'DMG Bonus': 'Бонус урона',
 };
@@ -130,7 +130,7 @@ const attributeRussian: Record<string, string> = {
 
 const roleRussian: Record<string, string> = {
   Damage: 'Урон',
-  Buff: 'Усиление',
+  Buff: 'Бафф',
   Survival: 'Выживание',
   Support: 'Поддержка',
 };
@@ -154,10 +154,10 @@ export const russianClientTerminology = {
     ultimate: 'Сверхспособность',
     redirectSkill: 'Навык перенаправления',
     progressionStage: 'Прорыв',
-    breakGauge: 'Шкала сломления',
-    breakIntensity: 'Интенсивность сломления',
+    breakGauge: 'Шкала разрушения',
+    breakIntensity: 'Интенсивность разрушения',
     brokenEnemy: 'Сломленный враг',
-    breakDamage: 'Урон сломления',
+    breakDamage: 'Урон разрушения',
   },
   unchangedAbbreviations: ['ATK', 'DEF', 'HP', 'CRIT', 'DPS', 'MAX', 'MIN'] as const,
 } as const;
