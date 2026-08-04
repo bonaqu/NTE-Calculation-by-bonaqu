@@ -1,6 +1,8 @@
+/// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest';
+import css from './team-readiness.css?raw';
 
-const rawModules = import.meta.glob('./**/*.{ts,tsx,css}', {
+const rawModules = import.meta.glob('./**/*.{ts,tsx}', {
   eager: true,
   query: '?raw',
   import: 'default',
@@ -8,7 +10,6 @@ const rawModules = import.meta.glob('./**/*.{ts,tsx,css}', {
 
 const page = rawModules['./pages/TeamCalculatorPage.tsx'] ?? '';
 const panel = rawModules['./components/TeamReadinessPanel.tsx'] ?? '';
-const css = rawModules['./team-readiness.css'] ?? '';
 
 describe('Team Calculator readiness UI contract', () => {
   it('preserves existing calculation storage and adds isolated confirmation metadata', () => {
