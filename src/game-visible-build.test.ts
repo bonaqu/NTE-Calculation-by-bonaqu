@@ -13,7 +13,19 @@ import { calculateGameVisibleBuild } from './game-visible-calculation';
 describe('game-visible build profile', () => {
   it('covers every released character without pretending every kit is verified', () => {
     const released = characterCatalog.filter((character) => character.releaseStatus === 'released');
-    const partialNames = ['Shinku', 'Nanally', 'Chaos', 'Lacrimosa', 'Zero', 'Hathor', 'Jiuyuan'];
+    const partialNames = [
+      'Shinku',
+      'Nanally',
+      'Chaos',
+      'Lacrimosa',
+      'Zero',
+      'Hathor',
+      'Jiuyuan',
+      'Haniel',
+      'Sakiri',
+      'Baicang',
+      'Daffodill',
+    ];
     expect(characterCombatCoverage).toHaveLength(released.length);
     expect(new Set(characterCombatCoverage.map((record) => record.characterName)).size).toBe(released.length);
     expect(characterCombatCoverage.filter((record) => record.coverage === 'partial').map((record) => record.characterName).sort())
