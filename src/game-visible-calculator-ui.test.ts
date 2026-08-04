@@ -3,6 +3,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import appSource from './App.tsx?raw';
+import actionAwakeningSource from './components/ActionAwakeningRequirement.tsx?raw';
+import awakeningDatabaseSource from './components/CharacterAwakeningReference.tsx?raw';
+import teamEffectsPanelSource from './components/VerifiedTeamEffectsPanel.tsx?raw';
+import databaseSource from './pages/DatabasePage.tsx?raw';
 import pageSource from './pages/GameVisibleTeamCalculatorPage.tsx?raw';
 import modelSource from './game-visible-build.ts?raw';
 import calculationSource from './game-visible-calculation.ts?raw';
@@ -11,6 +15,7 @@ import mainSource from './main.tsx?raw';
 
 const baseCss = readFileSync(new URL('./game-visible-calculator.css', import.meta.url), 'utf8');
 const minimalCss = readFileSync(new URL('./game-visible-minimal-inputs.css', import.meta.url), 'utf8');
+const awakeningDatabaseCss = readFileSync(new URL('./components/CharacterAwakeningReference.css', import.meta.url), 'utf8');
 
 describe('formula-driven Team Calculator product contract', () => {
   it('keeps the game-visible calculator on the primary team route and migrates the existing storage shape', () => {
@@ -53,12 +58,37 @@ describe('formula-driven Team Calculator product contract', () => {
     expect(pageSource).toContain("activeBuild.arc.arcName === 'Blushing Mirage'");
   });
 
-  it('shows sourced Awakening nodes instead of treating one number as a generic multiplier', () => {
-    expect(pageSource).toContain('awakeningNodesByCharacter');
-    expect(pageSource).toContain("Array.from({ length: 7 }");
-    expect(pageSource).toContain('Все предыдущие считаются открытыми автоматически');
-    expect(pageSource).toContain('сам номер не является скрытым множителем урона');
-    expect(pageSource).toContain('node.relatedActionIds?.includes(selectedAction.id)');
+  it('replaces the generic A0-A6 picker with named calculation-specific requirements', () => {
+    expect(pageSource).toContain('<ActionAwakeningRequirement');
+    expect(pageSource).not.toContain('nte-awakening-picker');
+    expect(pageSource).not.toContain('nte-awakening-list');
+    expect(pageSource).not.toContain('Array.from({ length: 7 }');
+    expect(pageSource).not.toContain('Все предыдущие считаются открытыми автоматически');
+
+    expect(actionAwakeningSource).toContain('action?.minimumAwakening');
+    expect(actionAwakeningSource).toContain('A{minimum} · {title}');
+    expect(actionAwakeningSource).toContain('Остальные пробуждения не применяются автоматически');
+    expect(actionAwakeningSource).toContain('type="checkbox"');
+
+    expect(teamEffectsPanelSource).toContain('effect.minimumAwakening');
+    expect(teamEffectsPanelSource).toContain('nte-team-effect-awakening');
+    expect(teamEffectsPanelSource).toContain('Остальные узлы не применяются автоматически');
+  });
+
+  it('moves the complete Awakening reference into character cards', () => {
+    expect(databaseSource).toContain('<CharacterAwakeningReference');
+    expect(awakeningDatabaseSource).toContain('Справка, не поле калькулятора');
+    expect(awakeningDatabaseSource).toContain('используется моделью');
+    expect(awakeningDatabaseSource).toContain('справочно');
+    expect(awakeningDatabaseSource).toContain('verifiedVisibleActions');
+    expect(awakeningDatabaseSource).toContain('teamEffectsForCharacter');
+    expect(awakeningDatabaseCss).toContain('.character-awakening-reference__list');
+    expect(awakeningDatabaseCss).toContain('@media (max-width: 720px)');
+    expect(awakeningDatabaseCss).not.toMatch(/(?:linear|radial|conic)-gradient\s*\(/iu);
+    expect(awakeningDatabaseCss).not.toMatch(/box-shadow\s*:/iu);
+  });
+
+  it('retains sourced Russian and English Awakening evidence', () => {
     expect(awakeningSource).toContain("'current-russian-reference'");
     expect(awakeningSource).toContain("'current-english-reference'");
     expect(awakeningSource).toContain("'nanally.awakening-three-follow-up.level-11'");
@@ -71,7 +101,7 @@ describe('formula-driven Team Calculator product contract', () => {
     expect(pageSource).toContain('Постоянные бонусы снаряжения уже входят в них');
     expect(calculationSource).toContain('baseAtk: build.stats.atk');
     expect(calculationSource).toContain('arcAtk: 0');
-    expect(calculationSource).toContain('flatAtk: 0');
+    expect(calculationSource).toContain('flatAtk: modifier.flatAtk');
     expect(calculationSource).toContain('atkPercent: 0');
   });
 
@@ -87,14 +117,12 @@ describe('formula-driven Team Calculator product contract', () => {
     }
   });
 
-  it('loads the responsive awakening layer without decorative gradients or shadows', () => {
+  it('loads the responsive calculator layer without decorative gradients or shadows', () => {
     expect(mainSource).toContain("import './game-visible-calculator.css'");
     expect(mainSource).toContain("import './game-visible-minimal-inputs.css'");
     expect(baseCss).toContain('.nte-team-rail');
-    expect(minimalCss).toContain('.nte-awakening-picker');
-    expect(minimalCss).toContain('.nte-awakening-list article.used');
     expect(minimalCss).toContain('@media(max-width:620px)');
-    expect(`${baseCss}\n${minimalCss}`).not.toMatch(/(?:linear|radial|conic)-gradient\s*\(/iu);
-    expect(`${baseCss}\n${minimalCss}`).not.toMatch(/box-shadow\s*:/iu);
+    expect(`${baseCss}\n${minimalCss}\n${awakeningDatabaseCss}`).not.toMatch(/(?:linear|radial|conic)-gradient\s*\(/iu);
+    expect(`${baseCss}\n${minimalCss}\n${awakeningDatabaseCss}`).not.toMatch(/box-shadow\s*:/iu);
   });
 });
