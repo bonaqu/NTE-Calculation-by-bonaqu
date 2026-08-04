@@ -81,7 +81,13 @@ describe('team calculation readiness', () => {
 
   it('requires exactly four unique characters', () => {
     const duplicate = sampleTeamMembers.map((member) => ({ ...member }));
-    duplicate[3] = { ...duplicate[3], name: duplicate[0].name };
+    const first = duplicate[0];
+    const fourth = duplicate[3];
+    expect(first).toBeDefined();
+    expect(fourth).toBeDefined();
+    if (!first || !fourth) throw new Error('Sample team must contain four members');
+    duplicate[3] = { ...fourth, name: first.name };
+
     const report = evaluateTeamReadiness(duplicate, sampleTeamDuration, sampleTeamEnemy);
     expect(report.status).toBe('incomplete');
     expect(report.issues).toEqual(expect.arrayContaining([
