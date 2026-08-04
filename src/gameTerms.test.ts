@@ -26,17 +26,17 @@ describe('Russian client terminology', () => {
     expect(characterCatalog.every((character) => Boolean(characterRussianNames[character.name]))).toBe(true);
   });
 
-  it('uses owner-confirmed Russian client names as primary labels', () => {
-    expect(localizedCharacterName('Shinku', 'ru')).toBe('Синку');
+  it('uses the best current Russian evidence as primary labels', () => {
+    expect(localizedCharacterName('Shinku', 'ru')).toBe('Шинку');
     expect(localizedCharacterName('Zero', 'ru')).toBe('Оценщик');
     expect(localizedCharacterName('Daffodill', 'ru')).toBe('Даффодил');
     expect(localizedCharacterName('Shinku', 'en')).toBe('Shinku');
   });
 
   it('keeps older and alternative names as search-only aliases', () => {
-    expect(characterRussianAliases.Shinku).toContain('Шинку');
+    expect(characterRussianAliases.Shinku).toContain('Синку');
     expect(characterRussianAliases.Zero).toEqual(expect.arrayContaining(['Зеро', 'Зеро эспер', 'Нулевой эспер']));
-    expect(characterRussianNames.Shinku).not.toBe('Шинку');
+    expect(characterRussianNames.Shinku).not.toBe('Синку');
     expect(characterRussianNames.Zero).not.toBe('Нулевой эспер');
 
     expect(canonicalCharacterName('Синку')).toBe('Shinku');
@@ -46,11 +46,11 @@ describe('Russian client terminology', () => {
     expect(canonicalCharacterName('Нулевой эспер')).toBe('Zero');
   });
 
-  it('uses exact Russian client-facing Arc types, attributes, roles and stats', () => {
+  it('uses current Russian Arc types, attributes, roles and stats', () => {
     expect(localizedArcType('Solid', 'ru')).toBe('Твёрдый');
     expect(localizedArcType('Gas', 'ru')).toBe('Газ');
     expect(localizedArcType('Liquid', 'ru')).toBe('Жидкий');
-    expect(localizedArcType('Plasma', 'ru')).toBe('Плазма');
+    expect(localizedArcType('Plasma', 'ru')).toBe('Плазменный');
     expect(localizedArcType('Synthesis', 'ru')).toBe('Гибридный');
     expect(localizedAttribute('Incantation', 'ru')).toBe('Чары');
     expect(localizedRole('Buff', 'ru')).toBe('Бафф');
@@ -62,6 +62,8 @@ describe('Russian client terminology', () => {
     expect(russianClientTerminology.combat.breakGauge).toBe('Шкала разрушения');
     expect(russianClientTerminology.combat.breakDamage).toBe('Урон разрушения');
     expect(russianClientTerminology.combat.brokenEnemy).toBe('Сломленный враг');
+    expect(russianClientTerminology.sourcePriority.indexOf('official-russian-publication'))
+      .toBeLessThan(russianClientTerminology.sourcePriority.indexOf('owner-confirmed-client-spelling'));
   });
 
   it('uses current Russian Arc and progression-material names', () => {
