@@ -17,11 +17,12 @@ import {
   progressionDatasetSources,
 } from '../../../src/progression-data';
 import { rotationPresets } from '../../../src/rotation-presets';
+import { verifiedTeamEffects } from '../../../src/team-effects';
 import { calculateDamage, calculateTeam, type DamageInput, type TeamMemberInput } from '../../../packages/calculation-core/src';
 
 const MAX_BODY_BYTES = 32_768;
 const FORMULA_VERSION = '0.2';
-const SERVICE_VERSION = '0.7.0';
+const SERVICE_VERSION = '0.8.0';
 const DATASET_VERIFIED_AT = '2026-08-04';
 
 function corsHeaders(): Record<string, string> {
@@ -153,10 +154,12 @@ export default {
           count: characterCombatCoverage.length,
           verifiedActionCount: verifiedVisibleActions.length,
           verifiedActions: verifiedVisibleActions,
+          verifiedTeamEffectCount: verifiedTeamEffects.length,
+          verifiedTeamEffects,
           visibleBuildVersion: GAME_VISIBLE_BUILD_VERSION,
           verifiedAt: DATASET_VERIFIED_AT,
-          scope: 'game-visible-input-and-evidence-coverage',
-          policy: 'Unsupported coefficients remain blocked; visible final ATK is never combined with Arc ATK again.',
+          scope: 'game-visible-input-action-and-team-effect-coverage',
+          policy: 'Final Attributes stay immutable; only explicit verified combat windows derive temporary modifiers.',
         }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/esper-cycles') {
         response = json({

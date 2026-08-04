@@ -53,6 +53,12 @@ export interface GameVisibleCharacterBuild {
   level: number;
   maxLevel: number;
   awakeningLevel: number;
+  /**
+   * Base ATK is separate from final displayed ATK and is requested only when a
+   * selected verified support effect explicitly scales from it.
+   */
+  baseAtk: number;
+  activeTeamEffectIds: string[];
   stats: VisibleCombatStats;
   arc: VisibleArcBuild;
   skills: VisibleSkillLevels;
@@ -117,6 +123,8 @@ export function createEmptyGameVisibleBuild(characterName: string): GameVisibleC
     level: 1,
     maxLevel: 20,
     awakeningLevel: 0,
+    baseAtk: 0,
+    activeTeamEffectIds: [],
     stats: zeroStats(),
     arc: emptyArc(),
     skills: { basic: 1, skill: 1, ultimate: 1, support: 1 },
@@ -128,14 +136,17 @@ export function createEmptyGameVisibleBuild(characterName: string): GameVisibleC
 
 /**
  * First-party evidence supplied by the repository owner from the current Russian
- * client. Final displayed ATK is intentionally stored as one number. Arc ATK and
- * its static ATK effect are informational and must not be added to it again.
+ * client. Final displayed ATK is intentionally stored as one number. The
+ * screenshot also exposes a 1126 + 900 split, but Base ATK is not required by
+ * Shinku's current tests and therefore is not seeded as an ordinary input.
  */
 export const shinkuScreenshotBuild: GameVisibleCharacterBuild = {
   characterName: 'Shinku',
   level: 70,
   maxLevel: 70,
   awakeningLevel: 5,
+  baseAtk: 0,
+  activeTeamEffectIds: [],
   stats: {
     hp: 21_316,
     atk: 2_026,
@@ -250,6 +261,14 @@ const finite = (value: unknown, fallback = 0): number => typeof value === 'numbe
 const clamp = (value: unknown, min: number, max: number, fallback = min): number => Math.min(max, Math.max(min, finite(value, fallback)));
 const text = (value: unknown, fallback = ''): string => typeof value === 'string' ? value.normalize('NFKC').trim().slice(0, 120) : fallback;
 
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value
+    .filter((entry): entry is string => typeof entry === 'string')
+    .map((entry) => text(entry))
+    .filter(Boolean))].slice(0, 12);
+}
+
 function normalizeStats(value: unknown): VisibleCombatStats {
   const input = isRecord(value) ? value : {};
   return {
@@ -293,6 +312,8 @@ function normalizeBuild(value: unknown, fallbackName: string): GameVisibleCharac
     level: Math.trunc(clamp(input.level, 1, 80, 1)),
     maxLevel: Math.trunc(clamp(input.maxLevel, 1, 80, 20)),
     awakeningLevel: Math.trunc(clamp(input.awakeningLevel, 0, 6)),
+    baseAtk: clamp(input.baseAtk, 0, 99_999),
+    activeTeamEffectIds: normalizeStringArray(input.activeTeamEffectIds),
     stats: normalizeStats(input.stats),
     arc: normalizeArc(input.arc),
     skills: {

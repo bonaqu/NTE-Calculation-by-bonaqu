@@ -19,6 +19,8 @@ on:
       - 'src/rotation-presets-extra.ts'
       - 'src/game-visible-build.ts'
       - 'src/game-visible-calculation.ts'
+      - 'src/verified-visible-actions.ts'
+      - 'src/team-effects.ts'
       - 'src/progression-data.ts'
       - 'src/progression-engine.ts'
       - 'package.json'
@@ -66,7 +68,7 @@ jobs:
         id: verify
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
-          EXPECTED_SERVICE_VERSION: '0.7.0'
+          EXPECTED_SERVICE_VERSION: '0.8.0'
           EXPECTED_FORMULA_VERSION: '0.2'
           EXPECTED_VISIBLE_BUILD_VERSION: '1'
         run: |
@@ -76,12 +78,14 @@ jobs:
           echo "combat_models_url=$BASE/api/v1/data/combat-models" >> "$GITHUB_OUTPUT"
           echo "progression_url=$BASE/api/v1/data/progression/characters" >> "$GITHUB_OUTPUT"
           {
-            echo '### API 0.7.0 production contract'
+            echo '### API 0.8.0 production contract'
             echo
             echo '- 20 released-character coverage records'
             echo '- 9 verified standalone actions across 5 partial models'
+            echo '- 3 verified conditional team effects'
             echo '- Shinku final ATK remains 2026; Arc ATK 570 is not added again'
-            echo '- Nanally Fair Duel and Zero Awakening 1 POST calculations passed'
+            echo '- Haniel +40 all-slot ATK and Sakiri +180 excluding self POST checks passed'
+            echo '- Sakiri 10% target DEF reduction provenance passed'
           } >> "$GITHUB_STEP_SUMMARY"
 
   report:
@@ -109,8 +113,8 @@ jobs:
           - Health endpoint: $HEALTH_URL
           - Combat model coverage: $COMBAT_MODELS_URL
           - Roster ascension dataset: $PROGRESSION_URL
-          - API 0.7.0 contract: 9 verified standalone actions across 5 partial character models
-          - Shinku no-double-count, Nanally Fair Duel and Zero Awakening 1 production POST checks: success
+          - API 0.8.0 contract: 9 verified actions and 3 conditional team effects
+          - Shinku no-double-count, Haniel Base ATK and Sakiri A4/DEF reduction POST checks: success
           - Workflow evidence: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌
