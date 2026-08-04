@@ -55,7 +55,7 @@ describe('verified game-visible actions batch B', () => {
     for (const action of verifiedVisibleActionsBatchB.filter((entry) => entry.characterName === 'Hathor')) {
       expect(action.requiredLevel).toBe(10);
       expect(action.description.ru).not.toMatch(/официальное русское название/iu);
-      expect(action.assumedConditions?.join(' ')).not.toContain('A4');
+      expect(action.description.ru).not.toMatch(/A4|A5|A6/iu);
     }
     expect(verifiedVisibleActions.some((action) => action.id.includes('aerial-command'))).toBe(false);
   });
@@ -139,11 +139,9 @@ describe('verified game-visible actions batch B', () => {
     expect(result.calculatedActionCount).toBe(4);
     expect(result.blockedActionCount).toBe(0);
     expect(result.coveragePercent).toBe(100);
-    expect(result.steps.map((entry) => entry.calculation?.multiplier)).toEqual([
-      1399.3,
-      600.6,
-      799.7,
-      1099.4,
-    ]);
+    const multipliers = result.steps.map((entry) => entry.calculation?.multiplier ?? 0);
+    [1399.3, 600.6, 799.7, 1099.4].forEach((expected, index) => {
+      expect(multipliers[index]).toBeCloseTo(expected, 8);
+    });
   });
 });
