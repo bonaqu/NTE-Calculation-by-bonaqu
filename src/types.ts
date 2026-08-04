@@ -141,6 +141,8 @@ export interface RotationStep {
   outcome: LocalizedText;
   cycle?: EsperCycleId;
   optional?: boolean;
+  /** Optional direct term references for future datasets; current presets use the external stable binding table. */
+  termRefs?: readonly string[];
 }
 
 export interface RotationPreset {
