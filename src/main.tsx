@@ -19,6 +19,7 @@ import './rotation-catalog.css';
 import './rotation-practice.css';
 import './progression-roster.css';
 import './progression-next.css';
+import './progression-automation.css';
 import './localization-evidence.css';
 import './terminology-audit.css';
 import './data-health.css';
