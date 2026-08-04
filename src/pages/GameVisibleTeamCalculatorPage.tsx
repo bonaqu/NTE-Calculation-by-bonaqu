@@ -3,6 +3,7 @@ import { Activity, BarChart3, CheckCircle2, CircleDot, Shield, Sparkles, Swords,
 import { arcDirectory } from '../arc-directory';
 import { awakeningNodesByCharacter } from '../awakening-data';
 import { characterByName, characterCatalog } from '../characters';
+import { VerifiedTeamEffectsPanel } from '../components/VerifiedTeamEffectsPanel';
 import {
   actionsForCharacter,
   calculateGameVisibleTeam,
@@ -18,7 +19,6 @@ import {
   screenshotConfirmedRussianLabels,
   type GameVisibleCharacterBuild,
   type GameVisibleTeamState,
-  type VisibleCombatStats,
   type VisibleTestModeId,
 } from '../game-visible-build';
 import {
@@ -30,6 +30,8 @@ import {
 } from '../gameTerms';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useI18n } from '../i18n';
+import { supportAwakeningNodesByCharacter } from '../support-awakening-data';
+import { teamEffectsForCharacter } from '../team-effects';
 
 const tabs = ['overview', 'damage', 'conditions', 'test'] as const;
 type CalculatorTab = typeof tabs[number];
@@ -153,7 +155,10 @@ export function GameVisibleTeamCalculatorPage() {
   const selectedNames = useMemo(() => new Set(state.builds.map((build) => build.characterName)), [state.builds]);
   const verifiedActions = useMemo(() => actionsForCharacter(activeBuild.characterName), [activeBuild.characterName]);
   const selectedAction = verifiedActions.find((action) => action.id === activeBuild.verifiedActionId);
-  const awakeningNodes = awakeningNodesByCharacter.get(activeBuild.characterName) ?? [];
+  const awakeningNodes = awakeningNodesByCharacter.get(activeBuild.characterName)
+    ?? supportAwakeningNodesByCharacter.get(activeBuild.characterName)
+    ?? [];
+  const availableTeamEffects = teamEffectsForCharacter(activeBuild.characterName);
   const showArcCondition = activeBuild.characterName === 'Shinku' && activeBuild.testMode === 'burst-reference';
   const showTarget = activeBuild.testMode === 'training-target'
     || (activeBuild.testMode === 'verified-action' && Boolean(selectedAction));
@@ -214,10 +219,11 @@ export function GameVisibleTeamCalculatorPage() {
       {state.builds.map((build, index) => {
         const profile = characterByName.get(build.characterName);
         const row = teamCalculation.rows[index];
+        const enabledEffects = build.activeTeamEffectIds.length;
         return <button key={`${build.characterName}-${index}`} className={state.activeSlot === index ? 'active' : ''} onClick={() => updateState((current) => ({ ...current, activeSlot: index }))}>
           <span>{index + 1}</span>
           {profile ? <img src={profile.image} alt="" /> : null}
-          <div><b>{localizedCharacterName(build.characterName, locale)}</b><small>{row?.supported ? (ru ? 'готов к тесту' : 'test ready') : (ru ? 'нужно заполнить' : 'needs input')}</small></div>
+          <div><b>{localizedCharacterName(build.characterName, locale)}</b><small>{row?.supported ? (ru ? 'готов к тесту' : 'test ready') : (ru ? 'нужно заполнить' : 'needs input')}{enabledEffects ? ` · ${enabledEffects} ${ru ? 'эфф.' : 'effect'}` : ''}</small></div>
           {row?.supported ? <CheckCircle2 size={18} /> : <Activity size={18} />}
         </button>;
       })}
@@ -283,7 +289,11 @@ export function GameVisibleTeamCalculatorPage() {
             </div>
             <div className="nte-awakening-list">{awakeningNodes.map((node) => {
               const unlocked = node.level <= activeBuild.awakeningLevel;
-              const used = Boolean(selectedAction && node.relatedActionIds?.includes(selectedAction.id));
+              const usedByAction = Boolean(selectedAction && node.relatedActionIds?.includes(selectedAction.id));
+              const usedByTeamEffect = activeBuild.characterName === 'Sakiri'
+                && node.level === 4
+                && activeBuild.activeTeamEffectIds.includes('sakiri.awakening-four.team-atk');
+              const used = usedByAction || usedByTeamEffect;
               return <article key={`${node.characterName}-${node.level}`} className={`${unlocked ? 'unlocked' : 'locked'} ${used ? 'used' : ''}`}>
                 <b>A{node.level}</b>
                 <div><strong>{node.title[locale]}</strong><p>{node.description[locale]}</p><small>{node.evidence === 'current-russian-reference' ? (ru ? 'текущая русская карточка' : 'current Russian record') : (ru ? 'русское название не подтверждено — показано английское' : 'English current reference')}</small></div>
@@ -291,6 +301,14 @@ export function GameVisibleTeamCalculatorPage() {
               </article>;
             })}</div>
           </div> : null}
+
+          <VerifiedTeamEffectsPanel
+            build={activeBuild}
+            sourceSlot={state.activeSlot}
+            evaluations={teamCalculation.teamEffects}
+            locale={locale}
+            onChange={(build) => updateBuild(() => build)}
+          />
 
           {showArcCondition ? <div className="nte-condition-section">
             <h3>{ru ? 'Условный эффект дуги' : 'Conditional Arc effect'}</h3>
@@ -302,7 +320,7 @@ export function GameVisibleTeamCalculatorPage() {
             </> : null}
           </div> : null}
 
-          {!actionNeedsSkill(selectedAction) && !awakeningNodes.length && !showArcCondition ? <div className="nte-input-policy"><CheckCircle2 size={19} /><b>{ru ? 'Дополнительные поля не нужны' : 'No extra inputs needed'}</b><span>{ru ? 'Выбранный тест считается только по итоговым атрибутам и заданной цели.' : 'The selected test uses only final attributes and the target preset.'}</span></div> : null}
+          {!actionNeedsSkill(selectedAction) && !awakeningNodes.length && !availableTeamEffects.length && !showArcCondition ? <div className="nte-input-policy"><CheckCircle2 size={19} /><b>{ru ? 'Дополнительные поля не нужны' : 'No extra inputs needed'}</b><span>{ru ? 'Выбранный тест считается только по итоговым атрибутам и заданной цели.' : 'The selected test uses only final attributes and the target preset.'}</span></div> : null}
         </section> : null}
 
         {tab === 'test' ? <section className="nte-editor-section">
@@ -333,7 +351,7 @@ export function GameVisibleTeamCalculatorPage() {
           <strong><ResultNumber value={teamCalculation.totalExpected} locale={locale} /></strong>
           <small>{ru ? `${teamCalculation.comparableRows} из 4 слотов рассчитано` : `${teamCalculation.comparableRows} of 4 slots calculated`}</small>
         </div>
-        <div className="nte-trust-footer"><Shield size={17} /><span>{ru ? 'Сайт применяет только подтверждённые эффекты выбранного теста. Скрытые бонусы дуги, консоли и пробуждения не добавляются автоматически.' : 'Only verified effects for the selected test are applied. Hidden Arc, Console or Awakening bonuses are never added automatically.'}</span></div>
+        <div className="nte-trust-footer"><Shield size={17} /><span>{ru ? 'Сайт применяет только подтверждённые эффекты выбранного теста. Исходные итоговые атрибуты не перезаписываются.' : 'Only verified effects for the selected test are applied. Saved final Attributes are never overwritten.'}</span></div>
       </aside>
     </div>
   </div>;
