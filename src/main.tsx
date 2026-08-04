@@ -14,6 +14,7 @@ import './character-catalog.css';
 import './team-input.css';
 import './home-tools.css';
 import './rotation-lab.css';
+import './rotation-practice.css';
 import './progression-roster.css';
 import './imageFallbackRuntime';
 
