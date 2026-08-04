@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+// @ts-expect-error Vitest runs this source contract in Node; the browser app intentionally omits Node types.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import homeSource from './pages/HomePage.tsx?raw';
