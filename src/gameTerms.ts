@@ -98,14 +98,19 @@ export const arcTypeRussian: Record<ArcDirectoryType, string> = {
   Synthesis: 'Гибридный',
 };
 
+/** Current Russian-client labels. Abbreviations remain available separately. */
 export const statRussian: Record<string, string> = {
-  'ATK%': 'АТК',
-  'HP%': 'ОЗ',
-  'CRIT Rate': 'Шанс критического удара',
-  'CRIT DMG': 'Критический урон',
-  'Break Intensity': 'Эффективность разрушения',
-  'Charge Efficiency': 'Эффективность зарядки',
-  'DMG Bonus': 'Бонус урона',
+  ATK: 'Атака',
+  DEF: 'Защита',
+  HP: 'ОЗ',
+  'ATK%': 'Бонус к атаке',
+  'HP%': 'Бонус к ОЗ',
+  'CRIT Rate': 'Шанс крит. удара',
+  'CRIT DMG': 'Крит. урон',
+  'Break Intensity': 'Интенсивность разрушения',
+  'Charge Efficiency': 'Скорость зарядки',
+  'Cycle Intensity': 'Интенсивность цикла',
+  'DMG Bonus': 'Бонус к урону',
 };
 
 const sourceTitleRussian: Record<string, string> = {
@@ -146,12 +151,12 @@ export const russianAbbreviations = {
 } as const;
 
 export const russianClientTerminology = {
-  version: 4,
+  version: 5,
   verifiedAt: '2026-08-04',
   sourcePriority: [
     'current-russian-client',
-    'official-russian-publication',
     'owner-confirmed-client-spelling',
+    'official-russian-publication',
     'current-russian-reference',
     'project-fallback',
   ] as const,
@@ -170,7 +175,7 @@ export const russianClientTerminology = {
     criticalCounter: 'Критический контрудар',
     progressionStage: 'Прорыв',
     breakGauge: 'Шкала разрушения',
-    breakIntensity: 'Эффективность разрушения',
+    breakIntensity: 'Интенсивность разрушения',
     brokenEnemy: 'Сломленный враг',
     breakDamage: 'Урон разрушения',
   },
