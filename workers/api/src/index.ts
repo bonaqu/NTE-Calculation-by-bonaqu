@@ -3,6 +3,12 @@ import { arcPresets } from '../../../src/arc-presets';
 import { characterCatalog } from '../../../src/characters';
 import { iroiProgression } from '../../../src/data';
 import { esperCycles } from '../../../src/esper-cycles';
+import { calculateGameVisibleTeam, verifiedVisibleActions } from '../../../src/game-visible-calculation';
+import {
+  characterCombatCoverage,
+  GAME_VISIBLE_BUILD_VERSION,
+  normalizeGameVisibleTeamState,
+} from '../../../src/game-visible-build';
 import {
   ascensionMaterials,
   ascensionSteps,
@@ -15,7 +21,7 @@ import { calculateDamage, calculateTeam, type DamageInput, type TeamMemberInput 
 
 const MAX_BODY_BYTES = 32_768;
 const FORMULA_VERSION = '0.2';
-const SERVICE_VERSION = '0.6.1';
+const SERVICE_VERSION = '0.7.0';
 const DATASET_VERIFIED_AT = '2026-08-04';
 
 function corsHeaders(): Record<string, string> {
@@ -81,12 +87,14 @@ const endpoints = [
   '/api/v1/data/arcs',
   '/api/v1/data/arc-presets',
   '/api/v1/data/characters',
+  '/api/v1/data/combat-models',
   '/api/v1/data/esper-cycles',
   '/api/v1/data/rotation-presets',
   '/api/v1/data/progression/characters',
   '/api/v1/data/progression/iroi',
   '/api/v1/calculate/damage',
   '/api/v1/calculate/team',
+  '/api/v1/calculate/visible-team',
 ];
 
 export default {
@@ -103,6 +111,7 @@ export default {
           service: 'nte-calculation-api',
           version: SERVICE_VERSION,
           formulaVersion: FORMULA_VERSION,
+          visibleBuildVersion: GAME_VISIBLE_BUILD_VERSION,
           datasetVerifiedAt: DATASET_VERIFIED_AT,
           endpoints,
         }, 200, requestId, 'public, max-age=300');
@@ -112,6 +121,7 @@ export default {
           service: 'nte-calculation-api',
           version: SERVICE_VERSION,
           formulaVersion: FORMULA_VERSION,
+          visibleBuildVersion: GAME_VISIBLE_BUILD_VERSION,
         }, 200, requestId);
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/arcs') {
         response = json({
@@ -136,6 +146,17 @@ export default {
           upcomingCount: characterCatalog.filter((character) => character.releaseStatus === 'upcoming').length,
           verifiedAt: DATASET_VERIFIED_AT,
           scope: 'sourced-character-profiles',
+        }, 200, requestId, 'public, max-age=300');
+      } else if (request.method === 'GET' && url.pathname === '/api/v1/data/combat-models') {
+        response = json({
+          data: characterCombatCoverage,
+          count: characterCombatCoverage.length,
+          verifiedActionCount: verifiedVisibleActions.length,
+          verifiedActions: verifiedVisibleActions,
+          visibleBuildVersion: GAME_VISIBLE_BUILD_VERSION,
+          verifiedAt: DATASET_VERIFIED_AT,
+          scope: 'game-visible-input-and-evidence-coverage',
+          policy: 'Unsupported coefficients remain blocked; visible final ATK is never combined with Arc ATK again.',
         }, 200, requestId, 'public, max-age=300');
       } else if (request.method === 'GET' && url.pathname === '/api/v1/data/esper-cycles') {
         response = json({
@@ -189,6 +210,16 @@ export default {
         } else {
           response = json({ result: calculateTeam(input.members, input.duration), formulaVersion: FORMULA_VERSION }, 200, requestId);
         }
+      } else if (request.method === 'POST' && url.pathname === '/api/v1/calculate/visible-team') {
+        const input = await parseJson(request);
+        const normalized = normalizeGameVisibleTeamState(input);
+        response = normalized
+          ? json({
+            result: calculateGameVisibleTeam(normalized),
+            visibleBuildVersion: GAME_VISIBLE_BUILD_VERSION,
+            policy: 'game-visible-input-only',
+          }, 200, requestId)
+          : json({ error: 'INVALID_VISIBLE_TEAM_INPUT', requestId }, 400, requestId);
       } else {
         response = json({ error: 'NOT_FOUND', requestId }, 404, requestId);
       }
