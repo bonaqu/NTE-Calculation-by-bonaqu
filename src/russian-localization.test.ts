@@ -61,6 +61,8 @@ function sourceRussianStrings(): SourceString[] {
 const forbiddenPrimaryTerms: RegExp[] = [
   /\bСинку\b/u,
   /Слезы с маской/iu,
+  /\bATK\b|\bDEF\b|\bHP\b/u,
+  /\bбаффер\w*/iu,
   /Esper Cycle/iu,
   /пробой|пробит/iu,
   /сила пробоя/iu,
