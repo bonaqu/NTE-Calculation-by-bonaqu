@@ -170,6 +170,7 @@ const currentClientEvidence = {
 };
 
 const releasedCharacters = characterCatalog.filter((character) => character.releaseStatus === 'released');
+const firstVerifiedActionBatch = new Set(['Shinku', 'Nanally', 'Chaos', 'Lacrimosa', 'Zero']);
 
 export const characterCombatCoverage: readonly CharacterCombatCoverage[] = releasedCharacters.map((character) => {
   if (character.name === 'Shinku') {
@@ -182,6 +183,21 @@ export const characterCombatCoverage: readonly CharacterCombatCoverage[] = relea
       note: {
         ru: 'Видимые характеристики, дуга, уровни навыков и русские подписи подтверждены скриншотами клиента. Конкретный урон доступен только для отдельно проверенных действий.',
         en: 'Visible stats, Arc, skill levels and Russian labels are confirmed by client screenshots. Exact damage is available only for separately verified actions.',
+      },
+    } satisfies CharacterCombatCoverage;
+  }
+
+  if (firstVerifiedActionBatch.has(character.name)) {
+    return {
+      characterName: character.name,
+      coverage: 'partial',
+      supportedModes: ['neutral-reference', 'training-target', 'verified-action'],
+      verifiedAt: '2026-08-04',
+      sourcePublisher: character.sourcePublisher ?? 'Prydwen Institute',
+      ...(character.sourceUrl ? { sourceUrl: character.sourceUrl } : {}),
+      note: {
+        ru: 'Для персонажа доступны контрольные тесты видимых характеристик и несколько отдельно подтверждённых срабатываний. Полная ротация ещё не моделируется.',
+        en: 'The character supports visible-stat reference tests and a small set of separately verified triggers. The full rotation is not modeled yet.',
       },
     } satisfies CharacterCombatCoverage;
   }
