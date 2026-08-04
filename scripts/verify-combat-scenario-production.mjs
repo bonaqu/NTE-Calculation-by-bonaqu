@@ -3,6 +3,7 @@ if (!base) throw new Error('DEPLOYMENT_URL is required');
 
 const expectedVersion = Number(process.env.EXPECTED_COMBAT_SCENARIO_VERSION || 1);
 const expectedEffectCount = Number(process.env.EXPECTED_VERIFIED_TEAM_EFFECT_COUNT || 4);
+const expectedCycleModelCount = Number(process.env.EXPECTED_VERIFIED_COMBAT_CYCLE_MODEL_COUNT || 1);
 const endpoints = {
   models: `${base}/api/v1/data/combat-models`,
   scenario: `${base}/api/v1/calculate/combat-scenario`,
@@ -56,100 +57,72 @@ const target = {
   boss: true,
 };
 
-const sakiriTeam = {
+const team = (builds, duration = 30) => ({
   version: 1,
   activeSlot: 0,
-  duration: 30,
-  builds: [
-    build('Shinku', { skills: { basic: 11, skill: 1, ultimate: 1, support: 1 } }),
-    build('Sakiri', { awakeningLevel: 4, baseAtk: 600 }),
-    build('Zero'),
-    build('Nanally'),
-  ],
+  duration,
+  builds,
   target,
-};
+});
 
+const scenarioStep = (id, at, kind, sourceSlot, fields = {}) => ({
+  id,
+  at,
+  kind,
+  sourceSlot,
+  actionId: '',
+  effectId: '',
+  cycleId: '',
+  note: '',
+  ...fields,
+});
+
+const sakiriTeam = team([
+  build('Shinku', { skills: { basic: 11, skill: 1, ultimate: 1, support: 1 } }),
+  build('Sakiri', { awakeningLevel: 4, baseAtk: 600 }),
+  build('Zero'),
+  build('Nanally'),
+]);
 const sakiriScenario = {
   version: 1,
   name: 'Sakiri production duration boundary',
   steps: [
-    {
-      id: 'activate-sakiri-a4',
-      at: 0,
-      kind: 'activate-effect',
-      sourceSlot: 1,
-      actionId: '',
-      effectId: 'sakiri.awakening-four.team-atk',
-      note: '',
-    },
-    {
-      id: 'sakiri-inside-window',
-      at: 19.9,
-      kind: 'action',
-      sourceSlot: 0,
-      actionId: 'shinku.charge-enhancement.level-11',
-      effectId: '',
-      note: '',
-    },
-    {
-      id: 'sakiri-expired-window',
-      at: 20,
-      kind: 'action',
-      sourceSlot: 0,
-      actionId: 'shinku.charge-enhancement.level-11',
-      effectId: '',
-      note: '',
-    },
+    scenarioStep('activate-sakiri-a4', 0, 'activate-effect', 1, { effectId: 'sakiri.awakening-four.team-atk' }),
+    scenarioStep('sakiri-inside-window', 19.9, 'action', 0, { actionId: 'shinku.charge-enhancement.level-11' }),
+    scenarioStep('sakiri-expired-window', 20, 'action', 0, { actionId: 'shinku.charge-enhancement.level-11' }),
   ],
 };
 
-const hathorTeam = {
-  version: 1,
-  activeSlot: 0,
-  duration: 20,
-  builds: [
-    build('Shinku', {
-      stats: stats(1_000, 50, 100),
-      skills: { basic: 11, skill: 1, ultimate: 1, support: 1 },
-    }),
-    build('Hathor', { stats: stats(1_000, 50, 100) }),
-    build('Zero', { stats: stats(1_000, 50, 100) }),
-    build('Nanally', { stats: stats(1_000, 50, 100) }),
-  ],
-  target,
-};
-
+const hathorTeam = team([
+  build('Shinku', { stats: stats(1_000, 50, 100), skills: { basic: 11, skill: 1, ultimate: 1, support: 1 } }),
+  build('Hathor', { stats: stats(1_000, 50, 100) }),
+  build('Zero', { stats: stats(1_000, 50, 100) }),
+  build('Nanally', { stats: stats(1_000, 50, 100) }),
+], 20);
 const hathorScenario = {
   version: 1,
   name: 'Hathor Remora production duration boundary',
   steps: [
-    {
-      id: 'activate-hathor-remora',
-      at: 0,
-      kind: 'activate-effect',
-      sourceSlot: 1,
-      actionId: '',
-      effectId: 'hathor.delay-warning.remora-crit-rate',
-      note: '',
-    },
-    {
-      id: 'hathor-inside-window',
-      at: 11.9,
-      kind: 'action',
-      sourceSlot: 0,
-      actionId: 'shinku.charge-enhancement.level-11',
-      effectId: '',
-      note: '',
-    },
-    {
-      id: 'hathor-expired-window',
-      at: 12,
-      kind: 'action',
-      sourceSlot: 0,
-      actionId: 'shinku.charge-enhancement.level-11',
-      effectId: '',
-      note: '',
-    },
+    scenarioStep('activate-hathor-remora', 0, 'activate-effect', 1, { effectId: 'hathor.delay-warning.remora-crit-rate' }),
+    scenarioStep('hathor-inside-window', 11.9, 'action', 0, { actionId: 'shinku.charge-enhancement.level-11' }),
+    scenarioStep('hathor-expired-window', 12, 'action', 0, { actionId: 'shinku.charge-enhancement.level-11' }),
+  ],
+};
+
+const stainTeam = team([
+  build('Lacrimosa'),
+  build('Nanally'),
+  build('Shinku', { skills: { basic: 11, skill: 1, ultimate: 1, support: 1 } }),
+  build('Zero'),
+], 20);
+const stainScenario = {
+  version: 1,
+  name: 'Stain production duration boundary',
+  steps: [
+    scenarioStep('activate-stain', 0, 'activate-cycle', 0, { cycleId: 'stain' }),
+    scenarioStep('stain-lakshana-inside', 11.9, 'action', 0, { actionId: 'lacrimosa.discord-enhancement.broken-target' }),
+    scenarioStep('stain-cosmos-inside', 11.9, 'action', 2, { actionId: 'shinku.charge-enhancement.level-11' }),
+    scenarioStep('stain-lakshana-expired', 12, 'action', 0, { actionId: 'lacrimosa.discord-enhancement.broken-target' }),
   ],
 };
 
@@ -159,11 +132,11 @@ async function readJson(url, init) {
   return response.json();
 }
 
-async function calculate(team, scenario) {
+async function calculate(value, scenario) {
   return readJson(endpoints.scenario, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ team, scenario }),
+    body: JSON.stringify({ team: value, scenario }),
   });
 }
 
@@ -176,50 +149,54 @@ function step(calculation, id) {
 }
 
 async function verifyOnce() {
-  const [models, sakiri, hathor] = await Promise.all([
+  const [models, sakiri, hathor, stain] = await Promise.all([
     readJson(endpoints.models),
     calculate(sakiriTeam, sakiriScenario),
     calculate(hathorTeam, hathorScenario),
+    calculate(stainTeam, stainScenario),
   ]);
 
-  assert(models.combatScenarioVersion === expectedVersion, `combat scenario model version mismatch: ${models.combatScenarioVersion}`);
-  assert(models.verifiedTeamEffectCount === expectedEffectCount, `expected ${expectedEffectCount} verified team effects, got ${models.verifiedTeamEffectCount}`);
-  assert(models.verifiedTeamEffects.some((effect) => effect.id === 'hathor.delay-warning.remora-crit-rate' && effect.critRate === 10 && effect.durationSeconds === 12), 'Hathor Remora effect metadata missing');
-  assert(Array.isArray(models.combatScenarioStepKinds), 'combat scenario step kinds missing');
-  assert(models.combatScenarioStepKinds.join(',') === 'action,activate-effect,wait', 'combat scenario step kinds mismatch');
+  assert(models.combatScenarioVersion === expectedVersion, `scenario version mismatch: ${models.combatScenarioVersion}`);
+  assert(models.verifiedTeamEffectCount === expectedEffectCount, `expected ${expectedEffectCount} team effects, got ${models.verifiedTeamEffectCount}`);
+  assert(models.verifiedCombatCycleModelCount === expectedCycleModelCount, `expected ${expectedCycleModelCount} cycle model, got ${models.verifiedCombatCycleModelCount}`);
+  assert(models.combatScenarioStepKinds.join(',') === 'action,activate-effect,activate-cycle,wait', 'scenario step kinds mismatch');
+  assert(models.verifiedCombatCycleModels.some((model) => model.id === 'stain' && model.durationSeconds === 12 && model.damageBonus === 20), 'Stain model metadata missing');
 
-  for (const calculation of [sakiri, hathor]) {
-    assert(calculation.combatScenarioVersion === expectedVersion, `calculation scenario version mismatch: ${calculation.combatScenarioVersion}`);
-    assert(calculation.policy === 'verified-actions-and-timed-effects-only', 'scenario policy mismatch');
-    assert(calculation.result.activatedEffectCount === 1, 'effect activation missing');
-    assert(calculation.result.calculatedActionCount === 2, 'expected two calculated actions');
+  for (const calculation of [sakiri, hathor, stain]) {
+    assert(calculation.combatScenarioVersion === expectedVersion, 'calculation scenario version mismatch');
+    assert(calculation.policy === 'verified-actions-timed-effects-and-supported-cycles-only', 'scenario policy mismatch');
     assert(calculation.result.coveragePercent === 100, `scenario coverage mismatch: ${calculation.result.coveragePercent}`);
   }
 
   const sakiriInside = step(sakiri, 'sakiri-inside-window');
   const sakiriExpired = step(sakiri, 'sakiri-expired-window');
-  assert(sakiriInside?.calculation?.result?.totalAtk === 1_180, `Sakiri inside-window ATK must be 1180, got ${sakiriInside?.calculation?.result?.totalAtk}`);
-  assert(sakiriExpired?.calculation?.result?.totalAtk === 1_000, `Sakiri expired-window ATK must be 1000, got ${sakiriExpired?.calculation?.result?.totalAtk}`);
-  assert(sakiriInside.activeEffects.some((entry) => entry.effectId === 'sakiri.awakening-four.team-atk'), 'Sakiri active effect provenance missing');
-  assert(sakiriExpired.activeEffects.length === 0, 'Sakiri effect remained active at 20 seconds');
+  assert(sakiriInside?.calculation?.result?.totalAtk === 1_180, 'Sakiri inside ATK must be 1180');
+  assert(sakiriExpired?.calculation?.result?.totalAtk === 1_000, 'Sakiri expired ATK must be 1000');
 
   const hathorInside = step(hathor, 'hathor-inside-window');
   const hathorExpired = step(hathor, 'hathor-expired-window');
-  assert(hathorInside?.calculation?.result?.totalAtk === 1_000, `Hathor effect must not change ATK, got ${hathorInside?.calculation?.result?.totalAtk}`);
-  assert(hathorExpired?.calculation?.result?.totalAtk === 1_000, `expired Hathor ATK mismatch: ${hathorExpired?.calculation?.result?.totalAtk}`);
-  assert(hathorInside?.calculation?.result?.expectedCritMultiplier === 1.6, `inside Remora expected CRIT multiplier must be 1.6, got ${hathorInside?.calculation?.result?.expectedCritMultiplier}`);
-  assert(hathorExpired?.calculation?.result?.expectedCritMultiplier === 1.5, `expired Remora expected CRIT multiplier must be 1.5, got ${hathorExpired?.calculation?.result?.expectedCritMultiplier}`);
-  assert(hathorInside.calculation.result.expected > hathorExpired.calculation.result.expected, 'Remora CRIT Rate did not increase expected damage');
-  assert(hathorInside.activeEffects.some((entry) => entry.effectId === 'hathor.delay-warning.remora-crit-rate'), 'Hathor active effect provenance missing');
-  assert(hathorExpired.activeEffects.length === 0, 'Hathor effect remained active at 12 seconds');
+  assert(hathorInside?.calculation?.result?.expectedCritMultiplier === 1.6, 'Hathor inside expected CRIT multiplier must be 1.6');
+  assert(hathorExpired?.calculation?.result?.expectedCritMultiplier === 1.5, 'Hathor expired expected CRIT multiplier must be 1.5');
+
+  const stainInside = step(stain, 'stain-lakshana-inside');
+  const stainUnrelated = step(stain, 'stain-cosmos-inside');
+  const stainExpired = step(stain, 'stain-lakshana-expired');
+  assert(stain.result.activatedCycleCount === 1, 'Stain activation missing');
+  assert(stainInside?.activeCycles.some((entry) => entry.cycleId === 'stain'), 'Stain active-cycle provenance missing');
+  assert(stainExpired?.activeCycles.length === 0, 'Stain remained active at 12 seconds');
+  assert(stainInside?.calculation?.conditions.some((condition) => condition.id === 'cycle.stain.target-window'), 'Stain Lakshana condition missing');
+  assert(!stainUnrelated?.calculation?.conditions.some((condition) => condition.id === 'cycle.stain.target-window'), 'Stain affected unrelated Cosmos action');
+  assert(Math.abs(stainInside.calculation.result.expected - stainExpired.calculation.result.expected * 1.2) < 1e-7, 'Stain did not apply exactly +20% damage');
+  assert(stainInside.calculation.result.totalAtk === stainExpired.calculation.result.totalAtk, 'Stain changed final ATK');
 
   return {
-    combatScenarioVersion: hathor.combatScenarioVersion,
+    combatScenarioVersion: stain.combatScenarioVersion,
     verifiedTeamEffectCount: models.verifiedTeamEffectCount,
+    verifiedCombatCycleModelCount: models.verifiedCombatCycleModelCount,
     sakiriInsideWindowAtk: sakiriInside.calculation.result.totalAtk,
-    sakiriExpiredWindowAtk: sakiriExpired.calculation.result.totalAtk,
     hathorInsideExpectedCritMultiplier: hathorInside.calculation.result.expectedCritMultiplier,
-    hathorExpiredExpectedCritMultiplier: hathorExpired.calculation.result.expectedCritMultiplier,
+    stainInsideExpected: stainInside.calculation.result.expected,
+    stainExpiredExpected: stainExpired.calculation.result.expected,
   };
 }
 
