@@ -22,6 +22,7 @@ import './progression-next.css';
 import './progression-automation.css';
 import './localization-evidence.css';
 import './terminology-audit.css';
+import './character-terms.css';
 import './data-health.css';
 import './interface-foundation.css';
 import './imageFallbackRuntime';
