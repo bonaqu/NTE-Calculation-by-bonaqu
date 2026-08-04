@@ -12,6 +12,7 @@ import './guided-ux.css';
 import './database.css';
 import './character-catalog.css';
 import './team-input.css';
+import './team-readiness.css';
 import './home-tools.css';
 import './rotation-lab.css';
 import './rotation-practice.css';
