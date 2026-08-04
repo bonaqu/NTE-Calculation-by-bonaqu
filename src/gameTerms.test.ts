@@ -48,7 +48,7 @@ describe('Russian client terminology', () => {
     expect(canonicalCharacterName('Нулевой эспер')).toBe('Zero');
   });
 
-  it('uses current Russian Arc types, attributes, roles and stats', () => {
+  it('uses screenshot-confirmed Russian Arc types, attributes, roles and stats', () => {
     expect(localizedArcType('Solid', 'ru')).toBe('Твёрдый');
     expect(localizedArcType('Gas', 'ru')).toBe('Газовый');
     expect(localizedArcType('Liquid', 'ru')).toBe('Жидкий');
@@ -57,15 +57,21 @@ describe('Russian client terminology', () => {
     expect(localizedAttribute('Incantation', 'ru')).toBe('Чары');
     expect(localizedRole('Buff', 'ru')).toBe('Усиление');
     expect(localizedRole('Survival', 'ru')).toBe('Выживание');
-    expect(localizedStatLabel('Break Intensity', 'ru')).toBe('Эффективность разрушения');
-    expect(localizedStatLabel('Charge Efficiency', 'ru')).toBe('Эффективность зарядки');
-    expect(localizedStatLabel('CRIT Rate', 'ru')).toBe('Шанс критического удара');
+    expect(localizedStatLabel('ATK', 'ru')).toBe('Атака');
+    expect(localizedStatLabel('DEF', 'ru')).toBe('Защита');
+    expect(localizedStatLabel('ATK%', 'ru')).toBe('Бонус к атаке');
+    expect(localizedStatLabel('Break Intensity', 'ru')).toBe('Интенсивность разрушения');
+    expect(localizedStatLabel('Charge Efficiency', 'ru')).toBe('Скорость зарядки');
+    expect(localizedStatLabel('Cycle Intensity', 'ru')).toBe('Интенсивность цикла');
+    expect(localizedStatLabel('CRIT Rate', 'ru')).toBe('Шанс крит. удара');
+    expect(localizedStatLabel('CRIT DMG', 'ru')).toBe('Крит. урон');
     expect(localizedAbbreviation('ATK', 'ru')).toBe('АТК');
     expect(localizedAbbreviation('DEF', 'ru')).toBe('ЗАЩ');
     expect(localizedAbbreviation('HP', 'ru')).toBe('ОЗ');
   });
 
   it('uses current Russian combat-action labels', () => {
+    expect(russianClientTerminology.version).toBe(5);
     expect(russianClientTerminology.combat.esperCycle).toBe('Цикл эспера');
     expect(russianClientTerminology.combat.basicAttack).toBe('Базовая атака');
     expect(russianClientTerminology.combat.redirectSkill).toBe('Навык перенаправления');
@@ -75,11 +81,11 @@ describe('Russian client terminology', () => {
     expect(russianClientTerminology.combat.criticalCounter).toBe('Критический контрудар');
     expect(russianClientTerminology.combat.progressionStage).toBe('Прорыв');
     expect(russianClientTerminology.combat.breakGauge).toBe('Шкала разрушения');
-    expect(russianClientTerminology.combat.breakIntensity).toBe('Эффективность разрушения');
+    expect(russianClientTerminology.combat.breakIntensity).toBe('Интенсивность разрушения');
     expect(russianClientTerminology.combat.breakDamage).toBe('Урон разрушения');
     expect(russianClientTerminology.combat.brokenEnemy).toBe('Сломленный враг');
-    expect(russianClientTerminology.sourcePriority.indexOf('official-russian-publication'))
-      .toBeLessThan(russianClientTerminology.sourcePriority.indexOf('owner-confirmed-client-spelling'));
+    expect(russianClientTerminology.sourcePriority.indexOf('owner-confirmed-client-spelling'))
+      .toBeLessThan(russianClientTerminology.sourcePriority.indexOf('official-russian-publication'));
   });
 
   it('uses current Russian Arc and progression-material names', () => {
