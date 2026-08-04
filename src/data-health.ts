@@ -20,9 +20,7 @@ export type DataHealthDomain =
   | 'esper-cycles'
   | 'progression'
   | 'benchmarks';
-
 export type DataHealthStatus = 'fresh' | 'review-due' | 'expired' | 'invalid';
-
 export type DataHealthReason =
   | 'missing-publisher'
   | 'missing-verified-date'
@@ -41,7 +39,6 @@ export interface DataHealthPolicy {
   expireAfterDays: number;
   requiresSourceUpdatedAt: boolean;
 }
-
 export interface DataHealthRecord {
   id: string;
   domain: DataHealthDomain;
@@ -51,7 +48,6 @@ export interface DataHealthRecord {
   sourceUpdatedAt?: string;
   verifiedAt: string;
 }
-
 export interface DataHealthEvaluation extends DataHealthRecord {
   status: DataHealthStatus;
   reasons: readonly DataHealthReason[];
@@ -60,7 +56,6 @@ export interface DataHealthEvaluation extends DataHealthRecord {
   reviewBy?: string;
   expiresBy?: string;
 }
-
 export interface DataHealthDomainSummary {
   domain: DataHealthDomain;
   total: number;
@@ -71,7 +66,6 @@ export interface DataHealthDomainSummary {
   oldestVerifiedAt?: string;
   nextReviewAt?: string;
 }
-
 export interface DataHealthReport {
   asOf: string;
   total: number;
@@ -109,14 +103,12 @@ const domainLabels: Readonly<Record<DataHealthDomain, LocalizedText>> = {
   progression: { ru: 'Прокачка', en: 'Progression' },
   benchmarks: { ru: 'Сравнения и модели', en: 'Benchmarks and models' },
 };
-
 const statusLabels: Readonly<Record<DataHealthStatus, LocalizedText>> = {
   fresh: { ru: 'Проверено недавно', en: 'Recently reviewed' },
   'review-due': { ru: 'Пора перепроверить', en: 'Review due' },
   expired: { ru: 'Просрочено', en: 'Expired' },
   invalid: { ru: 'Ошибка метаданных', en: 'Invalid metadata' },
 };
-
 const reasonLabels: Readonly<Record<DataHealthReason, LocalizedText>> = {
   'missing-publisher': { ru: 'Не указан источник или издатель.', en: 'Source publisher is missing.' },
   'missing-verified-date': { ru: 'Не указана дата проверки в проекте.', en: 'Project verification date is missing.' },
@@ -132,27 +124,11 @@ const reasonLabels: Readonly<Record<DataHealthReason, LocalizedText>> = {
 };
 
 export const dataHealthDomains: readonly DataHealthDomain[] = [
-  'localization',
-  'characters',
-  'arc-catalog',
-  'arc-guides',
-  'rotations',
-  'esper-cycles',
-  'progression',
-  'benchmarks',
+  'localization', 'characters', 'arc-catalog', 'arc-guides', 'rotations', 'esper-cycles', 'progression', 'benchmarks',
 ];
-
-export function dataHealthDomainLabel(domain: DataHealthDomain, locale: Locale): string {
-  return domainLabels[domain][locale];
-}
-
-export function dataHealthStatusLabel(status: DataHealthStatus, locale: Locale): string {
-  return statusLabels[status][locale];
-}
-
-export function dataHealthReasonLabel(reason: DataHealthReason, locale: Locale): string {
-  return reasonLabels[reason][locale];
-}
+export const dataHealthDomainLabel = (domain: DataHealthDomain, locale: Locale): string => domainLabels[domain][locale];
+export const dataHealthStatusLabel = (status: DataHealthStatus, locale: Locale): string => statusLabels[status][locale];
+export const dataHealthReasonLabel = (reason: DataHealthReason, locale: Locale): string => reasonLabels[reason][locale];
 
 function parseIsoDay(value: string): number | null {
   if (!/^\d{4}-\d{2}-\d{2}$/u.test(value)) return null;
@@ -160,138 +136,83 @@ function parseIsoDay(value: string): number | null {
   if (!Number.isFinite(parsed)) return null;
   return new Date(parsed).toISOString().slice(0, 10) === value ? parsed : null;
 }
-
 function utcDay(date: Date): number {
   return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 }
-
 function isoDay(value: number): string {
   return new Date(value).toISOString().slice(0, 10);
 }
-
 function addDays(value: string, days: number): string | undefined {
   const parsed = parseIsoDay(value);
   return parsed === null ? undefined : isoDay(parsed + days * DAY_MS);
 }
-
 function ageInDays(value: string, asOfMs: number): number | undefined {
   const parsed = parseIsoDay(value);
   return parsed === null ? undefined : Math.floor((asOfMs - parsed) / DAY_MS);
 }
-
-function earliest(values: Array<string | undefined>): string | undefined {
-  return values.filter((value): value is string => Boolean(value)).sort()[0];
+function isDefinedString(value: string | undefined): value is string {
+  return typeof value === 'string' && value.length > 0;
 }
-
-function sourceRecord(
-  id: string,
-  title: string,
-  publisher: string,
-  verifiedAt: string,
-  sourceUrl?: string,
-): DataHealthRecord {
+function earliest(values: Array<string | undefined>): string | undefined {
+  return values.filter(isDefinedString).sort()[0];
+}
+function sourceRecord(id: string, title: string, publisher: string, verifiedAt: string, sourceUrl?: string): DataHealthRecord {
   return { id, domain: 'benchmarks', title, sourcePublisher: publisher, sourceUrl, verifiedAt };
 }
 
 export function buildDataHealthRecords(): DataHealthRecord[] {
   const sourceById = new Map([...sources, ...arcPresetSources].map((source) => [source.id, source]));
-
   return [
     ...allLocalizationEvidence.map((entry) => ({
-      id: `localization:${entry.kind}:${entry.canonical}`,
-      domain: 'localization' as const,
-      title: `${entry.english} / ${entry.russian}`,
-      sourcePublisher: entry.sourcePublisher,
-      sourceUrl: entry.sourceUrl,
-      verifiedAt: entry.verifiedAt,
+      id: `localization:${entry.kind}:${entry.canonical}`, domain: 'localization' as const,
+      title: `${entry.english} / ${entry.russian}`, sourcePublisher: entry.sourcePublisher,
+      sourceUrl: entry.sourceUrl, verifiedAt: entry.verifiedAt,
     })),
-    ...characterCatalog.map((character) => ({
-      id: `character:${character.name}`,
-      domain: 'characters' as const,
-      title: character.name,
-      sourcePublisher: character.sourcePublisher,
-      sourceUrl: character.sourceUrl,
-      verifiedAt: character.verifiedAt,
+    ...characterCatalog.map((entry) => ({
+      id: `character:${entry.name}`, domain: 'characters' as const, title: entry.name,
+      sourcePublisher: entry.sourcePublisher, sourceUrl: entry.sourceUrl, verifiedAt: entry.verifiedAt,
     })),
-    ...arcDirectory.map((arc) => {
-      const source = sourceById.get(arc.sourceId);
+    ...arcDirectory.map((entry) => {
+      const source = sourceById.get(entry.sourceId);
       return {
-        id: `arc:${arc.id}`,
-        domain: 'arc-catalog' as const,
-        title: arc.name,
-        sourcePublisher: source?.publisher ?? '',
-        sourceUrl: source?.url,
-        verifiedAt: arc.verifiedAt,
+        id: `arc:${entry.id}`, domain: 'arc-catalog' as const, title: entry.name,
+        sourcePublisher: source?.publisher ?? '', sourceUrl: source?.url, verifiedAt: entry.verifiedAt,
       };
     }),
-    ...characterArcGuides.map((guide) => ({
-      id: `arc-guide:${guide.characterName}`,
-      domain: 'arc-guides' as const,
-      title: guide.characterName,
-      sourcePublisher: guide.sourcePublisher,
-      sourceUrl: guide.sourceUrl,
-      sourceUpdatedAt: guide.sourceUpdatedAt,
-      verifiedAt: guide.verifiedAt,
+    ...characterArcGuides.map((entry) => ({
+      id: `arc-guide:${entry.characterName}`, domain: 'arc-guides' as const, title: entry.characterName,
+      sourcePublisher: entry.sourcePublisher, sourceUrl: entry.sourceUrl,
+      sourceUpdatedAt: entry.sourceUpdatedAt, verifiedAt: entry.verifiedAt,
     })),
-    ...rotationPresets.map((preset) => ({
-      id: `rotation:${preset.id}`,
-      domain: 'rotations' as const,
-      title: preset.title.en,
-      sourcePublisher: preset.sourcePublisher,
-      sourceUrl: preset.sourceUrl,
-      sourceUpdatedAt: preset.sourceUpdatedAt,
-      verifiedAt: preset.verifiedAt,
+    ...rotationPresets.map((entry) => ({
+      id: `rotation:${entry.id}`, domain: 'rotations' as const, title: entry.title.en,
+      sourcePublisher: entry.sourcePublisher, sourceUrl: entry.sourceUrl,
+      sourceUpdatedAt: entry.sourceUpdatedAt, verifiedAt: entry.verifiedAt,
     })),
-    ...esperCycles.map((cycle) => ({
-      id: `esper-cycle:${cycle.id}`,
-      domain: 'esper-cycles' as const,
-      title: cycle.name.en,
-      sourcePublisher: cycle.sourcePublisher,
-      sourceUrl: cycle.sourceUrl,
-      sourceUpdatedAt: cycle.sourceUpdatedAt,
-      verifiedAt: cycle.verifiedAt,
+    ...esperCycles.map((entry) => ({
+      id: `esper-cycle:${entry.id}`, domain: 'esper-cycles' as const, title: entry.name.en,
+      sourcePublisher: entry.sourcePublisher, sourceUrl: entry.sourceUrl,
+      sourceUpdatedAt: entry.sourceUpdatedAt, verifiedAt: entry.verifiedAt,
     })),
-    ...characterAscensionProfiles.map((profile) => ({
-      id: `progression:${profile.characterName}`,
-      domain: 'progression' as const,
-      title: profile.characterName,
-      sourcePublisher: profile.sourcePublisher,
-      sourceUrl: profile.sourceUrl,
-      sourceUpdatedAt: profile.sourceUpdatedAt,
-      verifiedAt: profile.verifiedAt,
+    ...characterAscensionProfiles.map((entry) => ({
+      id: `progression:${entry.characterName}`, domain: 'progression' as const, title: entry.characterName,
+      sourcePublisher: entry.sourcePublisher, sourceUrl: entry.sourceUrl,
+      sourceUpdatedAt: entry.sourceUpdatedAt, verifiedAt: entry.verifiedAt,
     })),
-    ...progressionDatasetSources.map((source, index) => ({
-      id: `progression-source:${index}:${source.publisher}`,
-      domain: 'progression' as const,
-      title: source.publisher,
-      sourcePublisher: source.publisher,
-      sourceUrl: source.url,
-      sourceUpdatedAt: source.updatedAt,
-      verifiedAt: source.verifiedAt,
+    ...progressionDatasetSources.map((entry, index) => ({
+      id: `progression-source:${index}:${entry.publisher}`, domain: 'progression' as const, title: entry.publisher,
+      sourcePublisher: entry.publisher, sourceUrl: entry.url,
+      sourceUpdatedAt: entry.updatedAt, verifiedAt: entry.verifiedAt,
     })),
-    ...sources.map((source) => sourceRecord(
-      `benchmark-source:${source.id}`,
-      source.title,
-      source.publisher,
-      source.verifiedAt,
-      source.url || undefined,
+    ...sources.map((entry) => sourceRecord(
+      `benchmark-source:${entry.id}`, entry.title, entry.publisher, entry.verifiedAt, entry.url || undefined,
     )),
-    ...arcPresetSources.map((source) => sourceRecord(
-      `model-source:${source.id}`,
-      source.title,
-      source.publisher,
-      source.verifiedAt,
-      source.url || undefined,
+    ...arcPresetSources.map((entry) => sourceRecord(
+      `model-source:${entry.id}`, entry.title, entry.publisher, entry.verifiedAt, entry.url || undefined,
     )),
-    ...arcBenchmarkScenarios.map((scenario) => {
-      const source = sourceById.get(scenario.sourceId);
-      return sourceRecord(
-        `benchmark:${scenario.id}`,
-        scenario.title.en,
-        source?.publisher ?? '',
-        scenario.verifiedAt,
-        source?.url || undefined,
-      );
+    ...arcBenchmarkScenarios.map((entry) => {
+      const source = sourceById.get(entry.sourceId);
+      return sourceRecord(`benchmark:${entry.id}`, entry.title.en, source?.publisher ?? '', entry.verifiedAt, source?.url || undefined);
     }),
   ];
 }
@@ -300,36 +221,32 @@ export function evaluateDataHealthRecord(record: DataHealthRecord, asOf: Date): 
   const policy = dataHealthPolicies[record.domain];
   const asOfMs = utcDay(asOf);
   const reasons: DataHealthReason[] = [];
-
   if (!record.sourcePublisher.trim()) reasons.push('missing-publisher');
   if (!record.verifiedAt) reasons.push('missing-verified-date');
   if (policy.requiresSourceUpdatedAt && !record.sourceUpdatedAt) reasons.push('missing-source-update-date');
 
   const verificationAgeDays = record.verifiedAt ? ageInDays(record.verifiedAt, asOfMs) : undefined;
   const sourceAgeDays = record.sourceUpdatedAt ? ageInDays(record.sourceUpdatedAt, asOfMs) : undefined;
-
   if (record.verifiedAt && verificationAgeDays === undefined) reasons.push('malformed-verified-date');
   if (record.sourceUpdatedAt && sourceAgeDays === undefined) reasons.push('malformed-source-update-date');
   if (verificationAgeDays !== undefined && verificationAgeDays < 0) reasons.push('future-verified-date');
   if (sourceAgeDays !== undefined && sourceAgeDays < 0) reasons.push('future-source-update-date');
 
-  const invalid = reasons.length > 0;
-  if (!invalid) {
+  const invalidMetadata = reasons.length > 0;
+  if (!invalidMetadata) {
     if (verificationAgeDays !== undefined && verificationAgeDays > policy.expireAfterDays) reasons.push('verification-expired');
     else if (verificationAgeDays !== undefined && verificationAgeDays > policy.reviewAfterDays) reasons.push('verification-review-due');
-
     if (sourceAgeDays !== undefined && sourceAgeDays > policy.expireAfterDays) reasons.push('source-expired');
     else if (sourceAgeDays !== undefined && sourceAgeDays > policy.reviewAfterDays) reasons.push('source-review-due');
   }
 
-  const status: DataHealthStatus = invalid
+  const status: DataHealthStatus = invalidMetadata
     ? 'invalid'
     : reasons.some((reason) => reason.endsWith('expired'))
       ? 'expired'
       : reasons.some((reason) => reason.endsWith('review-due'))
         ? 'review-due'
         : 'fresh';
-
   const reviewBy = earliest([
     addDays(record.verifiedAt, policy.reviewAfterDays),
     record.sourceUpdatedAt ? addDays(record.sourceUpdatedAt, policy.reviewAfterDays) : undefined,
@@ -338,11 +255,8 @@ export function evaluateDataHealthRecord(record: DataHealthRecord, asOf: Date): 
     addDays(record.verifiedAt, policy.expireAfterDays),
     record.sourceUpdatedAt ? addDays(record.sourceUpdatedAt, policy.expireAfterDays) : undefined,
   ]);
-
   return {
-    ...record,
-    status,
-    reasons,
+    ...record, status, reasons,
     ...(verificationAgeDays !== undefined ? { verificationAgeDays } : {}),
     ...(sourceAgeDays !== undefined ? { sourceAgeDays } : {}),
     ...(reviewBy ? { reviewBy } : {}),
@@ -350,15 +264,20 @@ export function evaluateDataHealthRecord(record: DataHealthRecord, asOf: Date): 
   };
 }
 
-function countStatus(evaluations: readonly DataHealthEvaluation[], status: DataHealthStatus): number {
-  return evaluations.filter((entry) => entry.status === status).length;
+function countStatus(entries: readonly DataHealthEvaluation[], status: DataHealthStatus): number {
+  return entries.filter((entry) => entry.status === status).length;
 }
-
 function compareActionable(left: DataHealthEvaluation, right: DataHealthEvaluation): number {
   const priority: Record<DataHealthStatus, number> = { invalid: 0, expired: 1, 'review-due': 2, fresh: 3 };
   return priority[left.status] - priority[right.status]
     || (left.reviewBy ?? '').localeCompare(right.reviewBy ?? '')
     || left.title.localeCompare(right.title);
+}
+function validDates(entries: readonly DataHealthEvaluation[]): string[] {
+  return entries.map((entry) => parseIsoDay(entry.verifiedAt) === null ? undefined : entry.verifiedAt).filter(isDefinedString);
+}
+function futureDates(values: Array<string | undefined>, asOfIso: string): string[] {
+  return values.filter(isDefinedString).filter((value) => value > asOfIso).sort();
 }
 
 export function buildDataHealthReport(
@@ -368,26 +287,15 @@ export function buildDataHealthReport(
   const asOfIso = isoDay(utcDay(asOf));
   const idCounts = new Map<string, number>();
   records.forEach((record) => idCounts.set(record.id, (idCounts.get(record.id) ?? 0) + 1));
-  const duplicateIds = [...idCounts.entries()].filter(([, count]) => count > 1).map(([id]) => id).sort();
+  const duplicateIds = [...idCounts].filter(([, count]) => count > 1).map(([id]) => id).sort();
   const evaluations = records.map((record) => evaluateDataHealthRecord(record, asOf));
   const actionable = evaluations.filter((entry) => entry.status !== 'fresh').sort(compareActionable);
-  const validVerificationDates = evaluations
-    .map((entry) => parseIsoDay(entry.verifiedAt) === null ? undefined : entry.verifiedAt)
-    .filter((value): value is string => Boolean(value));
-  const futureReviewDates = evaluations
-    .map((entry) => entry.reviewBy)
-    .filter((value): value is string => Boolean(value) && value > asOfIso)
-    .sort();
-
-  const domains = dataHealthDomains.map((domain) => {
+  const verificationDates = validDates(evaluations).sort();
+  const nextReviewDates = futureDates(evaluations.map((entry) => entry.reviewBy), asOfIso);
+  const domains = dataHealthDomains.map((domain): DataHealthDomainSummary => {
     const entries = evaluations.filter((entry) => entry.domain === domain);
-    const verificationDates = entries
-      .map((entry) => parseIsoDay(entry.verifiedAt) === null ? undefined : entry.verifiedAt)
-      .filter((value): value is string => Boolean(value));
-    const nextReviewDates = entries
-      .map((entry) => entry.reviewBy)
-      .filter((value): value is string => Boolean(value) && value > asOfIso)
-      .sort();
+    const dates = validDates(entries).sort();
+    const nextDates = futureDates(entries.map((entry) => entry.reviewBy), asOfIso);
     return {
       domain,
       total: entries.length,
@@ -395,18 +303,16 @@ export function buildDataHealthReport(
       reviewDue: countStatus(entries, 'review-due'),
       expired: countStatus(entries, 'expired'),
       invalid: countStatus(entries, 'invalid'),
-      ...(verificationDates.length ? { oldestVerifiedAt: verificationDates.sort()[0] } : {}),
-      ...(nextReviewDates[0] ? { nextReviewAt: nextReviewDates[0] } : {}),
+      ...(dates[0] ? { oldestVerifiedAt: dates[0] } : {}),
+      ...(nextDates[0] ? { nextReviewAt: nextDates[0] } : {}),
     };
   });
-
   const contractErrors = [
     ...duplicateIds.map((id) => `Duplicate data-health identity: ${id}`),
     ...evaluations
       .filter((entry) => entry.status === 'invalid' || entry.status === 'expired')
       .map((entry) => `${entry.id}: ${entry.status} (${entry.reasons.join(', ')})`),
   ];
-
   return {
     asOf: asOfIso,
     total: evaluations.length,
@@ -414,8 +320,8 @@ export function buildDataHealthReport(
     reviewDue: countStatus(evaluations, 'review-due'),
     expired: countStatus(evaluations, 'expired'),
     invalid: countStatus(evaluations, 'invalid'),
-    ...(validVerificationDates.length ? { oldestVerifiedAt: validVerificationDates.sort()[0] } : {}),
-    ...(futureReviewDates[0] ? { nextReviewAt: futureReviewDates[0] } : {}),
+    ...(verificationDates[0] ? { oldestVerifiedAt: verificationDates[0] } : {}),
+    ...(nextReviewDates[0] ? { nextReviewAt: nextReviewDates[0] } : {}),
     duplicateIds,
     evaluations,
     actionable,
