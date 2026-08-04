@@ -20,8 +20,8 @@ describe('character terminology UI contracts', () => {
 
   it('discloses unresolved Russian labels rather than hiding them', () => {
     expect(stepTermsSource).toContain("characterTermCoverage.get(step.actor) === 'unresolved'");
-    expect(stepTermsSource).toContain('точное русское название действия');
-    expect(stepTermsSource).toContain('Exact Russian label');
+    expect(stepTermsSource).toContain('Точное русское название действия');
+    expect(stepTermsSource).toContain('exact Russian label');
     expect(stepTermsSource).toContain('term.sourceUrl');
   });
 
@@ -38,7 +38,7 @@ describe('character terminology UI contracts', () => {
     expect(css).toContain('@media(max-width:760px)');
     expect(css).toContain('@media(prefers-reduced-motion:reduce)');
     expect(css).not.toMatch(/gradient\s*\(/iu);
-    expect(css).not.toMatch(/transform\s*:/iu);
+    expect(css).not.toMatch(/(?:^|[;{])\s*transform\s*:/iu);
     expect(css).not.toMatch(/box-shadow\s*:/iu);
   });
 
