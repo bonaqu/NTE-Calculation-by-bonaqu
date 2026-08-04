@@ -21,6 +21,7 @@ on:
       - 'src/game-visible-build.ts'
       - 'src/game-visible-calculation.ts'
       - 'src/verified-visible-actions.ts'
+      - 'src/verified-visible-actions-*.ts'
       - 'src/team-effects.ts'
       - 'src/combat-scenario.ts'
       - 'src/progression-data.ts'
@@ -75,6 +76,8 @@ jobs:
           EXPECTED_FORMULA_VERSION: '0.2'
           EXPECTED_VISIBLE_BUILD_VERSION: '1'
           EXPECTED_COMBAT_SCENARIO_VERSION: '1'
+          EXPECTED_VERIFIED_ACTION_COUNT: '14'
+          EXPECTED_PARTIAL_CHARACTERS: 'Chaos,Hathor,Jiuyuan,Lacrimosa,Nanally,Shinku,Zero'
         run: |
           node scripts/verify-worker-production.mjs
           node scripts/verify-combat-scenario-production.mjs
@@ -87,10 +90,11 @@ jobs:
             echo '### API 0.9.0 production contract'
             echo
             echo '- 20 released-character coverage records'
-            echo '- 9 verified standalone actions across 5 partial models'
+            echo '- 14 verified standalone actions across 7 partial models'
             echo '- 3 verified conditional team effects'
             echo '- versioned combat-scenario endpoint with action/effect/wait steps'
             echo '- Shinku final ATK remains 2026; Arc ATK 570 is not added again'
+            echo '- Hathor third Cyclone Strike 1099.4% and Jiuyuan A6 200% POST checks passed'
             echo '- Haniel +40 all-slot ATK and Sakiri +180 excluding self POST checks passed'
             echo '- Sakiri A4 applies at 19.9s and expires exactly at 20s'
           } >> "$GITHUB_STEP_SUMMARY"
@@ -122,8 +126,8 @@ jobs:
           - Combat model coverage: $COMBAT_MODELS_URL
           - Combat scenario endpoint: $COMBAT_SCENARIO_URL
           - Roster ascension dataset: $PROGRESSION_URL
-          - API 0.9.0 contract: 9 verified actions, 3 conditional team effects and scenario schema v1
-          - Shinku no-double-count, Haniel Base ATK, Sakiri A4/DEF reduction and 20-second expiry POST checks: success
+          - API 0.9.0 contract: 14 verified actions, 3 conditional team effects and scenario schema v1
+          - Shinku no-double-count, Hathor/Jiuyuan actions, Haniel Base ATK, Sakiri A4/DEF reduction and 20-second expiry POST checks: success
           - Workflow evidence: $RUN_URL"
           else
             BODY="### Cloudflare Worker deployment: requires attention ❌
