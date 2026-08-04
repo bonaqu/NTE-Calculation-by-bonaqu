@@ -24,7 +24,7 @@ Step kind:
 
 `activate-cycle`
 
-The step stores a canonical `cycleId`. Existing `nte.team.scenario.v1` payloads without `cycleId` remain valid and normalize the field to an empty string.
+The step stores a canonical `cycleId`. Existing `nte.team.scenario.v1` payloads without `cycleId` remain valid: the TypeScript input field is optional for legacy objects, while the normalizer always returns a string and uses an empty string when the field is absent. The storage key and scenario version are unchanged.
 
 Cycle activation validates:
 
