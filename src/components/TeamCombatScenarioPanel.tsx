@@ -49,6 +49,7 @@ import {
   type RotationScenarioImportMetadata,
 } from '../rotation-scenario-import';
 import { teamEffectsForCharacter } from '../team-effects';
+import { BuildProfileManager } from './BuildProfileManager';
 
 interface TeamCombatScenarioPanelProps {
   team: GameVisibleTeamState;
@@ -251,6 +252,8 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
       {importMetadata.timingStatus === 'order-only' ? <button type="button" onClick={confirmImportedTiming}><CheckCircle2 size={16} />{ru ? 'Подтвердить введённые секунды' : 'Confirm entered seconds'}</button> : null}
       <p>{importedPreset.title[locale]} · {importMetadata.report.mappedSourceSteps}/{importMetadata.report.totalSourceSteps} {ru ? 'исходных шагов связано безопасно' : 'source steps safely bound'}</p>
     </section> : null}
+
+    <BuildProfileManager team={team} locale={locale} />
 
     <div className="combat-scenario-summary" aria-label={ru ? 'Итог сценария' : 'Scenario summary'}>
       <div><span>{ru ? 'Подтверждённый ожидаемый урон' : 'Verified expected damage'}</span><strong>{format(result.totalExpected)}</strong></div>
