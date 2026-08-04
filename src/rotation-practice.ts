@@ -6,6 +6,11 @@ export function firstIncompleteStepIndex(steps: readonly RotationStep[], complet
   return index >= 0 ? index : 0;
 }
 
+export function requiredRotationStepsComplete(steps: readonly RotationStep[], completed: ReadonlySet<string>): boolean {
+  const required = steps.filter((step) => !step.optional);
+  return required.length > 0 && required.every((step) => completed.has(step.id));
+}
+
 export function clampPracticeStepIndex(index: number, stepCount: number): number {
   if (stepCount <= 0) return 0;
   if (!Number.isFinite(index)) return 0;
