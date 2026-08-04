@@ -3,6 +3,7 @@ import { arcPresetSources } from '../arc-presets';
 import { arcBenchmarkScenarios, sources } from '../data';
 import { esperCycles } from '../esper-cycles';
 import { useI18n } from '../i18n';
+import { DataHealthPanel } from '../components/DataHealthPanel';
 import { LocalizationEvidenceLegend } from '../components/LocalizationEvidenceNote';
 import { TerminologyEvidenceTable } from '../components/TerminologyEvidenceTable';
 import { Panel } from '../components/UI';
@@ -22,6 +23,7 @@ export function MethodologyPage() {
 
     <LocalizationEvidenceLegend />
     <TerminologyEvidenceTable />
+    <DataHealthPanel />
 
     <div className="method-grid">
       <Panel><div className="panel-title"><FlaskConical size={20} /><div><h2>{ru ? 'Базовая формула урона' : 'Baseline damage formula'}</h2><p>{ru ? 'Версия модели 0.2' : 'Model v0.2'}</p></div></div><pre>{ru ? 'Урон = итоговая АТК × множитель атаки × бонус урона × множитель ЗАЩ × сопротивление × средний критический множитель' : 'DMG = Total ATK × Attack Multiplier × DMG Bonus × DEF × RES × Expected CRIT'}</pre><p>{ru ? 'Итоговая АТК складывает базовую атаку персонажа и дуги, затем применяет процентные бонусы и дополнительную АТК числом. Множитель защиты зависит от уровней и снижения ЗАЩ. Сопротивление считается по публичной линейной модели, указанной в источниках ниже.' : 'Total ATK combines character and Arc base attack, then applies percentage bonuses and flat ATK. The defence multiplier uses character and enemy levels plus DEF reduction. Resistance follows the public linear model listed in the sources below.'}</p></Panel>
