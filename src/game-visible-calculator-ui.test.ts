@@ -7,6 +7,7 @@ import pageSource from './pages/GameVisibleTeamCalculatorPage.tsx?raw';
 import modelSource from './game-visible-build.ts?raw';
 import calculationSource from './game-visible-calculation.ts?raw';
 import awakeningSource from './awakening-data.ts?raw';
+import awakeningReferenceSource from './awakening-reference.ts?raw';
 import mainSource from './main.tsx?raw';
 
 const baseCss = readFileSync(new URL('./game-visible-calculator.css', import.meta.url), 'utf8');
@@ -53,12 +54,17 @@ describe('formula-driven Team Calculator product contract', () => {
     expect(pageSource).toContain("activeBuild.arc.arcName === 'Blushing Mirage'");
   });
 
-  it('shows sourced Awakening nodes instead of treating one number as a generic multiplier', () => {
-    expect(pageSource).toContain('awakeningNodesByCharacter');
+  it('shows only formula-required Awakening nodes instead of the complete reference', () => {
+    expect(pageSource).toContain('relevantAwakeningNodes(');
+    expect(pageSource).not.toContain('awakeningNodesByCharacter');
+    expect(pageSource).not.toContain('supportAwakeningNodesByCharacter');
     expect(pageSource).toContain("Array.from({ length: 7 }");
-    expect(pageSource).toContain('Все предыдущие считаются открытыми автоматически');
-    expect(pageSource).toContain('сам номер не является скрытым множителем урона');
-    expect(pageSource).toContain('node.relatedActionIds?.includes(selectedAction.id)');
+    expect(pageSource).toContain('Показывается только узел, от которого зависит выбранное действие или командный эффект');
+    expect(pageSource).toContain('Полный справочник A1–A6 находится в Базе персонажей');
+    expect(pageSource).toContain('nte-awakening-list required-only');
+    expect(pageSource).toContain('требование выполнено');
+    expect(pageSource).not.toContain('Все предыдущие считаются открытыми автоматически');
+    expect(awakeningReferenceSource).toContain('teamEffectAwakeningRequirements');
     expect(awakeningSource).toContain("'current-russian-reference'");
     expect(awakeningSource).toContain("'current-english-reference'");
     expect(awakeningSource).toContain("'nanally.awakening-three-follow-up.level-11'");
@@ -71,7 +77,7 @@ describe('formula-driven Team Calculator product contract', () => {
     expect(pageSource).toContain('Постоянные бонусы снаряжения уже входят в них');
     expect(calculationSource).toContain('baseAtk: build.stats.atk');
     expect(calculationSource).toContain('arcAtk: 0');
-    expect(calculationSource).toContain('flatAtk: 0');
+    expect(calculationSource).toContain('flatAtk: modifier.flatAtk');
     expect(calculationSource).toContain('atkPercent: 0');
   });
 
@@ -87,7 +93,7 @@ describe('formula-driven Team Calculator product contract', () => {
     }
   });
 
-  it('loads the responsive awakening layer without decorative gradients or shadows', () => {
+  it('loads the responsive requirement layer without decorative gradients or shadows', () => {
     expect(mainSource).toContain("import './game-visible-calculator.css'");
     expect(mainSource).toContain("import './game-visible-minimal-inputs.css'");
     expect(baseCss).toContain('.nte-team-rail');
