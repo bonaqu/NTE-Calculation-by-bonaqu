@@ -4,7 +4,7 @@ import { esperCycleById, localizedCycleName } from '../esper-cycles';
 import { localizedCharacterName } from '../gameTerms';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useI18n } from '../i18n';
-import { clampPracticeStepIndex, firstIncompleteStepIndex, nextPracticeStepIndex, phaseStepPosition, previousPracticeStepIndex } from '../rotation-practice';
+import { clampPracticeStepIndex, firstIncompleteStepIndex, nextPracticeStepIndex, phaseStepPosition, previousPracticeStepIndex, requiredRotationStepsComplete } from '../rotation-practice';
 import type { Locale, RotationActionKind, RotationPhase, RotationPreset, RotationStep } from '../types';
 
 type RotationView = 'plan' | 'practice';
@@ -75,7 +75,7 @@ export function RotationWorkflow({ preset, completed, onToggleStep, onResetProgr
   const currentStep = preset.steps[cursor];
   const phasePosition = phaseStepPosition(preset.steps, cursor);
   const completedCount = preset.steps.filter((step) => completed.has(step.id)).length;
-  const allComplete = preset.steps.length > 0 && completedCount === preset.steps.length;
+  const allRequiredComplete = requiredRotationStepsComplete(preset.steps, completed);
 
   useEffect(() => {
     setCursors((current) => {
@@ -121,7 +121,7 @@ export function RotationWorkflow({ preset, completed, onToggleStep, onResetProgr
           return <label className={`rotation-plan-row ${isComplete ? 'complete' : ''}`} key={step.id}><input type="checkbox" checked={isComplete} onChange={() => onToggleStep(step.id)} /><span className="rotation-plan-number">{isComplete ? <Check size={15} /> : globalIndex + 1}</span><span className="rotation-plan-action"><b>{localizedCharacterName(step.actor, locale)}</b><em>{actionLabels[step.action][locale]}{step.optional ? ` · ${ru ? 'необязательно' : 'optional'}` : ''}</em><p>{step.instruction[locale]}</p></span><span className="rotation-plan-purpose">{purposeForStep(step, locale)}</span><span className="rotation-plan-outcome"><Sparkles size={14} />{step.outcome[locale]}</span></label>;
         })}</section>;
       })}
-    </div> : allComplete ? <div className="rotation-practice-complete"><CheckCircle2 size={34} /><h3>{ru ? 'Ротация пройдена' : 'Rotation complete'}</h3><p>{ru ? 'Все обязательные и отмеченные необязательные шаги выполнены. Можно начать заново или вернуться к полному плану.' : 'All required and selected optional steps are complete. Restart or return to the full plan.'}</p><div><button className="button primary" type="button" onClick={restart}><RefreshCcw size={16} /> {ru ? 'Повторить ротацию' : 'Repeat rotation'}</button><button className="button ghost" type="button" onClick={() => setView('plan')}>{ru ? 'Открыть план' : 'Open plan'}</button></div></div> : currentStep ? <article className={`rotation-practice-card phase-${currentStep.phase}`}>
+    </div> : allRequiredComplete ? <div className="rotation-practice-complete"><CheckCircle2 size={34} /><h3>{ru ? 'Обязательная часть пройдена' : 'Required rotation complete'}</h3><p>{ru ? 'Все обязательные шаги выполнены. Необязательные действия не блокируют завершение: их можно отдельно потренировать в полном плане.' : 'Every required step is complete. Optional actions do not block completion and can be practiced separately from the full plan.'}</p><div><button className="button primary" type="button" onClick={restart}><RefreshCcw size={16} /> {ru ? 'Повторить ротацию' : 'Repeat rotation'}</button><button className="button ghost" type="button" onClick={() => setView('plan')}>{ru ? 'Открыть план' : 'Open plan'}</button></div></div> : currentStep ? <article className={`rotation-practice-card phase-${currentStep.phase}`}>
       <header><div><span>{phaseLabels[currentStep.phase][locale]}</span><small>{ru ? `Шаг ${phasePosition.current} из ${phasePosition.total} в разделе` : `Step ${phasePosition.current} of ${phasePosition.total} in phase`}</small></div><strong>{cursor + 1}/{preset.steps.length}</strong></header>
       <div className="rotation-practice-actor"><b>{localizedCharacterName(currentStep.actor, locale)}</b><span>{actionLabels[currentStep.action][locale]}</span>{currentStep.optional ? <em>{ru ? 'Можно пропустить' : 'May be skipped'}</em> : <em>{ru ? 'По порядку источника' : 'Source order'}</em>}</div>
       <div className="rotation-practice-content"><section><span>{ru ? 'Сейчас сделай' : 'Do this now'}</span><p>{currentStep.instruction[locale]}</p></section><section><span>{ru ? 'Зачем' : 'Why'}</span><p>{purposeForStep(currentStep, locale)}</p></section><section><span>{ru ? 'Должно получиться' : 'Expected result'}</span><p>{currentStep.outcome[locale]}</p></section></div>
