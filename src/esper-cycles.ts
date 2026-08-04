@@ -93,7 +93,7 @@ export const esperCycles: EsperCycleDefinition[] = [
     attributes: ['Chaos', 'Incantation', 'Psyche'],
     derivedFrom: ['nova', 'scorch'],
     effect: {
-      ru: 'Когда Нова и Поджог действуют одновременно, уменьшает шкалу сломления цели на процентное значение.',
+      ru: 'Когда Нова и Поджог действуют одновременно, уменьшает шкалу разрушения цели на процентное значение.',
       en: 'When Nova and Scorch are active together, removes a percentage of the target Break gauge.',
     },
   }),
