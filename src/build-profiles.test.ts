@@ -78,7 +78,8 @@ describe('reusable game-visible build profiles', () => {
     updated.stats.atk = 2_500;
     library = updateBuildProfile(library, 'my-hathor', updated, 'Hathor 2500', '2026-08-05T02:00:00Z');
     expect(library.profiles[0]?.build.stats.atk).toBe(2_500);
-    expect(library.profiles[0]?.activeTeamEffectIds).toBeUndefined();
+    expect(library.profiles[0]?.build.activeTeamEffectIds).toEqual([]);
+    expect(library.profiles[0]?.build.arc.afterUltimateActive).toBe(false);
     library = deleteBuildProfile(library, 'my-hathor-2');
     expect(library.profiles).toHaveLength(1);
   });
