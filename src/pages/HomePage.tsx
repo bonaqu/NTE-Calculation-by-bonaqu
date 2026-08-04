@@ -1,51 +1,68 @@
-import { ArrowRight, BarChart3, Boxes, Languages, Route, ShieldCheck, Sparkles, Users } from 'lucide-react';
-import type { RouteKey } from '../types';
+import { ArrowRight, BarChart3, Boxes, Database, Languages, Route, ShieldCheck, Users } from 'lucide-react';
+import { arcDirectory } from '../arc-directory';
+import { characterArcGuides } from '../arc-recommendations';
+import { arcBenchmarkScenarios } from '../data';
 import { useI18n } from '../i18n';
-import { localizedArcName } from '../gameTerms';
+import type { RouteKey } from '../types';
 
 export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) {
   const { locale } = useI18n();
   const ru = locale === 'ru';
   const tools = [
-    { route: 'team' as const, icon: Users, title: ru ? 'РАСЧЁТ КОМАНДЫ' : 'TEAM CALCULATION', text: ru ? 'Укажи характеристики четырёх персонажей и сразу увидь вклад каждого в общий урон.' : 'Model a four-character rotation with buffs, defence and target resistance.' },
-    { route: 'rotations' as const, icon: Route, title: ru ? 'РОТАЦИИ И РЕАКЦИИ' : 'ROTATION LAB', text: ru ? 'Тренируй подтверждённые ротации и проверяй, какие циклы эсперов доступны выбранной четвёрке.' : 'Practice sourced rotations and derive the Esper Cycles available to any four-character team.' },
-    { route: 'arcs' as const, icon: BarChart3, title: ru ? 'СРАВНЕНИЕ ДУГ' : 'ARCS CALCULATION', text: ru ? 'Открой готовые сравнения или введи свои характеристики — результат пересчитается автоматически.' : 'Compare Arcs using separate sourced benchmarks and your own stat model.' },
-    { route: 'progression' as const, icon: Boxes, title: ru ? 'ПЛАН ПРОКАЧКИ' : 'ROSTER PROGRESSION', text: ru ? 'Добавь несколько персонажей, укажи общий инвентарь и получи суммарный маршрут фарма до ур. 80.' : 'Plan several characters at once with shared inventory and an aggregate farming route to Lv. 80.' },
+    {
+      route: 'team' as const,
+      icon: Users,
+      title: ru ? 'Рассчитать команду' : 'Calculate a team',
+      text: ru ? 'Задай одну основную атаку или серию для каждого персонажа и посмотри вклад в общую ротацию.' : 'Describe one main attack or sequence for each character and inspect their rotation contribution.',
+    },
+    {
+      route: 'rotations' as const,
+      icon: Route,
+      title: ru ? 'Разобрать ротацию' : 'Read a rotation',
+      text: ru ? 'Открой полный план либо тренируй подтверждённую последовательность по одному шагу.' : 'Open the full plan or practice a sourced sequence one step at a time.',
+    },
+    {
+      route: 'arcs' as const,
+      icon: BarChart3,
+      title: ru ? 'Подобрать дуги' : 'Choose Arcs',
+      text: ru ? 'Смотри рекомендации для всех выпущенных персонажей и отдельные расчёты Ирой.' : 'Review recommendations for every released character and separate Iroi calculations.',
+    },
+    {
+      route: 'progression' as const,
+      icon: Boxes,
+      title: ru ? 'Спланировать прокачку' : 'Plan progression',
+      text: ru ? 'Узнай ближайшие блокеры общего инвентаря и полный остаток материалов до ур. 80.' : 'Find immediate shared-inventory blockers and the complete remainder to level 80.',
+    },
   ];
-  const wrongGate = localizedArcName('The Wrong Gate', locale);
+  const facts = [
+    { value: characterArcGuides.length, label: ru ? 'персонажей с гайдами по дугам' : 'characters with Arc guides' },
+    { value: arcDirectory.length, label: ru ? 'дуг в проверяемом каталоге' : 'Arcs in the validated catalog' },
+    { value: arcBenchmarkScenarios.length, label: ru ? 'отдельных сценария сравнения Ирой' : 'separate Iroi benchmark scenarios' },
+  ];
 
-  return <div className="page home-page">
-    <section className="hero">
-      <div className="hero-copy">
-        <div className="brand-line"><span>NTE</span> Calculation by bonaqu</div>
-        <h1>{ru ? 'Понятные расчёты NTE без ручных таблиц.' : 'Theorycrafting without spreadsheet sorcery.'}</h1>
-        <p>{ru ? 'Выбирай готовый сценарий или вводи свои данные. Формулы, ограничения и источники всегда показаны рядом с результатом.' : 'Fast Neverness to Everness calculators with transparent formulas, versioned data and explicit assumptions.'}</p>
-        <div className="hero-actions">
-          <button className="button primary" onClick={() => navigate('rotations')}>{ru ? 'Открыть ротации' : 'Open Rotation Lab'} <ArrowRight size={18} /></button>
-          <button className="button ghost" onClick={() => navigate('methodology')}>{ru ? 'Как устроены расчёты' : 'How calculations work'}</button>
+  return <div className="page home-page product-home">
+    <section className="home-intro">
+      <div className="home-intro-copy">
+        <div className="home-kicker"><span>NTE</span><b>Calculation by bonaqu</b></div>
+        <h1>{ru ? 'Инструменты NTE, которые объясняют результат.' : 'NTE tools that explain the result.'}</h1>
+        <p>{ru ? 'Рекомендации источника, пользовательские расчёты и ограничения модели больше не смешиваются. Выбирай задачу — нужные данные и пояснения будут рядом.' : 'Sourced recommendations, custom calculations and model limits stay separate. Choose a task and keep the relevant data plus explanation together.'}</p>
+        <div className="home-actions">
+          <button className="button primary" onClick={() => navigate('arcs')}>{ru ? 'Подобрать дугу' : 'Choose an Arc'} <ArrowRight size={18} /></button>
+          <button className="button ghost" onClick={() => navigate('methodology')}>{ru ? 'Проверить методику' : 'Review methodology'}</button>
         </div>
-        <div className="trust-row">
-          <span><ShieldCheck size={17} /> {ru ? 'Источник указан у каждого результата' : 'Source metadata per scenario'}</span>
-          <span><Languages size={17} /> RU / EN</span>
-          <span><Sparkles size={17} /> {ru ? 'Настройки сохраняются в браузере' : 'Local state persistence'}</span>
-        </div>
+        <div className="home-trust"><span><ShieldCheck size={16} /> {ru ? 'Источники и даты рядом с данными' : 'Sources and dates beside the data'}</span><span><Languages size={16} /> RU / EN</span><span><Database size={16} /> {ru ? 'Состояние хранится локально' : 'State is stored locally'}</span></div>
+        <dl className="home-facts">{facts.map((fact) => <div key={fact.label}><dt>{fact.value}</dt><dd>{fact.label}</dd></div>)}</dl>
       </div>
-      <div className="hero-art" aria-label={ru ? 'Иллюстрация Ирой' : 'Iroi artwork'}>
-        <div className="orb orb-a" /><div className="orb orb-b" />
+
+      <figure className="home-character">
         <img src="https://cdn.prydwen.gg/images/nte/characters/iroi_full.webp" alt={ru ? 'Ирой' : 'Iroi'} />
-        <div className="hero-data-card">
-          <small>{ru ? 'Ирой · два готовых сравнения' : 'Iroi · two sourced scenarios'}</small>
-          <strong>{wrongGate}</strong>
-          {ru ? <span className="original-name">The Wrong Gate</span> : null}
-          <div><span>Prydwen M1</span><b>100.00%</b></div>
-          <div><span>Rivyn M5</span><b>107.77%</b></div>
-        </div>
-      </div>
+        <figcaption><span>{ru ? 'Ирой' : 'Iroi'}</span><p>{ru ? 'Её отдельные сравнения остаются в разделе дуг и не выдаются за универсальный рейтинг для остальных персонажей.' : 'Her separate comparisons remain in the Arc section and are not presented as a universal ranking for other characters.'}</p></figcaption>
+      </figure>
     </section>
-    <section className="tool-rail">
-      {tools.map(({ route, icon: Icon, title, text }) => <button key={route} className="tool-card" onClick={() => navigate(route)}>
-        <Icon size={24} /><div><h2>{title}</h2><p>{text}</p></div><ArrowRight size={20} />
-      </button>)}
+
+    <section className="home-tool-index" aria-labelledby="home-tools-title">
+      <header><span>{ru ? 'С чего начать' : 'Start here'}</span><h2 id="home-tools-title">{ru ? 'Выбери задачу, а не раздел меню' : 'Choose a task, not a dashboard tile'}</h2><p>{ru ? 'Каждый инструмент отвечает на отдельный вопрос и явно показывает границы своих данных.' : 'Each tool answers one distinct question and states the boundary of its data.'}</p></header>
+      <div>{tools.map(({ route, icon: Icon, title, text }, index) => <button key={route} className="home-tool-row" onClick={() => navigate(route)}><span className="home-tool-number">{String(index + 1).padStart(2, '0')}</span><Icon size={22} /><span className="home-tool-copy"><b>{title}</b><small>{text}</small></span><ArrowRight size={19} /></button>)}</div>
     </section>
   </div>;
 }
