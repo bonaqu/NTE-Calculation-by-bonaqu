@@ -1,5 +1,6 @@
 import { characterCatalog } from './characters';
 import type { LocalizedText } from './types';
+import { verifiedVisibleActions } from './verified-visible-actions';
 
 export const GAME_VISIBLE_BUILD_VERSION = 1 as const;
 export const GAME_VISIBLE_TEAM_STORAGE_KEY = 'nte.team.visible.v1';
@@ -181,7 +182,7 @@ const currentClientEvidence = {
 };
 
 const releasedCharacters = characterCatalog.filter((character) => character.releaseStatus === 'released');
-const verifiedActionCharacters = new Set(['Shinku', 'Nanally', 'Chaos', 'Lacrimosa', 'Zero', 'Hathor', 'Jiuyuan']);
+const verifiedActionCharacters = new Set(verifiedVisibleActions.map((action) => action.characterName));
 
 export const characterCombatCoverage: readonly CharacterCombatCoverage[] = releasedCharacters.map((character) => {
   if (character.name === 'Shinku') {
@@ -203,7 +204,7 @@ export const characterCombatCoverage: readonly CharacterCombatCoverage[] = relea
       characterName: character.name,
       coverage: 'partial',
       supportedModes: ['neutral-reference', 'training-target', 'verified-action'],
-      verifiedAt: '2026-08-04',
+      verifiedAt: '2026-08-05',
       sourcePublisher: character.sourcePublisher ?? 'Prydwen Institute',
       ...(character.sourceUrl ? { sourceUrl: character.sourceUrl } : {}),
       note: {
@@ -217,7 +218,7 @@ export const characterCombatCoverage: readonly CharacterCombatCoverage[] = relea
     characterName: character.name,
     coverage: 'relative-only',
     supportedModes: ['neutral-reference', 'training-target'],
-    verifiedAt: '2026-08-04',
+    verifiedAt: '2026-08-05',
     sourcePublisher: character.sourcePublisher ?? 'NTE Calculation by bonaqu',
     ...(character.sourceUrl ? { sourceUrl: character.sourceUrl } : {}),
     note: {
