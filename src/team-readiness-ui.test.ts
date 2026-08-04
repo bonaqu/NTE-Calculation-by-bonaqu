@@ -1,15 +1,11 @@
 /// <reference types="vite/client" />
+// @ts-expect-error Vitest runs this source contract in Node; the browser app intentionally omits Node types.
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import css from './team-readiness.css?raw';
+import page from './pages/TeamCalculatorPage.tsx?raw';
+import panel from './components/TeamReadinessPanel.tsx?raw';
 
-const rawModules = import.meta.glob('./**/*.{ts,tsx}', {
-  eager: true,
-  query: '?raw',
-  import: 'default',
-}) as Record<string, string>;
-
-const page = rawModules['./pages/TeamCalculatorPage.tsx'] ?? '';
-const panel = rawModules['./components/TeamReadinessPanel.tsx'] ?? '';
+const css = readFileSync(new URL('./team-readiness.css', import.meta.url), 'utf8');
 
 describe('Team Calculator readiness UI contract', () => {
   it('preserves existing calculation storage and adds isolated confirmation metadata', () => {
