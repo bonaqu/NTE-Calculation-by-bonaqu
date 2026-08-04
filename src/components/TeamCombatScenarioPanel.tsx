@@ -28,7 +28,12 @@ import {
 } from '../combat-scenario';
 import { esperCycleById } from '../esper-cycles';
 import { actionsForCharacter } from '../game-visible-calculation';
-import type { GameVisibleTeamState } from '../game-visible-build';
+import {
+  GAME_VISIBLE_TEAM_STORAGE_KEY,
+  initialGameVisibleTeamState,
+  normalizeGameVisibleTeamState,
+  type GameVisibleTeamState,
+} from '../game-visible-build';
 import { localizedCharacterName } from '../gameTerms';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { rotationPresetById, rotationPresets } from '../rotation-presets';
@@ -48,7 +53,6 @@ import { teamEffectsForCharacter } from '../team-effects';
 interface TeamCombatScenarioPanelProps {
   team: GameVisibleTeamState;
   locale: 'ru' | 'en';
-  onTeamChange: (team: GameVisibleTeamState) => void;
 }
 
 function nextStepId(steps: readonly CombatScenarioStep[]): string {
@@ -70,12 +74,17 @@ function stepLabel(kind: CombatScenarioStepKind, ru: boolean): string {
   return ru ? 'Подтверждённое действие' : 'Verified action';
 }
 
-export function TeamCombatScenarioPanel({ team, locale, onTeamChange }: TeamCombatScenarioPanelProps) {
+export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPanelProps) {
   const ru = locale === 'ru';
   const [scenario, setScenario] = useLocalStorage<CombatScenarioState>(
     COMBAT_SCENARIO_STORAGE_KEY,
     initialCombatScenarioState(),
     { normalize: normalizeCombatScenarioState },
+  );
+  const [, setStoredTeam] = useLocalStorage<GameVisibleTeamState>(
+    GAME_VISIBLE_TEAM_STORAGE_KEY,
+    initialGameVisibleTeamState(),
+    { normalize: normalizeGameVisibleTeamState },
   );
   const [importMetadata, setImportMetadata] = useLocalStorage<RotationScenarioImportMetadata>(
     ROTATION_SCENARIO_IMPORT_STORAGE_KEY,
@@ -184,7 +193,7 @@ export function TeamCombatScenarioPanel({ team, locale, onTeamChange }: TeamComb
       if (!accepted) return;
     }
     const imported = importRotationPresetToScenario(selectedPreset, team, locale);
-    onTeamChange(imported.team);
+    setStoredTeam(imported.team);
     setScenario(imported.scenario);
     setImportMetadata(imported.metadata);
   };
@@ -293,7 +302,7 @@ export function TeamCombatScenarioPanel({ team, locale, onTeamChange }: TeamComb
           </select> : step.kind === 'activate-cycle' ? <select value={step.cycleId} aria-label={ru ? 'Подтверждённый цикл эспера' : 'Verified Esper Cycle'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, cycleId: event.target.value }), true)}>
             <option value="">{ru ? 'Выбери численно поддержанный цикл' : 'Select a numerically supported cycle'}</option>
             {supportedCycles.map(({ model, cycle }) => <option value={model.id} key={model.id}>{cycle?.name[locale]} · {model.durationSeconds}{ru ? 'с' : 's'} · +{model.damageBonus}%</option>)}
-          </select> : <input value={step.note} maxLength={400} onChange={(event) => updateStep(step.id, (current) => ({ ...current, note: event.target.value }))} placeholder={ru ? 'Что происходит в непокрытой части ротации' : 'What happens in the unsupported rotation part'} />}{origin ? <small>{ru ? 'Rotation Lab' : 'Rotation Lab'} · {origin.step.instruction[locale]}{origin.part ? ` · ${ru ? 'часть' : 'part'} ${origin.part + 1}` : ''}</small> : null}</div>
+          </select> : <input value={step.note} maxLength={400} onChange={(event) => updateStep(step.id, (current) => ({ ...current, note: event.target.value }))} placeholder={ru ? 'Что происходит в непокрытой части ротации' : 'What happens in the unsupported rotation part'} />}{origin ? <small>Rotation Lab · {origin.step.instruction[locale]}{origin.part ? ` · ${ru ? 'часть' : 'part'} ${origin.part + 1}` : ''}</small> : null}</div>
           <div className="combat-scenario-row-actions"><button type="button" aria-label={ru ? 'Дублировать' : 'Duplicate'} onClick={() => duplicateStep(step.id)}><Copy size={15} /></button><button type="button" aria-label={ru ? 'Удалить' : 'Remove'} onClick={() => removeStep(step.id)}><Trash2 size={15} /></button></div>
         </div>;
       })}
