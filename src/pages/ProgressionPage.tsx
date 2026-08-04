@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { QuickStart } from '../components/GuidedHelp';
+import { ProgressionAutomationPanel } from '../components/ProgressionAutomationPanel';
 import { ProgressionNextOverview } from '../components/ProgressionNextOverview';
 import { ProgressionRosterList } from '../components/ProgressionRosterList';
 import { Field, formatNumber, Metric, Panel, SelectField } from '../components/UI';
@@ -31,6 +32,7 @@ import {
   progressionDatasetSources,
   type AscensionMaterialId,
 } from '../progression-data';
+import { applyImmediatePayments } from '../progression-automation';
 import {
   aggregateRosterRequirements,
   calculateMaterialShortages,
@@ -183,6 +185,13 @@ export function ProgressionPage() {
     inventory: { ...current.inventory, [id]: Math.max(0, Math.floor(Number.isFinite(value) ? value : 0)) },
   }));
 
+  const applyBulkInventory = (inventory: Record<AscensionMaterialId, number>) => setState((current) => ({
+    ...current,
+    inventory,
+  }));
+
+  const payReadyAscensions = () => setState((current) => applyImmediatePayments(current));
+
   const resetPlan = () => {
     setState(defaultRosterProgressionState());
     setTransferStatus('idle');
@@ -266,6 +275,14 @@ export function ProgressionPage() {
     </div>
 
     <ProgressionNextOverview entries={state.entries} inventory={state.inventory} />
+
+    {state.entries.length > 0 ? <ProgressionAutomationPanel
+      entries={state.entries}
+      inventory={state.inventory}
+      activeMaterialIds={activeMaterialIds}
+      onApplyInventory={applyBulkInventory}
+      onApplyPayments={payReadyAscensions}
+    /> : null}
 
     <Panel className="progression-transfer-panel">
       <div className="panel-title"><Link2 size={20} /><div><h2>{ru ? 'Передать или сохранить план' : 'Share or back up the plan'}</h2><p>{ru ? 'Ссылка предназначена для быстрой передачи, JSON — для полной резервной копии.' : 'Use a link for quick sharing and JSON for a complete backup.'}</p></div></div>
