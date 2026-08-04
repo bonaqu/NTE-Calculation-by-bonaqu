@@ -15,7 +15,11 @@ function sortedUnique(values: readonly string[]): string[] {
 }
 
 export function buildRotationCoverageReport(): RotationCoverageReport {
-  const representedMainCharacters = sortedUnique(rotationPresets.map((preset) => preset.team[0]).filter(Boolean));
+  const representedMainCharacters = sortedUnique(
+    rotationPresets
+      .map((preset) => preset.team[0])
+      .filter((name): name is string => typeof name === 'string' && name.length > 0),
+  );
   const releasedCharacters = characterCatalog
     .filter((character) => character.releaseStatus === 'released')
     .map((character) => character.name);
