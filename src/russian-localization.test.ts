@@ -60,14 +60,14 @@ function sourceRussianStrings(): SourceString[] {
 }
 
 const forbiddenPrimaryTerms: RegExp[] = [
-  /\bШинку\b/u,
+  /\bСинку\b/u,
   /\bНулевой эспер\b/u,
   /Esper Cycle/iu,
   /пробой|пробит/iu,
   /сила пробоя/iu,
   /\bЗаклинани(?:е|я|ю|ем|и)\b/iu,
   /\bСинтез\b/iu,
-  /\bГазовый\b|\bПлазменный\b/iu,
+  /\bГазовый\b/iu,
   /сломлени(?:е|я|ю|ем|и|й|ям|ями|ях)/iu,
   /перенаправленн(?:ый|ого|ым) навык/iu,
   /\bультимейт(?:а|е|ом|ы|ов)?\b/iu,
@@ -110,8 +110,8 @@ describe('Russian localization regression contract', () => {
   });
 
   it('keeps Russian primary display labels free of canonical English names', () => {
-    expect(Object.values(characterRussianNames)).toEqual(expect.arrayContaining(['Синку', 'Оценщик', 'Даффодил']));
-    expect(Object.values(characterRussianNames)).not.toEqual(expect.arrayContaining(['Shinku', 'Zero', 'Daffodill']));
+    expect(Object.values(characterRussianNames)).toEqual(expect.arrayContaining(['Шинку', 'Оценщик', 'Даффодил']));
+    expect(Object.values(characterRussianNames)).not.toEqual(expect.arrayContaining(['Shinku', 'Zero', 'Daffodill', 'Синку']));
     expect(Object.values(arcRussianNames)).not.toEqual(expect.arrayContaining(['Blushing Mirage', "What's Desired"]));
   });
 

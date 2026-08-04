@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { calculateDamage, type DamageInput } from '../../packages/calculation-core/src';
-import { combinedDamageBonus, effectiveAtk, withCombinedDamageBonus, withEffectiveAtk } from './teamForm';
+import {
+  combinedDamageBonus,
+  effectiveAtk,
+  totalMultiplierPerUse,
+  withCombinedDamageBonus,
+  withEffectiveAtk,
+  withTotalMultiplierPerUse,
+} from './teamForm';
 
 const input: DamageInput = {
   characterLevel: 80,
@@ -22,6 +29,16 @@ describe('team quick-entry helpers', () => {
   it('matches the calculation engine effective ATK', () => {
     expect(effectiveAtk(input)).toBeCloseTo(calculateDamage(input).totalAtk, 8);
     expect(combinedDamageBonus(input)).toBe(45);
+  });
+
+  it('combines the per-hit multiplier and identical hit count', () => {
+    expect(totalMultiplierPerUse(input)).toBe(840);
+  });
+
+  it('flattens hit breakdown without changing calculated damage', () => {
+    const flattened = withTotalMultiplierPerUse(input, totalMultiplierPerUse(input));
+    expect(flattened).toMatchObject({ skillMultiplier: 840, hits: 1 });
+    expect(calculateDamage(flattened).expected).toBeCloseTo(calculateDamage(input).expected, 8);
   });
 
   it('flattens ATK components without changing calculated damage', () => {
@@ -46,5 +63,6 @@ describe('team quick-entry helpers', () => {
   it('sanitizes non-finite quick input', () => {
     expect(withEffectiveAtk(input, Number.NaN).baseAtk).toBe(0);
     expect(withCombinedDamageBonus(input, Number.POSITIVE_INFINITY).damageBonus).toBe(0);
+    expect(withTotalMultiplierPerUse(input, Number.NaN)).toMatchObject({ skillMultiplier: 0, hits: 1 });
   });
 });

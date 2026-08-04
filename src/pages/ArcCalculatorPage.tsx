@@ -19,6 +19,7 @@ import {
   type ArcMode,
   type ArcStatKey,
 } from '../state/arcState';
+import { totalMultiplierPerUse, withTotalMultiplierPerUse } from '../state/teamForm';
 import { Field, formatNumber, Panel } from '../components/UI';
 import { FieldHelp, QuickStart } from '../components/GuidedHelp';
 import { localizedArcName, localizedArcType, localizedStatLabel } from '../gameTerms';
@@ -30,16 +31,17 @@ type ShareStatus = 'idle' | 'copied' | 'failed';
 const scenarioIds = arcBenchmarkScenarios.map((scenario) => scenario.id);
 const initialScenario = arcBenchmarkScenarios[0]!;
 const defaultState = createDefaultArcState(initialScenario.id);
+const quickArcStatKeys: ArcStatKey[] = arcStatKeys.filter((key) => key !== 'skillMultiplier' && key !== 'hits');
 
 const labels: Record<'ru' | 'en', Record<ArcStatKey, string>> = {
   ru: {
     baseAtk: 'Базовая ATK Ирой', flatAtk: 'Дополнительная ATK числом', atkPercent: 'ATK Ирой, %', critRate: 'Крит. шанс, %',
-    critDamage: 'Крит. урон, %', damageBonus: 'Бонус урона Ирой, %', skillMultiplier: 'Множитель выбранного окна, %', hits: 'Попаданий в окне',
+    critDamage: 'Крит. урон, %', damageBonus: 'Бонус урона Ирой, %', skillMultiplier: 'Множитель одного одинакового попадания, % ATK', hits: 'Одинаковых попаданий за применение',
     enemyLevel: 'Уровень врага', resistance: 'Сопротивление врага, %', teamFixed: 'Суммарный базовый урон союзников', passiveUptime: 'Доля времени условных эффектов, %',
   },
   en: {
     baseAtk: 'Iroi base ATK', flatAtk: 'Flat ATK', atkPercent: 'ATK, %', critRate: 'CRIT Rate, %',
-    critDamage: 'CRIT DMG, %', damageBonus: 'DMG Bonus, %', skillMultiplier: 'Window multiplier, %', hits: 'Hits',
+    critDamage: 'CRIT DMG, %', damageBonus: 'DMG Bonus, %', skillMultiplier: 'Multiplier per identical hit, % ATK', hits: 'Identical hits per use',
     enemyLevel: 'Enemy level', resistance: 'Enemy RES, %', teamFixed: 'Base ally damage', passiveUptime: 'Conditional effect uptime, %',
   },
 };
@@ -96,6 +98,7 @@ export function ArcCalculatorPage() {
   const modelArcs = useMemo(() => arcPresets.filter((arc) => customArcIdSet.has(arc.id)), [customArcIdSet]);
   const scenario = arcBenchmarkScenarios.find((item) => item.id === scenarioId) ?? initialScenario;
   const scenarioSource = sourceMap.get(scenario.sourceId);
+  const multiplierPerUse = totalMultiplierPerUse(stats);
   const tableLabels = {
     arcAtk: ru ? 'Базовая ATK дуги' : 'Arc base ATK',
     totalAtk: ru ? 'Итоговая ATK' : 'Total ATK',
@@ -140,6 +143,13 @@ export function ArcCalculatorPage() {
       return normalized ? { ...current, stats: normalized } : current;
     });
   };
+  const updateTotalMultiplier = (value: number) => {
+    if (!Number.isFinite(value)) return;
+    setArcState((current) => {
+      const normalized = normalizeArcStats(withTotalMultiplierPerUse(current.stats, value));
+      return normalized ? { ...current, stats: normalized } : current;
+    });
+  };
   const resetStats = () => {
     setArcState((current) => ({ ...current, stats: { ...defaultArcStats } }));
     setShareStatus('idle');
@@ -155,7 +165,7 @@ export function ArcCalculatorPage() {
   };
 
   return <div className="page calc-page">
-    <header className="page-heading"><div><span>{ru ? 'СРАВНЕНИЕ ДУГ' : 'ARCS CALCULATION'}</span><h1>{ru ? 'Какая дуга лучше для Ирой' : 'Iroi Arc comparison'}</h1><p>{ru ? 'Используй готовые сравнения из источников или введи характеристики своей Ирой. Лучший результат всегда принимается за 100%.' : 'Two separate sourced benchmarks plus a transparent custom-stat model.'}</p></div>
+    <header className="page-heading"><div><span>{ru ? 'СРАВНЕНИЕ ДУГ' : 'ARCS CALCULATION'}</span><h1>{ru ? 'Какая дуга лучше для Ирой' : 'Iroi Arc comparison'}</h1><p>{ru ? 'Используй готовые сравнения из источников или введи характеристики своей Ирой. Лучший результат всегда принимается за 100%.' : 'Use separate sourced comparisons or enter your own Iroi stats. The best result in each scenario is always 100%.'}</p></div>
       <div className="segmented" role="tablist" aria-label={ru ? 'Режим расчёта' : 'Calculation mode'}><button role="tab" aria-selected={mode === 'benchmark'} className={mode === 'benchmark' ? 'active' : ''} onClick={() => setMode('benchmark')}>{ru ? 'Готовые сравнения' : 'Benchmarks'}</button><button role="tab" aria-selected={mode === 'custom'} className={mode === 'custom' ? 'active' : ''} onClick={() => setMode('custom')}>{ru ? 'Мои характеристики' : 'Custom stats'}</button></div>
     </header>
 
@@ -168,11 +178,11 @@ export function ArcCalculatorPage() {
       'Read the relative score: the best Arc in that scenario is 100%.',
       'Keep scenarios separate because their assumptions and Mixing levels differ.',
     ]) : (ru ? [
-      'Введи характеристики своей Ирой и выбранного окна урона.',
+      'Введи характеристики своей Ирой и суммарный множитель одной выбранной атаки или серии.',
       'Укажи базовый урон союзников и долю времени условных эффектов.',
       'Скопируй ссылку, чтобы сохранить или отправить этот расчёт.',
     ] : [
-      'Enter your Iroi stats and the selected damage window.',
+      'Enter your Iroi stats and the total multiplier for one selected attack or sequence.',
       'Set base ally damage and conditional-effect uptime.',
       'Copy a link to save or share the calculation.',
     ])} />
@@ -184,15 +194,18 @@ export function ArcCalculatorPage() {
       <div className="scenario-source"><span>{scenarioSource?.publisher} · {ru ? 'проверено' : 'verified'} {scenario.verifiedAt}</span>{scenarioSource?.url ? <a href={scenarioSource.url} target="_blank" rel="noreferrer">{ru ? 'Открыть источник' : 'Open source'} <ExternalLink size={15} /></a> : <span className="muted">{ru ? 'Источник предоставлен владельцем проекта' : 'Source supplied by the project owner'}</span>}</div>
     </Panel> : null}
 
-    {mode === 'custom' ? <Panel className="settings-panel"><div className="settings-heading"><div className="panel-title"><SlidersHorizontal size={20} /><div><h2>{ru ? 'Расчёт по моим характеристикам' : 'Partial team model'}</h2><p>{ru ? 'Постоянные характеристики учитываются полностью. Поле доли времени влияет только на условные эффекты, а бонусы союзникам усиливают только союзников.' : 'Static stats and always-on passives stay active. Uptime scales conditional effects only; ally bonuses affect ally damage only.'}</p></div></div><div className="settings-actions"><button className="button ghost compact-button" type="button" onClick={resetStats}><RotateCcw size={16} /> {ru ? 'Сбросить' : 'Reset'}</button><button className="button compact-button" type="button" onClick={shareCustomState}>{shareStatus === 'copied' ? <Check size={16} /> : <Copy size={16} />} {ru ? 'Копировать ссылку' : 'Copy link'}</button></div></div><div className="field-grid">
-      {arcStatKeys.map((key) => <Field key={key} label={labels[locale][key]} type="number" value={stats[key]} min={key === 'passiveUptime' ? 0 : undefined} max={key === 'passiveUptime' ? 100 : undefined} onChange={(event) => updateStat(key, Number(event.target.value))} />)}
-    </div><FieldHelp title={ru ? 'Что означают необычные поля?' : 'What do the unusual fields mean?'} terms={ru ? [
-      { term: 'Множитель окна', description: 'Суммарный процент урона всех попаданий выбранного навыка или связки.' },
+    {mode === 'custom' ? <Panel className="settings-panel"><div className="settings-heading"><div className="panel-title"><SlidersHorizontal size={20} /><div><h2>{ru ? 'Расчёт по моим характеристикам' : 'Partial team model'}</h2><p>{ru ? 'Постоянные характеристики учитываются полностью. Доля времени влияет только на условные эффекты, а бонусы союзникам усиливают только союзников.' : 'Static stats and always-on passives stay active. Uptime scales conditional effects only; ally bonuses affect ally damage only.'}</p></div></div><div className="settings-actions"><button className="button ghost compact-button" type="button" onClick={resetStats}><RotateCcw size={16} /> {ru ? 'Сбросить' : 'Reset'}</button><button className="button compact-button" type="button" onClick={shareCustomState}>{shareStatus === 'copied' ? <Check size={16} /> : <Copy size={16} />} {ru ? 'Копировать ссылку' : 'Copy link'}</button></div></div><div className="field-grid">
+      <Field label={ru ? 'Суммарный множитель за применение, % ATK' : 'Total multiplier per use, % ATK'} hint={ru ? 'Сложи разные части серии один раз: 120% + 180% = 300%.' : 'Add different sequence parts once: 120% + 180% = 300%.'} type="number" min="0" value={Math.round(multiplierPerUse * 100) / 100} onChange={(event) => updateTotalMultiplier(Number(event.target.value))} />
+      {quickArcStatKeys.map((key) => <Field key={key} label={labels[locale][key]} type="number" value={stats[key]} min={key === 'passiveUptime' ? 0 : undefined} max={key === 'passiveUptime' ? 100 : undefined} onChange={(event) => updateStat(key, Number(event.target.value))} />)}
+    </div><div className="sequence-formula arc-sequence-formula" aria-live="polite"><span>{ru ? 'Выбранная атака или серия' : 'Selected attack or sequence'}</span><strong>{multiplierPerUse.toLocaleString(locale, { maximumFractionDigits: 2 })}% ATK {ru ? 'за одно применение' : 'per use'}</strong></div>
+      <details className="member-advanced-fields arc-hit-details"><summary><SlidersHorizontal size={17} /><span><b>{ru ? 'Разбивка одинаковых попаданий' : 'Identical-hit breakdown'}</b><small>{ru ? 'Нужна только когда все учитываемые попадания имеют один множитель' : 'Only needed when every included hit uses the same multiplier'}</small></span></summary><div className="field-grid compact"><Field label={labels[locale].skillMultiplier} type="number" min="0" value={stats.skillMultiplier} onChange={(event) => updateStat('skillMultiplier', Number(event.target.value))} /><Field label={labels[locale].hits} type="number" min="0" value={stats.hits} onChange={(event) => updateStat('hits', Number(event.target.value))} /></div><p>{ru ? 'Например, четыре одинаковых попадания по 150% можно задать как 150% × 4. Если части серии разные, безопаснее сложить их один раз в суммарном поле выше.' : 'For example, four identical 150% hits can be entered as 150% × 4. When sequence parts differ, add them once in the total field above.'}</p></details>
+      <FieldHelp title={ru ? 'Что означают необычные поля?' : 'What do the unusual fields mean?'} terms={ru ? [
+      { term: 'Суммарный множитель за применение', description: 'Общий процент ATK одной выбранной атаки, навыка или серии. Разные части серии складываются только один раз.' },
       { term: 'Урон союзников', description: 'Урон остальных трёх персонажей до бонуса, который даёт выбранная дуга.' },
       { term: 'Доля времени эффекта', description: 'Какую часть боя условный пассивный эффект действительно активен: 100% означает постоянное действие.' },
       { term: 'От лучшего результата', description: 'Лидер равен 100%, остальные показаны относительно него в этом же расчёте.' },
     ] : [
-      { term: 'Window multiplier', description: 'Combined damage percentage of all hits in the selected skill or combo.' },
+      { term: 'Total multiplier per use', description: 'The total % ATK of one selected attack, skill or sequence. Different parts are added only once.' },
       { term: 'Ally damage', description: 'Damage from the other three characters before the Arc ally bonus.' },
       { term: 'Conditional uptime', description: 'The share of combat time during which a conditional passive is active.' },
       { term: 'Relative score', description: 'The leader is 100%; every other result is measured against it.' },
@@ -227,6 +240,6 @@ export function ArcCalculatorPage() {
     </Panel>
 
     {mode === 'benchmark' && scenario.id === 'rivyn-support' ? <div className="disclaimer"><Info size={18} /><span>{ru ? 'Абсолютные значения точно перенесены со скриншота, но исходный калькулятор Rivyn не опубликован. Таблица воспроизводит результат, а не заявляет, что внутренняя формула восстановлена.' : 'Absolute values are transcribed from the screenshot, but Rivyn’s source calculator is not public. This table reproduces the result and does not claim the internal formula has been reconstructed.'}</span></div> : null}
-    {mode === 'custom' ? <div className="disclaimer"><Info size={18} /><span>{ru ? `Суммарный базовый урон союзников: ${formatNumber(stats.teamFixed)}. Постоянные дополнительные характеристики и пассивы применяются на 100%; доля времени ${stats.passiveUptime}% влияет только на условную часть. Бонусы союзникам усиливают только их урон, а итоговый рейтинг сортируется по полному урону команды. Настройки сохраняются в этом браузере.` : `Base ally damage: ${formatNumber(stats.teamFixed)}. Static substats and always-on passives apply at 100%; the ${stats.passiveUptime}% uptime affects conditional modifiers only. Ally bonuses affect ally damage only, and ranking uses total team damage. Settings are saved in this browser.`}</span></div> : null}
+    {mode === 'custom' ? <div className="disclaimer"><Info size={18} /><span>{ru ? `Выбранная атака или серия: ${multiplierPerUse.toLocaleString(locale, { maximumFractionDigits: 2 })}% ATK за применение. Суммарный базовый урон союзников: ${formatNumber(stats.teamFixed)}. Постоянные дополнительные характеристики и пассивы применяются на 100%; доля времени ${stats.passiveUptime}% влияет только на условную часть. Бонусы союзникам усиливают только их урон, а итоговый рейтинг сортируется по полному урону команды. Настройки сохраняются в этом браузере.` : `Selected attack or sequence: ${multiplierPerUse.toLocaleString(locale, { maximumFractionDigits: 2 })}% ATK per use. Base ally damage: ${formatNumber(stats.teamFixed)}. Static substats and always-on passives apply at 100%; the ${stats.passiveUptime}% uptime affects conditional modifiers only. Ally bonuses affect ally damage only, and ranking uses total team damage. Settings are saved in this browser.`}</span></div> : null}
   </div>;
 }
