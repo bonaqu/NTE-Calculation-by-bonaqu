@@ -20,6 +20,8 @@
     "src/gameTerms.ts",
     "src/russian-game-text.ts",
     "src/localization-evidence.ts",
+    "src/character-terms.ts",
+    "src/rotation-step-terms.ts",
     "src/arc-directory.ts",
     "src/arc-catalog.ts",
     "src/arc-presets.ts",
