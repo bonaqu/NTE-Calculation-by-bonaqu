@@ -11,7 +11,7 @@ import {
   type VerifiedTeamEffect,
   type VerifiedTeamEffectId,
 } from './team-effects';
-import type { EsperCycleId, LocalizedText } from './types';
+import type { CharacterAttribute, EsperCycleId, LocalizedText } from './types';
 import { visibleActionById } from './verified-visible-actions';
 
 export const COMBAT_SCENARIO_VERSION = 1 as const;
@@ -27,7 +27,8 @@ export interface CombatScenarioStep {
   sourceSlot: number;
   actionId: string;
   effectId: string;
-  cycleId: string;
+  /** Added within schema v1; old v1 saves omit it and normalize to an empty string. */
+  cycleId?: string;
   note: string;
 }
 
@@ -215,9 +216,11 @@ function teamCanTriggerCycle(team: GameVisibleTeamState, cycleId: EsperCycleId):
   if (!cycle) return false;
   const attributes = new Set(team.builds
     .map((build) => characterByName.get(build.characterName)?.attribute)
-    .filter((attribute): attribute is NonNullable<typeof attribute> => Boolean(attribute)));
+    .filter((attribute): attribute is CharacterAttribute => Boolean(attribute)));
   return cycle.attributes.every((attribute) => attributes.has(attribute));
 }
+
+type VisibleCalculationConditionForCycle = VisibleBuildCalculation['conditions'][number];
 
 function cycleModifierForAction(
   characterName: string,
@@ -238,8 +241,6 @@ function cycleModifierForAction(
     })),
   };
 }
-
-type VisibleCalculationConditionForCycle = VisibleBuildCalculation['conditions'][number];
 
 function calculateActionAt(
   team: GameVisibleTeamState,
@@ -339,8 +340,8 @@ export function calculateCombatScenario(
           activeEffects: beforeEffects,
           activeCycles: beforeCycles,
           blockedReason: blockedReason(
-            'Для выбранного цикла эспера ещё нет безопасной числовой модели сценария.',
-            'The selected Esper Cycle does not have a safe numerical scenario model yet.',
+            'Для выбранного цикла эспера ещё нет подтверждённой числовой модели сценария.',
+            'The selected Esper Cycle does not have a verified numerical scenario model yet.',
           ),
         });
         return;
