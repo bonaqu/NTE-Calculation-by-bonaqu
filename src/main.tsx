@@ -17,6 +17,7 @@ import './rotation-lab.css';
 import './rotation-practice.css';
 import './progression-roster.css';
 import './progression-next.css';
+import './localization-evidence.css';
 import './interface-foundation.css';
 import './imageFallbackRuntime';
 

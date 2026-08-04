@@ -136,7 +136,7 @@ const roleRussian: Record<string, string> = {
 };
 
 export const russianClientTerminology = {
-  version: 2,
+  version: 3,
   verifiedAt: '2026-08-04',
   sourcePriority: [
     'current-russian-client',

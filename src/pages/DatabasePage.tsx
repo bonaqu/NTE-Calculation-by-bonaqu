@@ -9,6 +9,7 @@ import { useI18n } from '../i18n';
 import { Panel } from '../components/UI';
 import { QuickStart } from '../components/GuidedHelp';
 import { ResilientImage } from '../components/ResilientImage';
+import { LocalizationEvidenceLegend, LocalizationEvidenceNote } from '../components/LocalizationEvidenceNote';
 import type { CharacterAttribute, CharacterRarity, CharacterReleaseStatus, CharacterRole } from '../types';
 import {
   localizedArcName,
@@ -19,6 +20,7 @@ import {
   localizedRole,
   localizedStatLabel,
 } from '../gameTerms';
+import { arcNameEvidence, arcTypeEvidence, characterNameEvidence } from '../localization-evidence';
 
 const rarities: ArcDirectoryRarity[] = ['S', 'A', 'B'];
 const arcTypes: ArcDirectoryType[] = ['Solid', 'Gas', 'Liquid', 'Plasma', 'Synthesis'];
@@ -44,16 +46,20 @@ export function DatabasePage() {
   const sourceMap = useMemo(() => new Map([...sources, ...arcPresetSources].map((source) => [source.id, source])), []);
 
   const characters = useMemo(() => characterCatalog.filter((row) => {
+    const nameEvidence = characterNameEvidence[row.name];
+    const typeEvidence = row.arcType ? arcTypeEvidence[row.arcType] : undefined;
     const searchable = [
       row.name,
       localizedCharacterName(row.name, 'ru'),
       ...localizedCharacterAliases(row.name),
+      ...(nameEvidence?.alternatives?.map((entry) => entry.russian) ?? []),
       row.attribute,
       localizedAttribute(row.attribute, 'ru'),
       row.role ?? '',
       localizedRole(row.role, 'ru'),
       row.arcType ?? '',
       localizedArcType(row.arcType ?? '', 'ru'),
+      ...(typeEvidence?.alternatives?.map((entry) => entry.russian) ?? []),
       row.summary.ru,
       row.summary.en,
       row.rarity,
@@ -69,11 +75,15 @@ export function DatabasePage() {
   }), [characterArcType, characterAttribute, characterRarity, characterRole, characterStatus, normalizedQuery]);
 
   const arcs = useMemo(() => arcCatalog.filter((row) => {
+    const nameEvidence = arcNameEvidence[row.name];
+    const typeEvidence = arcTypeEvidence[row.type];
     const searchable = [
       row.name,
       localizedArcName(row.name, 'ru'),
+      ...(nameEvidence?.alternatives?.map((entry) => entry.russian) ?? []),
       row.type,
       localizedArcType(row.type, 'ru'),
+      ...(typeEvidence.alternatives?.map((entry) => entry.russian) ?? []),
       row.rarity,
       row.secondaryLabel,
       localizedStatLabel(row.secondaryLabel, 'ru'),
@@ -108,24 +118,26 @@ export function DatabasePage() {
   const hasCharacterFilters = characterRarity !== 'all' || characterAttribute !== 'all' || characterRole !== 'all' || characterArcType !== 'all' || characterStatus !== 'all';
 
   return <div className="page calc-page database-page">
-    <header className="page-heading"><div><span>{ru ? 'БАЗА ДАННЫХ' : 'DATABASE'}</span><h1>{ru ? 'Персонажи и дуги NTE' : 'NTE database'}</h1><p>{ru ? 'Найди персонажа, проверь его роль и тип дуги, а затем сразу открой совместимое оружие. Основными показаны названия из русского клиента; поиск также понимает английские и старые варианты написания.' : 'Find a character, verify their role and Arc type, then open compatible weapons. Search works with both localized and canonical names.'}</p></div></header>
+    <header className="page-heading"><div><span>{ru ? 'БАЗА ДАННЫХ' : 'DATABASE'}</span><h1>{ru ? 'Персонажи и дуги NTE' : 'NTE database'}</h1><p>{ru ? 'Найди персонажа, проверь его роль и тип дуги, а затем сразу открой совместимое оружие. Основным показывается название с наиболее сильными доступными доказательствами; английское имя и конфликтующие варианты остаются доступны для проверки и поиска.' : 'Find a character, verify their role and Arc type, then open compatible weapons. The strongest supported localized label is primary while canonical and conflicting alternatives remain searchable and reviewable.'}</p></div></header>
 
     <QuickStart title={ru ? 'Как пользоваться базой' : 'How to use the database'} steps={ru ? [
-      'Открой вкладку персонажей или введи имя из клиента. Старые варианты вроде «Шинку» и «Зеро» тоже находятся поиском.',
+      'Открой вкладку персонажей или введи имя. Поиск понимает официальное «Шинку», старое «Синку», «Оценщик», «Зеро» и другие зафиксированные варианты.',
       'Нажми «Показать совместимые дуги» — база сама переключится на подходящий тип оружия.',
-      'Раскрой карточку дуги, чтобы увидеть характеристики, эффект от M1 до M5 и источник.',
+      'Раскрой карточку дуги, чтобы увидеть характеристики, эффект, источник данных и доказательства русского названия.',
     ] : [
-      'Open Characters and filter by role, attribute or rarity.',
+      'Open Characters and filter by role, attribute or rarity. Recorded alternative names remain searchable.',
       'Select “Show compatible Arcs” to switch to matching weapons automatically.',
-      'Open an Arc card to view stats, its M1–M5 effect and source.',
+      'Open an Arc card to view stats, effect, data source and Russian-label evidence.',
     ]} />
+
+    <LocalizationEvidenceLegend />
 
     <div className="database-toolbar">
       <div className="segmented" role="tablist" aria-label={ru ? 'Раздел базы данных' : 'Database section'}>
         <button role="tab" aria-selected={tab === 'characters'} className={tab === 'characters' ? 'active' : ''} onClick={() => setTab('characters')}>{ru ? `Персонажи · ${characterCatalog.length}` : `Characters · ${characterCatalog.length}`}</button>
         <button role="tab" aria-selected={tab === 'arcs'} className={tab === 'arcs' ? 'active' : ''} onClick={() => setTab('arcs')}>{ru ? `Дуги · ${arcCatalog.length}` : `Arcs · ${arcCatalog.length}`}</button>
       </div>
-      <label className="search-field"><Search size={18} /><span className="sr-only">{ru ? 'Поиск' : 'Search'}</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tab === 'arcs' ? (ru ? 'Название на русском или английском, тип, эффект…' : 'Name, type, effect…') : (ru ? 'Имя, роль, атрибут, описание…' : 'Name, role, attribute, summary…')} /></label>
+      <label className="search-field"><Search size={18} /><span className="sr-only">{ru ? 'Поиск' : 'Search'}</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tab === 'arcs' ? (ru ? 'Название, альтернативный вариант, тип, эффект…' : 'Name, alternative, type, effect…') : (ru ? 'Имя, вариант написания, роль, атрибут…' : 'Name, alternative, role, attribute…')} /></label>
     </div>
 
     {tab === 'characters' ? <div className="character-filter-panel" aria-label={ru ? 'Фильтры персонажей' : 'Character filters'}>
@@ -146,6 +158,8 @@ export function DatabasePage() {
     {tab === 'characters' ? <>
       {characters.length > 0 ? <section className="character-directory-grid" aria-live="polite">{characters.map((character) => {
         const displayName = localizedCharacterName(character.name, locale);
+        const nameEvidence = characterNameEvidence[character.name];
+        const typeEvidence = character.arcType ? arcTypeEvidence[character.arcType] : undefined;
         return <article className={`character-directory-card rarity-${character.rarity.toLowerCase()} ${character.releaseStatus}`} key={character.id}>
           <div className="character-card-top">
             <ResilientImage src={character.image} alt={displayName} wrapperClassName="character-card-image" loading="lazy" />
@@ -157,9 +171,11 @@ export function DatabasePage() {
             <div><dt>{ru ? 'Тип дуги' : 'Arc type'}</dt><dd>{character.arcType ? localizedArcType(character.arcType, locale) : (ru ? 'Ещё не объявлен' : 'Not announced')}</dd></div>
           </dl>
           <p className="character-summary">{character.summary[locale]}</p>
+          {ru && nameEvidence ? <LocalizationEvidenceNote evidence={nameEvidence} subject="Имя" /> : null}
+          {ru && typeEvidence ? <LocalizationEvidenceNote evidence={typeEvidence} subject="Тип дуги" /> : null}
           <div className="character-card-actions">
             {character.arcType ? <button className="button ghost compact-button" type="button" onClick={() => showCompatibleArcs(character.arcType!)}>{ru ? 'Показать совместимые дуги' : 'Show compatible Arcs'}</button> : <span className="character-unknown-note">{ru ? 'Совместимые дуги появятся после объявления типа.' : 'Compatible Arcs will appear after the type is announced.'}</span>}
-            <a href={character.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Источник' : 'Source'} <ExternalLink size={14} /></a>
+            <a href={character.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Источник характеристик' : 'Profile source'} <ExternalLink size={14} /></a>
           </div>
           <small className="character-source-meta">{character.sourcePublisher} · {ru ? 'проверено' : 'verified'} {character.verifiedAt}</small>
         </article>;
@@ -170,6 +186,8 @@ export function DatabasePage() {
       {arcs.length > 0 ? <section className="arc-directory-grid" aria-live="polite">{arcs.map((arc) => {
         const source = sourceMap.get(arc.sourceId);
         const displayName = localizedArcName(arc.name, locale);
+        const nameEvidence = arcNameEvidence[arc.name];
+        const typeEvidence = arcTypeEvidence[arc.type];
         return <details className={`arc-directory-card rarity-${arc.rarity.toLowerCase()}`} key={arc.id}>
           <summary>
             <div className="arc-directory-art"><span>{displayName.slice(0, 2).toUpperCase()}</span><img src={arc.image} alt="" loading="lazy" /></div>
@@ -177,7 +195,10 @@ export function DatabasePage() {
             <div className="arc-directory-stats"><span><small>ATK</small><b>{arc.baseAtk}</b></span><span><small>{localizedStatLabel(arc.secondaryLabel, locale)}</small><b>{arc.secondaryValue}%</b></span></div>
             <ChevronDown className="arc-directory-chevron" size={20} />
           </summary>
-          <div className="arc-directory-details"><div className="arc-effect-title"><BookOpenText size={17} /><b>{ru ? 'Эффект от M1 до M5' : 'M1 → M5 effect'}</b></div><p>{arc.effect[locale]}</p><div className="arc-source-line"><span><CheckCircle2 size={14} /> {source?.publisher ?? arc.sourceId}</span><small>{ru ? 'Проверено' : 'Verified'}: {source?.verifiedAt ?? arc.verifiedAt}</small>{source?.url ? <a href={source.url} target="_blank" rel="noreferrer">{ru ? 'Открыть источник' : 'Source'}</a> : null}</div></div>
+          <div className="arc-directory-details"><div className="arc-effect-title"><BookOpenText size={17} /><b>{ru ? 'Эффект от M1 до M5' : 'M1 → M5 effect'}</b></div><p>{arc.effect[locale]}</p>
+            {ru && nameEvidence ? <LocalizationEvidenceNote evidence={nameEvidence} subject="Название" /> : null}
+            {ru ? <LocalizationEvidenceNote evidence={typeEvidence} subject="Тип дуги" /> : null}
+            <div className="arc-source-line"><span><CheckCircle2 size={14} /> {source?.publisher ?? arc.sourceId}</span><small>{ru ? 'Данные дуги проверены' : 'Arc data verified'}: {source?.verifiedAt ?? arc.verifiedAt}</small>{source?.url ? <a href={source.url} target="_blank" rel="noreferrer">{ru ? 'Открыть источник характеристик' : 'Data source'}</a> : null}</div></div>
         </details>;
       })}</section> : <Panel className="empty-database"><Search size={24} /><h2>{ru ? 'Ничего не найдено' : 'No Arcs found'}</h2><p>{ru ? 'Измени запрос или сбрось фильтры.' : 'Change the query or reset the filters.'}</p><button className="button ghost" onClick={() => { setQuery(''); resetArcFilters(); }}>{ru ? 'Очистить поиск и фильтры' : 'Reset'}</button></Panel>}
     </> : null}
