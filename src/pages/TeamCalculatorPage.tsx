@@ -2,11 +2,12 @@ import { useMemo } from 'react';
 import { ChevronDown, Gauge, RotateCcw, SlidersHorizontal, Users } from 'lucide-react';
 import { calculateTeam, type EnemyProfile, type TeamMemberInput } from '../../packages/calculation-core/src';
 import { canonicalCharacterName, characterByName, characterCatalog } from '../characters';
-import { useI18n } from '../i18n';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Field, formatNumber, Metric, Panel } from '../components/UI';
+import { TeamReadinessPanel } from '../components/TeamReadinessPanel';
 import { FieldHelp, QuickStart } from '../components/GuidedHelp';
+import { Field, formatNumber, Metric, Panel } from '../components/UI';
 import { localizedArcType, localizedAttribute, localizedCharacterName, localizedRole } from '../gameTerms';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useI18n } from '../i18n';
 import {
   combinedDamageBonus,
   effectiveAtk,
@@ -15,21 +16,18 @@ import {
   withEffectiveAtk,
   withTotalMultiplierPerUse,
 } from '../state/teamForm';
+import {
+  emptyTeamInputs,
+  evaluateTeamReadiness,
+  sampleTeamDuration,
+  sampleTeamEnemy,
+  sampleTeamMembers,
+} from '../team-readiness';
 
 type NumericMemberKey = 'baseAtk' | 'arcAtk' | 'flatAtk' | 'atkPercent' | 'teamAtkPercent' | 'skillMultiplier' | 'hits' | 'actionsPerRotation' | 'damageBonus' | 'teamDamageBonus' | 'critRate' | 'critDamage';
 type EnemyKey = keyof EnemyProfile;
 
-const makeMember = (id: string, name: string, baseAtk: number, multiplier: number, actions: number): TeamMemberInput => ({
-  id, name, characterLevel: 80, baseAtk, arcAtk: 500, flatAtk: 250, atkPercent: 65, teamAtkPercent: 15,
-  skillMultiplier: multiplier, hits: 1, damageBonus: 30, teamDamageBonus: 15, critRate: 60, critDamage: 120,
-  actionsPerRotation: actions, enemy: { level: 82, resistance: 20, defenceReduction: 10, resistanceReduction: 0 },
-});
-
-const defaultMembers: TeamMemberInput[] = [
-  makeMember('shinku', 'Shinku', 1550, 900, 3), makeMember('iroi', 'Iroi', 1450, 420, 2),
-  makeMember('hathor', 'Hathor', 1400, 520, 2), makeMember('zero', 'Zero', 1300, 300, 2),
-];
-const defaultEnemy: EnemyProfile = { level: 82, resistance: 20, defenceReduction: 10, resistanceReduction: 0 };
+const initialMembers = (): TeamMemberInput[] => sampleTeamMembers.map((member) => ({ ...member, enemy: { ...sampleTeamEnemy } }));
 
 const labels: Record<'ru' | 'en', Record<NumericMemberKey | EnemyKey, string>> = {
   ru: {
@@ -53,16 +51,22 @@ const enemyFields: EnemyKey[] = ['level', 'resistance', 'defenceReduction', 'res
 export function TeamCalculatorPage() {
   const { locale } = useI18n();
   const ru = locale === 'ru';
-  const [members, setMembers] = useLocalStorage<TeamMemberInput[]>('nte.team.v2', defaultMembers);
-  const [duration, setDuration] = useLocalStorage<number>('nte.team.duration.v2', 35);
-  const [enemy, setEnemy] = useLocalStorage<EnemyProfile>('nte.team.enemy.v2', defaultEnemy);
+  const [members, setMembers] = useLocalStorage<TeamMemberInput[]>('nte.team.v2', initialMembers());
+  const [duration, setDuration] = useLocalStorage<number>('nte.team.duration.v2', sampleTeamDuration);
+  const [enemy, setEnemy] = useLocalStorage<EnemyProfile>('nte.team.enemy.v2', sampleTeamEnemy);
+  const [confirmedDigest, setConfirmedDigest] = useLocalStorage<string>('nte.team.confirmed-digest.v1', '');
+
   const normalizedMembers = useMemo(() => members.slice(0, 4).map((member, index) => {
-    const canonicalName = canonicalCharacterName(member.name) ?? defaultMembers[index]?.name ?? 'Zero';
+    const canonicalName = canonicalCharacterName(member.name) ?? sampleTeamMembers[index]?.name ?? 'Zero';
     const character = characterByName.get(canonicalName);
     return { ...member, id: character?.id ?? member.id, name: canonicalName, enemy };
   }), [enemy, members]);
   const selectedNames = useMemo(() => new Set(normalizedMembers.map((member) => member.name)), [normalizedMembers]);
   const result = useMemo(() => calculateTeam(normalizedMembers, duration), [normalizedMembers, duration]);
+  const readiness = useMemo(
+    () => evaluateTeamReadiness(normalizedMembers, duration, enemy, confirmedDigest),
+    [confirmedDigest, duration, enemy, normalizedMembers],
+  );
 
   const updateCharacter = (index: number, name: string) => {
     const character = characterByName.get(name);
@@ -74,23 +78,51 @@ export function TeamCalculatorPage() {
   const updateCombinedBonus = (index: number, value: number) => setMembers((current) => current.map((item, itemIndex) => itemIndex === index ? withCombinedDamageBonus(item, value) : item));
   const updateTotalMultiplier = (index: number, value: number) => setMembers((current) => current.map((item, itemIndex) => itemIndex === index ? withTotalMultiplierPerUse(item, value) : item));
   const updateEnemy = (key: EnemyKey, value: number) => setEnemy((current) => ({ ...current, [key]: value }));
-  const reset = () => { setMembers(defaultMembers); setDuration(35); setEnemy(defaultEnemy); };
+  const reset = () => {
+    setMembers(initialMembers());
+    setDuration(sampleTeamDuration);
+    setEnemy({ ...sampleTeamEnemy });
+    setConfirmedDigest('');
+  };
+  const startEmpty = () => {
+    setMembers(emptyTeamInputs(normalizedMembers, enemy));
+    setConfirmedDigest('');
+  };
+  const confirmCurrent = () => {
+    if (readiness.canConfirm) setConfirmedDigest(readiness.digest);
+  };
+
+  const resultStateNote = {
+    sample: ru ? 'Демонстрационные значения' : 'Sample values',
+    incomplete: ru ? 'Черновик: ввод неполный' : 'Draft: incomplete input',
+    unchecked: ru ? 'Не сверено пользователем' : 'Not checked by user',
+    checked: ru ? 'Сверено для текущих данных' : 'Checked for current inputs',
+  }[readiness.status];
 
   return <div className="page calc-page">
-    <header className="page-heading"><div><span>{ru ? 'РАСЧЁТ КОМАНДЫ' : 'TEAM CALCULATION'}</span><h1>{ru ? 'Калькулятор урона команды' : 'Team rotation calculator'}</h1><p>{ru ? 'Выбери четырёх персонажей и задай для каждого одну основную атаку, навык или серию. В быстром режиме нужен общий множитель за одно применение — без отдельного подсчёта попаданий.' : 'Choose four characters and describe one main attack, skill or sequence for each. Quick input needs one total multiplier per use, with no separate hit bookkeeping.'}</p></div><button className="button ghost" onClick={reset}><RotateCcw size={17} /> {ru ? 'Сбросить пример' : 'Reset example'}</button></header>
+    <header className="page-heading"><div><span>{ru ? 'РАСЧЁТ КОМАНДЫ' : 'TEAM CALCULATION'}</span><h1>{ru ? 'Калькулятор урона команды' : 'Team rotation calculator'}</h1><p>{ru ? 'Выбери четырёх персонажей и задай для каждого одну основную атаку, навык или серию. В быстром режиме нужен общий множитель за одно применение — без отдельного подсчёта попаданий.' : 'Choose four characters and describe one main attack, skill or sequence for each. Quick input needs one total multiplier per use, with no separate hit bookkeeping.'}</p></div><button className="button ghost" onClick={reset}><RotateCcw size={17} /> {ru ? 'Вернуть пример' : 'Restore sample'}</button></header>
 
     <QuickStart title={ru ? 'Быстрый старт' : 'Quick start'} steps={ru ? [
-      'Выбери персонажа в каждом слоте — повторно выбрать уже занятого персонажа нельзя.',
+      'Нажми «Начать со своих данных», чтобы убрать демонстрационные боевые значения, но сохранить выбранных персонажей.',
       'Введи итоговую АТК, общий бонус урона и суммарный множитель одной атаки или серии.',
-      'Укажи, сколько раз она применяется за ротацию. Разбивка по одинаковым попаданиям доступна в подробном вводе.',
+      'Укажи число применений и длительность ротации, затем сверь значения и подтверди текущий расчёт.',
     ] : [
-      'Choose a character in every slot; already selected characters are disabled.',
+      'Select “Start with my own data” to clear demo combat values while keeping the selected characters.',
       'Enter effective ATK, combined damage bonus and the total multiplier for one attack or sequence.',
-      'Set how many times it is used per rotation. Per-hit breakdown remains available in Detailed input.',
+      'Set uses and rotation duration, then review and confirm the current calculation.',
     ]} />
 
-    <div className="disclaimer top-note"><Users size={18} /><span>{ru ? 'Выбор персонажа подставляет только имя, роль, тип эспера и тип дуги. Сайт не выдумывает множители навыков: введи проверенное значение сам. Быстрый общий множитель объединяет подробные попадания только после изменения этого поля.' : 'Character selection fills identity metadata only. The site does not invent skill multipliers: enter a verified value yourself. The quick total multiplier flattens detailed hits only after you edit it.'}</span></div>
-    <div className="summary-strip"><Metric label={ru ? 'Урон за ротацию' : 'Team damage'} value={formatNumber(result.totalDamage)} /><Metric label="DPS" value={formatNumber(result.dps)} /><Metric label={ru ? 'Длительность' : 'Duration'} value={`${duration} ${ru ? 'сек' : 's'}`} /><Metric label={ru ? 'Версия формулы' : 'Formula'} value="v0.1" note={ru ? 'Оценочная модель' : 'Estimate model'} /></div>
+    <div className="disclaimer top-note"><Users size={18} /><span>{ru ? 'Выбор персонажа подставляет только имя, роль, тип эспера и тип дуги. Сайт не выдумывает множители навыков: введи проверенное значение сам. Отметка «сверено» подтверждает только твой текущий набор данных, а не официальную точность результата.' : 'Character selection fills identity metadata only. The site does not invent skill multipliers. “Checked” confirms only your current input snapshot, not official result accuracy.'}</span></div>
+
+    <TeamReadinessPanel
+      report={readiness}
+      members={normalizedMembers}
+      onConfirm={confirmCurrent}
+      onStartEmpty={startEmpty}
+      onResetSample={reset}
+    />
+
+    <div className="summary-strip"><Metric label={ru ? 'Урон за ротацию' : 'Team damage'} value={formatNumber(result.totalDamage)} note={resultStateNote} /><Metric label="DPS" value={formatNumber(result.dps)} note={resultStateNote} /><Metric label={ru ? 'Длительность' : 'Duration'} value={`${duration} ${ru ? 'сек' : 's'}`} /><Metric label={ru ? 'Версия формулы' : 'Formula'} value="v0.1" note={ru ? 'Оценочная модель' : 'Estimate model'} /></div>
 
     <div className="team-layout"><div className="member-stack">{normalizedMembers.map((member, index) => {
       const character = characterByName.get(member.name);
