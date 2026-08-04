@@ -14,9 +14,14 @@ export interface VerifiedVisibleAction {
   description: LocalizedText;
   multiplier: number;
   requiredSkill: 'basic' | 'skill' | 'ultimate' | 'support';
-  requiredLevel: number;
+  requiredLevel: number | '—';
+  minimumAwakening?: number;
+  requiresLowerLevelTarget?: boolean;
+  defenceIgnore?: number;
+  assumedConditions?: readonly LocalizedText[];
   sourcePublisher: string;
   sourceUrl: string;
+  sourceUpdatedAt: string;
   verifiedAt: string;
 }
 
@@ -45,12 +50,12 @@ export interface VisibleTeamCalculation {
   allRowsComparable: boolean;
 }
 
-const shinkuSource = 'https://www.prydwen.gg/neverness-to-everness/characters/shinku';
+const source = (character: string) => `https://www.prydwen.gg/neverness-to-everness/characters/${character}`;
 
 /**
- * Only actions whose exact coefficient is visible in a current sourced record
- * are exposed. The first release deliberately avoids reconstructing Shinku's
- * entire Ultimate from undocumented animation hit data.
+ * Only standalone actions whose complete coefficient and trigger are explicit in
+ * a current source are exposed. A record represents one trigger, not a full
+ * animation string, burst window or rotation.
  */
 export const verifiedVisibleActions: readonly VerifiedVisibleAction[] = [
   {
@@ -65,8 +70,9 @@ export const verifiedVisibleActions: readonly VerifiedVisibleAction[] = [
     requiredSkill: 'basic',
     requiredLevel: 11,
     sourcePublisher: 'Prydwen Institute',
-    sourceUrl: shinkuSource,
-    verifiedAt: '2026-07-13',
+    sourceUrl: source('shinku'),
+    sourceUpdatedAt: '2026-07-13',
+    verifiedAt: '2026-08-04',
   },
   {
     id: 'shinku.menacing-gaze-eight.level-11',
@@ -79,9 +85,152 @@ export const verifiedVisibleActions: readonly VerifiedVisibleAction[] = [
     multiplier: 215.9 * 8,
     requiredSkill: 'basic',
     requiredLevel: 11,
+    assumedConditions: [{
+      ru: 'Набрано 8 уровней указанного в источнике состояния.',
+      en: 'Eight stacks of the source-listed state are active.',
+    }],
     sourcePublisher: 'Prydwen Institute',
-    sourceUrl: shinkuSource,
-    verifiedAt: '2026-07-13',
+    sourceUrl: source('shinku'),
+    sourceUpdatedAt: '2026-07-13',
+    verifiedAt: '2026-08-04',
+  },
+  {
+    id: 'nanally.fair-duel.level-11',
+    characterName: 'Nanally',
+    title: { ru: 'Честная дуэль: одно срабатывание', en: 'Fair Duel: one trigger' },
+    description: {
+      ru: 'Одна дополнительная атака пассивного навыка «Честная дуэль» при 11-м уровне базовой атаки. Это не весь период «Авторитета Ити-дайме».',
+      en: 'One Fair Duel follow-up at Basic Attack level 11. This is not the full Ichi-daime’s Authority window.',
+    },
+    multiplier: 129.5,
+    requiredSkill: 'basic',
+    requiredLevel: 11,
+    assumedConditions: [{
+      ru: 'Активен «Авторитет Ити-дайме», и команда нанесла один экземпляр урона цикла эспера.',
+      en: 'Ichi-daime’s Authority is active and the team dealt one instance of Esper Cycle damage.',
+    }],
+    sourcePublisher: 'Prydwen Institute',
+    sourceUrl: source('nanally'),
+    sourceUpdatedAt: '2026-06-23',
+    verifiedAt: '2026-08-04',
+  },
+  {
+    id: 'nanally.awakening-three-follow-up.level-11',
+    characterName: 'Nanally',
+    title: { ru: 'Пробуждение 3: одна дополнительная атака', en: 'Awakening 3: one follow-up' },
+    description: {
+      ru: 'Одно дополнительное срабатывание пробуждения 3 при 11-м уровне базовой атаки. Сайт не умножает его на длительность состояния автоматически.',
+      en: 'One Awakening 3 follow-up at Basic Attack level 11. The site does not automatically multiply it by the state duration.',
+    },
+    multiplier: 107.9,
+    requiredSkill: 'basic',
+    requiredLevel: 11,
+    minimumAwakening: 3,
+    assumedConditions: [{
+      ru: 'Активен «Авторитет Ити-дайме», и Наналли нанесла один экземпляр урона.',
+      en: 'Ichi-daime’s Authority is active and Nanally dealt one instance of damage.',
+    }],
+    sourcePublisher: 'Prydwen Institute',
+    sourceUrl: source('nanally'),
+    sourceUpdatedAt: '2026-06-23',
+    verifiedAt: '2026-08-04',
+  },
+  {
+    id: 'chaos.remora-enhancement.base-five-seconds',
+    characterName: 'Chaos',
+    title: { ru: 'Усиление Реморы: базовые 5 секунд', en: 'Remora Enhancement: base 5 seconds' },
+    description: {
+      ru: 'Одно завершение Реморы с базовой длительностью 5 секунд: 800% АТК. Это отдельный пассивный взрыв, а не атака Хаоса в окне сверхспособности.',
+      en: 'One Remora end at its base five-second duration: 800% ATK. This is a standalone passive detonation, not Chaos’s Ultimate-window rotation.',
+    },
+    multiplier: 800,
+    requiredSkill: 'basic',
+    requiredLevel: '—',
+    assumedConditions: [{
+      ru: 'Ремора завершилась через базовые 5 секунд и не была обновлена.',
+      en: 'Remora ended at its base five-second duration and was not reapplied.',
+    }],
+    sourcePublisher: 'Prydwen Institute',
+    sourceUrl: source('chaos'),
+    sourceUpdatedAt: '2026-07-08',
+    verifiedAt: '2026-08-04',
+  },
+  {
+    id: 'chaos.remora-enhancement.maximum-twelve-seconds',
+    characterName: 'Chaos',
+    title: { ru: 'Усиление Реморы: максимум 12 секунд', en: 'Remora Enhancement: maximum 12 seconds' },
+    description: {
+      ru: 'Максимально продлённая Ремора: базовые 800% АТК увеличиваются на предельные 300%, поэтому одно завершение даёт 3200% АТК. Это не вся ротация Хаоса.',
+      en: 'Maximum-duration Remora: the base 800% ATK is increased by the capped 300%, producing 3200% ATK for one end trigger. This is not Chaos’s full rotation.',
+    },
+    multiplier: 800 * 4,
+    requiredSkill: 'basic',
+    requiredLevel: '—',
+    assumedConditions: [{
+      ru: 'Ремора продлена до 12 секунд; прирост достиг указанного в источнике ограничения +300%.',
+      en: 'Remora was extended to 12 seconds and reached the source-listed +300% increase cap.',
+    }],
+    sourcePublisher: 'Prydwen Institute',
+    sourceUrl: source('chaos'),
+    sourceUpdatedAt: '2026-07-08',
+    verifiedAt: '2026-08-04',
+  },
+  {
+    id: 'lacrimosa.discord-enhancement.broken-target',
+    characterName: 'Lacrimosa',
+    title: { ru: 'Усиление Диссонанса: сломленная цель', en: 'Discord Enhancement: Broken target' },
+    description: {
+      ru: 'Одно дополнительное срабатывание на 400% АТК, когда Диссонанс срабатывает по уже сломленной цели. Это не включает обычный урон Диссонанса.',
+      en: 'One 400% ATK bonus trigger when Discord activates on an already Broken target. This excludes Discord’s normal damage.',
+    },
+    multiplier: 400,
+    requiredSkill: 'basic',
+    requiredLevel: '—',
+    assumedConditions: [{
+      ru: 'Цель уже сломлена в момент срабатывания Диссонанса.',
+      en: 'The target is already Broken when Discord triggers.',
+    }],
+    sourcePublisher: 'Prydwen Institute',
+    sourceUrl: source('lacrimosa'),
+    sourceUpdatedAt: '2026-06-23',
+    verifiedAt: '2026-08-04',
+  },
+  {
+    id: 'zero.blooming-gaze.awakening-one',
+    characterName: 'Zero',
+    title: { ru: 'Пробуждение 1: дополнительный удар', en: 'Awakening 1: additional hit' },
+    description: {
+      ru: 'Один дополнительный удар на 200% АТК по цели ниже уровнем. Для этого отдельного удара учитывается 75% игнорирования защиты.',
+      en: 'One additional 200% ATK hit against a lower-level target. This standalone hit applies 75% DEF Ignore.',
+    },
+    multiplier: 200,
+    requiredSkill: 'basic',
+    requiredLevel: '—',
+    minimumAwakening: 1,
+    requiresLowerLevelTarget: true,
+    defenceIgnore: 75,
+    sourcePublisher: 'Prydwen Institute',
+    sourceUrl: source('zero'),
+    sourceUpdatedAt: '2026-05-31',
+    verifiedAt: '2026-08-04',
+  },
+  {
+    id: 'zero.appraise-and-engrave-extra.awakening-six',
+    characterName: 'Zero',
+    title: { ru: 'Пробуждение 6: дополнительный урон навыка', en: 'Awakening 6: Skill extra damage' },
+    description: {
+      ru: 'Дополнительный урон «Оценки и гравировки» на 300% АТК по первой подходящей цели ниже уровнем. Основные четыре удара навыка сюда не входят.',
+      en: 'The 300% ATK extra damage from Appraise and Engrave against the first eligible lower-level target. The Skill’s four main hits are excluded.',
+    },
+    multiplier: 300,
+    requiredSkill: 'basic',
+    requiredLevel: '—',
+    minimumAwakening: 6,
+    requiresLowerLevelTarget: true,
+    sourcePublisher: 'Prydwen Institute',
+    sourceUrl: source('zero'),
+    sourceUpdatedAt: '2026-05-31',
+    verifiedAt: '2026-08-04',
   },
 ];
 
@@ -161,6 +310,35 @@ function blocked(
   };
 }
 
+function validateActionRequirements(
+  action: VerifiedVisibleAction,
+  build: GameVisibleCharacterBuild,
+  state: GameVisibleTeamState,
+): LocalizedText | null {
+  if (typeof action.requiredLevel === 'number') {
+    const actualLevel = build.skills[action.requiredSkill];
+    if (actualLevel !== action.requiredLevel) {
+      return {
+        ru: `Для этого коэффициента нужен уровень ${action.requiredLevel}. На другом уровне сайт не интерполирует значения и не придумывает формулу роста.`,
+        en: `This coefficient requires level ${action.requiredLevel}. The site does not interpolate or invent scaling for another level.`,
+      };
+    }
+  }
+  if (action.minimumAwakening !== undefined && build.awakeningLevel < action.minimumAwakening) {
+    return {
+      ru: `Для действия требуется пробуждение ${action.minimumAwakening} или выше.`,
+      en: `This action requires Awakening ${action.minimumAwakening} or higher.`,
+    };
+  }
+  if (action.requiresLowerLevelTarget && state.target.level >= build.level) {
+    return {
+      ru: `Цель должна быть ниже уровня персонажа. Сейчас персонаж ${build.level}-го уровня, цель ${state.target.level}-го.`,
+      en: `The target must be lower level than the character. Character level is ${build.level}; target level is ${state.target.level}.`,
+    };
+  }
+  return null;
+}
+
 export function calculateGameVisibleBuild(
   build: GameVisibleCharacterBuild,
   state: GameVisibleTeamState,
@@ -181,6 +359,7 @@ export function calculateGameVisibleBuild(
 
   let multiplier = 100;
   let explanation = referenceExplanation;
+  let actionDefenceIgnore = 0;
   const conditions: VisibleCalculationCondition[] = [{
     id: 'visible.final-atk',
     label: {
@@ -198,20 +377,48 @@ export function calculateGameVisibleBuild(
         en: 'Select a verified action for this character.',
       });
     }
-    const actualLevel = build.skills[action.requiredSkill];
-    if (actualLevel !== action.requiredLevel) {
-      return blocked(build.testMode, {
-        ru: `Для этого коэффициента нужен уровень ${action.requiredLevel}. На другом уровне сайт не интерполирует значения и не придумывает формулу роста.`,
-        en: `This coefficient requires level ${action.requiredLevel}. The site does not interpolate or invent scaling for another level.`,
-      });
-    }
+    const requirementError = validateActionRequirements(action, build, state);
+    if (requirementError) return blocked(build.testMode, requirementError);
+
     multiplier = action.multiplier;
     explanation = action.description;
-    conditions.push({
-      id: action.id,
-      label: action.title,
-      source: 'verified-data',
-    });
+    actionDefenceIgnore = action.defenceIgnore ?? 0;
+    conditions.push({ id: action.id, label: action.title, source: 'verified-data' });
+    action.assumedConditions?.forEach((label, index) => conditions.push({
+      id: `${action.id}.condition.${index + 1}`,
+      label,
+      source: 'test-preset',
+    }));
+    if (action.minimumAwakening !== undefined) {
+      conditions.push({
+        id: `${action.id}.awakening`,
+        label: {
+          ru: `Пробуждение персонажа: ${build.awakeningLevel}`,
+          en: `Character Awakening: ${build.awakeningLevel}`,
+        },
+        source: 'player',
+      });
+    }
+    if (action.requiresLowerLevelTarget) {
+      conditions.push({
+        id: `${action.id}.target-level`,
+        label: {
+          ru: `Уровень цели ${state.target.level} ниже уровня персонажа ${build.level}`,
+          en: `Target level ${state.target.level} is below character level ${build.level}`,
+        },
+        source: 'player',
+      });
+    }
+    if (action.defenceIgnore) {
+      conditions.push({
+        id: `${action.id}.defence-ignore`,
+        label: {
+          ru: `Удар игнорирует ${action.defenceIgnore}% защиты цели`,
+          en: `The hit ignores ${action.defenceIgnore}% of target DEF`,
+        },
+        source: 'verified-data',
+      });
+    }
   }
 
   const conditional = arcConditional(build, build.testMode);
@@ -227,6 +434,7 @@ export function calculateGameVisibleBuild(
     });
   }
 
+  const target = targetFromState(state, build.testMode);
   const result = calculateDamage({
     characterLevel: build.level,
     baseAtk: build.stats.atk,
@@ -241,8 +449,8 @@ export function calculateGameVisibleBuild(
     critRate: build.stats.critRate,
     critDamage: build.stats.critDamage,
     enemy: {
-      ...targetFromState(state, build.testMode),
-      defenceReduction: Math.min(100, targetFromState(state, build.testMode).defenceReduction + conditional.defenceIgnore),
+      ...target,
+      defenceReduction: Math.min(100, target.defenceReduction + conditional.defenceIgnore + actionDefenceIgnore),
     },
   });
 
