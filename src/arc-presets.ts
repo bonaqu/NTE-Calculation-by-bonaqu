@@ -76,7 +76,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'youthful-fantasy-m5', name: 'Youthful Fantasy', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 5,
     benchmarkNote: {
-      ru: 'Интенсивность сломления и эффект «Чёрного тома» зависят от боя; частичная модель учитывает только постоянные 570 ATK и 30% ATK.',
+      ru: 'Интенсивность разрушения и эффект «Чёрного тома» зависят от боя; частичная модель учитывает только постоянные 570 ATK и 30% ATK.',
       en: 'Break Intensity and Black Tome are encounter-dependent; the partial model includes only the permanent 570 ATK and 30% ATK.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/4.webp',
@@ -87,7 +87,7 @@ export const arcPresets: ModeledArcPreset[] = [
     id: 'youthful-fantasy-m1', name: 'Youthful Fantasy', rarity: 'S', type: 'Liquid', baseAtk: 570,
     secondaryLabel: 'ATK%', secondaryValue: 30, mixing: 1, benchmarkPercent: 92.55,
     benchmarkNote: {
-      ru: 'Интенсивность сломления и эффект «Чёрного тома» зависят от боя; частичная модель учитывает только постоянные 570 ATK и 30% ATK.',
+      ru: 'Интенсивность разрушения и эффект «Чёрного тома» зависят от боя; частичная модель учитывает только постоянные 570 ATK и 30% ATK.',
       en: 'Break Intensity and Black Tome are encounter-dependent; the partial model includes only the permanent 570 ATK and 30% ATK.',
     },
     image: 'https://cdn.prydwen.gg/images/nte/weapons/4.webp',
