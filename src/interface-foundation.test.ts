@@ -32,9 +32,12 @@ describe('restrained interface foundation', () => {
     expect(homeSource).not.toContain('tool-card');
   });
 
-  it('derives public home facts from current datasets', () => {
-    expect(homeSource).toContain('characterArcGuides.length');
-    expect(homeSource).toContain('arcDirectory.length');
-    expect(homeSource).toContain('arcBenchmarkScenarios.length');
+  it('uses lightweight public counters whose dataset synchronization is tested separately', () => {
+    expect(homeSource).toContain('homeProductStats.arcGuideCharacters');
+    expect(homeSource).toContain('homeProductStats.sourcedArcs');
+    expect(homeSource).toContain('homeProductStats.iroiBenchmarkScenarios');
+    expect(homeSource).not.toContain('characterArcGuides.length');
+    expect(homeSource).not.toContain('arcDirectory.length');
+    expect(homeSource).not.toContain('arcBenchmarkScenarios.length');
   });
 });
