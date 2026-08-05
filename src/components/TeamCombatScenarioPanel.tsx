@@ -47,6 +47,7 @@ import {
   ROTATION_SCENARIO_IMPORT_STORAGE_KEY,
   rotationSourceStep,
   type RotationScenarioImportMetadata,
+  type RotationScenarioSourceCoverage,
 } from '../rotation-scenario-import';
 import { teamEffectsForCharacter } from '../team-effects';
 import { BuildProfileManager } from './BuildProfileManager';
@@ -73,6 +74,12 @@ function stepLabel(kind: CombatScenarioStepKind, ru: boolean): string {
   if (kind === 'activate-cycle') return ru ? 'Активировать цикл эспера' : 'Activate Esper Cycle';
   if (kind === 'wait') return ru ? 'Ожидание / непокрытый шаг' : 'Wait / unsupported step';
   return ru ? 'Подтверждённое действие' : 'Verified action';
+}
+
+function coverageLabel(coverage: RotationScenarioSourceCoverage, ru: boolean): string {
+  if (coverage === 'full') return ru ? 'полностью' : 'full';
+  if (coverage === 'partial') return ru ? 'частично' : 'partial';
+  return ru ? 'не связано' : 'unsupported';
 }
 
 export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPanelProps) {
@@ -235,12 +242,14 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
       </div>
       {selectedPreset && importPreview ? <div className="rotation-scenario-preview">
         <div><span>{ru ? 'Исходных шагов' : 'Source steps'}</span><b>{importPreview.totalSourceSteps}</b></div>
-        <div><span>{ru ? 'Связано с моделью' : 'Safely bound'}</span><b>{importPreview.mappedSourceSteps}</b></div>
+        <div className="coverage-full"><span>{ru ? 'Полностью' : 'Full'}</span><b>{importPreview.fullyMappedSourceSteps}</b></div>
+        <div className="coverage-partial"><span>{ru ? 'Частично' : 'Partial'}</span><b>{importPreview.partiallyMappedSourceSteps}</b></div>
+        <div className="coverage-unsupported"><span>{ru ? 'Не связано' : 'Unsupported'}</span><b>{importPreview.unsupportedSourceSteps}</b></div>
         <div><span>{ru ? 'Действий' : 'Actions'}</span><b>{importPreview.generatedActionSteps}</b></div>
         <div><span>{ru ? 'Окон' : 'Windows'}</span><b>{importPreview.generatedEffectSteps + importPreview.generatedCycleSteps}</b></div>
-        <div><span>{ru ? 'Покрытие импорта' : 'Import coverage'}</span><b>{importPreview.coveragePercent}%</b></div>
+        <div className="coverage-weighted"><span>{ru ? 'Взвешенное покрытие' : 'Weighted coverage'}</span><b>{importPreview.coveragePercent}%</b></div>
       </div> : null}
-      {selectedPreset ? <div className="rotation-scenario-source"><span>{selectedPreset.sourcePublisher} · {selectedPreset.sourceUpdatedAt}</span><a href={selectedPreset.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Источник ротации' : 'Rotation source'} <ExternalLink size={13} /></a><small>{ru ? 'Покрытие импорта не означает полный DPS ротации.' : 'Import coverage does not mean full rotation DPS coverage.'}</small></div> : null}
+      {selectedPreset ? <div className="rotation-scenario-source"><span>{selectedPreset.sourcePublisher} · {selectedPreset.sourceUpdatedAt}</span><a href={selectedPreset.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Источник ротации' : 'Rotation source'} <ExternalLink size={13} /></a><small>{ru ? 'Полный шаг = 1, частичный = 0,5. Это не покрытие полного DPS.' : 'A full step counts as 1 and a partial step as 0.5. This is not full-DPS coverage.'}</small></div> : null}
     </section>
 
     {importedPreset && importMetadata.report ? <section className={`rotation-scenario-timing ${importMetadata.timingStatus}`}>
@@ -250,7 +259,7 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
           ? (ru ? 'Эффекты и циклы пока не участвуют в уроне. Проверь отметки времени перед подтверждением.' : 'Effects and cycles do not affect damage yet. Review timestamps before confirming them.')
           : (ru ? 'Изменение любой отметки времени снова отключит временные окна.' : 'Changing any timestamp will disable timed windows again.')}</small></span></div>
       {importMetadata.timingStatus === 'order-only' ? <button type="button" onClick={confirmImportedTiming}><CheckCircle2 size={16} />{ru ? 'Подтвердить введённые секунды' : 'Confirm entered seconds'}</button> : null}
-      <p>{importedPreset.title[locale]} · {importMetadata.report.mappedSourceSteps}/{importMetadata.report.totalSourceSteps} {ru ? 'исходных шагов связано безопасно' : 'source steps safely bound'}</p>
+      <p>{importedPreset.title[locale]} · {ru ? 'полностью' : 'full'} {importMetadata.report.fullyMappedSourceSteps} · {ru ? 'частично' : 'partial'} {importMetadata.report.partiallyMappedSourceSteps} · {ru ? 'не связано' : 'unsupported'} {importMetadata.report.unsupportedSourceSteps} · {importMetadata.report.coveragePercent}%</p>
     </section> : null}
 
     <BuildProfileManager team={team} locale={locale} />
@@ -305,7 +314,7 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
           </select> : step.kind === 'activate-cycle' ? <select value={step.cycleId} aria-label={ru ? 'Подтверждённый цикл эспера' : 'Verified Esper Cycle'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, cycleId: event.target.value }), true)}>
             <option value="">{ru ? 'Выбери численно поддержанный цикл' : 'Select a numerically supported cycle'}</option>
             {supportedCycles.map(({ model, cycle }) => <option value={model.id} key={model.id}>{cycle?.name[locale]} · {model.durationSeconds}{ru ? 'с' : 's'} · +{model.damageBonus}%</option>)}
-          </select> : <input value={step.note} maxLength={400} onChange={(event) => updateStep(step.id, (current) => ({ ...current, note: event.target.value }))} placeholder={ru ? 'Что происходит в непокрытой части ротации' : 'What happens in the unsupported rotation part'} />}{origin ? <small>Rotation Lab · {origin.step.instruction[locale]}{origin.part ? ` · ${ru ? 'часть' : 'part'} ${origin.part + 1}` : ''}</small> : null}</div>
+          </select> : <input value={step.note} maxLength={400} onChange={(event) => updateStep(step.id, (current) => ({ ...current, note: event.target.value }))} placeholder={ru ? 'Что происходит в непокрытой части ротации' : 'What happens in the unsupported rotation part'} />}{origin ? <small className={`rotation-origin coverage-${origin.coverage}`}>Rotation Lab · {coverageLabel(origin.coverage, ru)} · {origin.step.instruction[locale]}{origin.part ? ` · ${ru ? 'часть' : 'part'} ${origin.part + 1}` : ''}</small> : null}</div>
           <div className="combat-scenario-row-actions"><button type="button" aria-label={ru ? 'Дублировать' : 'Duplicate'} onClick={() => duplicateStep(step.id)}><Copy size={15} /></button><button type="button" aria-label={ru ? 'Удалить' : 'Remove'} onClick={() => removeStep(step.id)}><Trash2 size={15} /></button></div>
         </div>;
       })}
@@ -334,7 +343,7 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
                 ? (entry.step.note || (ru ? 'Непокрытый промежуток' : 'Unsupported interval'))
                 : (ru ? 'Шаг заблокирован' : 'Step blocked')}</b><small>{entry.step.kind === 'activate-cycle'
                   ? (ru ? 'Состояние общей цели' : 'Shared target state')
-                  : entry.sourceCharacter ? localizedCharacterName(entry.sourceCharacter, locale) : ''}{activeWindowCount ? ` · ${activeWindowCount} ${ru ? 'активн. окон' : 'active windows'}` : ''}{origin ? ` · Rotation Lab: ${origin.step.id}` : ''}</small>{entry.blockedReason ? <p>{entry.blockedReason[locale]}</p> : null}</div>
+                  : entry.sourceCharacter ? localizedCharacterName(entry.sourceCharacter, locale) : ''}{activeWindowCount ? ` · ${activeWindowCount} ${ru ? 'активн. окон' : 'active windows'}` : ''}{origin ? ` · Rotation Lab: ${origin.step.id} (${coverageLabel(origin.coverage, ru)})` : ''}</small>{entry.blockedReason ? <p>{entry.blockedReason[locale]}</p> : null}</div>
           <div className="combat-scenario-result-value">{damage ? <><strong>{format(damage.expected)}</strong><small>{ru ? 'ожидаемый' : 'expected'}</small></> : entry.status === 'activated' ? <><strong>{activatedDuration === 'combat' ? '∞' : `${activatedDuration}${ru ? 'с' : 's'}`}</strong><small>{ru ? 'окно' : 'window'}</small></> : null}</div>
         </li>;
       })}</ol>
