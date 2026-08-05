@@ -1,14 +1,13 @@
-import { readFileSync } from 'node:fs';
+/// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest';
+import panelSource from './components/VerifiedScenarioRecipePanel.tsx?raw';
+import compositionSource from './components/TeamCombatScenarioPanel.ts?raw';
+import calculatorSource from './pages/GameVisibleTeamCalculatorPage.tsx?raw';
+import styles from './verified-scenario-recipes.css?raw';
 import {
   verifiedActionScenarioRecipes,
   verifiedRotationFragments,
 } from './verified-action-scenario-recipes';
-
-const panelSource = readFileSync(new URL('./components/VerifiedScenarioRecipePanel.tsx', import.meta.url), 'utf8');
-const compositionSource = readFileSync(new URL('./components/TeamCombatScenarioPanel.ts', import.meta.url), 'utf8');
-const calculatorSource = readFileSync(new URL('./pages/GameVisibleTeamCalculatorPage.tsx', import.meta.url), 'utf8');
-const styles = readFileSync(new URL('./verified-scenario-recipes.css', import.meta.url), 'utf8');
 
 describe('verified scenario recipe UI', () => {
   it('keeps the complete recipe catalog and verified fragments available to the picker', () => {
