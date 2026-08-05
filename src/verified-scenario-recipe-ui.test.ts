@@ -9,25 +9,31 @@ import {
   verifiedActionScenarioRecipes,
   verifiedRotationFragments,
 } from './verified-action-scenario-recipes';
+import { verifiedRotationRecipes } from './verified-rotation-recipes';
 
 const styles = readFileSync(new URL('./verified-scenario-recipes.css', import.meta.url), 'utf8');
 
 describe('verified scenario recipe UI', () => {
-  it('keeps the complete recipe catalog and verified fragments available to the picker', () => {
+  it('keeps standalone actions, exact fragments and audited rotation recipes separate', () => {
     expect(verifiedActionScenarioRecipes).toHaveLength(86);
     expect(new Set(verifiedActionScenarioRecipes.map((recipe) => recipe.characterName)).size).toBe(20);
     expect(verifiedRotationFragments).toHaveLength(1);
+    expect(verifiedRotationRecipes).toHaveLength(4);
     expect(panelSource).toContain('verifiedActionScenarioRecipes.filter');
     expect(panelSource).toContain('verifiedRotationFragments.filter');
+    expect(panelSource).toContain('verifiedRotationRecipes.filter');
     expect(panelSource).toContain('teamNames.has(recipe.characterName)');
-    expect(panelSource).toContain('teamNames.has(fragment.characterName)');
+    expect(panelSource).toContain('recipe.team.every((characterName) => teamNames.has(characterName))');
   });
 
-  it('applies only existing v1 scenario state and detaches Rotation Lab provenance', () => {
+  it('uses the existing v1 scenario state and handles provenance by recipe source', () => {
     expect(panelSource).toContain('compileVerifiedActionScenario');
     expect(panelSource).toContain('compileVerifiedRotationFragment');
+    expect(panelSource).toContain('compileVerifiedRotationRecipe');
     expect(panelSource).toContain('setScenario((current) =>');
     expect(panelSource).toContain('setImportMetadata(initialRotationScenarioImportMetadata())');
+    expect(panelSource).toContain('setImportMetadata(compiled.metadata)');
+    expect(panelSource).toContain('provenance Rotation Lab сохранён');
     expect(panelSource).not.toContain('setStoredTeam');
     expect(panelSource).not.toContain('createEmptyGameVisibleBuild');
   });
@@ -36,20 +42,26 @@ describe('verified scenario recipe UI', () => {
     expect(panelSource).toContain('window.confirm');
     expect(panelSource).toContain('Состав и сборки не изменятся');
     expect(panelSource).toContain('The lineup and builds will not change');
-    expect(panelSource).toContain('повторения и секунды не появляются без прямого источника');
-    expect(panelSource).toContain('repeats and seconds appear only with direct evidence');
+    expect(panelSource).toContain('Повторения, эффекты, циклы и секунды появляются только при прямом подтверждении');
+    expect(panelSource).toContain('Repeats, effects, Cycles and seconds appear only with direct evidence');
     expect(panelSource).toContain('это не посекундный таймлайн');
     expect(panelSource).toContain('this is not a second-by-second timeline');
+    expect(panelSource).toContain('Только порядок · секунды не подтверждены');
   });
 
-  it('shows action requirements, scaling, source provenance and order-only fragments', () => {
+  it('shows action requirements, recipe coverage, gaps and source provenance', () => {
     expect(panelSource).toContain('requiredSkillLabel');
     expect(panelSource).toContain('scalingLabel');
     expect(panelSource).toContain('timingLabel');
+    expect(panelSource).toContain('rotationCoverageLabel');
+    expect(panelSource).toContain('rotationTimingLabel');
     expect(panelSource).toContain('selectedAction.sourceUpdatedAt');
     expect(panelSource).toContain('selectedFragment.evidence.sourceUpdatedAt');
+    expect(panelSource).toContain('selectedRotationRecipe.gaps.length');
+    expect(panelSource).toContain('Что не вошло');
     expect(panelSource).toContain('Источник действия');
     expect(panelSource).toContain('Источник порядка');
+    expect(panelSource).toContain('Источник ротации');
   });
 
   it('composes the recipe picker before the existing manual scenario editor', () => {
@@ -62,6 +74,7 @@ describe('verified scenario recipe UI', () => {
 
   it('uses a border-led responsive layout without gradients or shadows', () => {
     expect(styles).toContain('.verified-scenario-recipes__grid');
+    expect(styles).toContain('.verified-scenario-recipes__gaps');
     expect(styles).toContain('@media (max-width: 900px)');
     expect(styles).toContain('@media (max-width: 560px)');
     expect(styles).toContain('border-radius: 0');

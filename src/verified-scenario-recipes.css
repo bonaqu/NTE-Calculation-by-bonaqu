@@ -126,6 +126,26 @@
   padding-left: 22px;
 }
 
+.verified-scenario-recipes__gaps {
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.14));
+  padding: 10px 12px;
+}
+
+.verified-scenario-recipes__gaps summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.verified-scenario-recipes__gaps ul {
+  display: grid;
+  gap: 7px;
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 0.78rem;
+  opacity: 0.76;
+}
+
 .verified-scenario-recipes__source {
   justify-content: space-between;
   gap: 12px;
@@ -164,7 +184,8 @@
 }
 
 .verified-scenario-recipes article > button:focus-visible,
-.verified-scenario-recipes select:focus-visible {
+.verified-scenario-recipes select:focus-visible,
+.verified-scenario-recipes__gaps summary:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
