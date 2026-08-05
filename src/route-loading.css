@@ -1,0 +1,5 @@
+.route-loading{width:min(720px,calc(100% - 32px));min-height:220px;margin:32px auto;display:flex;align-items:center;justify-content:center;gap:12px;border:1px solid var(--border);background:var(--panel)}
+.route-loading>svg{flex:0 0 auto;animation:route-loading-spin .9s linear infinite}.route-loading>div{display:grid;gap:3px}.route-loading b{font-size:15px}.route-loading span{font-size:13px;color:var(--text-muted)}
+@keyframes route-loading-spin{to{rotate:360deg}}
+@media(max-width:620px){.route-loading{min-height:180px;margin:18px auto}}
+@media(prefers-reduced-motion:reduce){.route-loading>svg{animation:none}}
