@@ -3,6 +3,9 @@ import { verifiedVisibleActionsBatchB } from './verified-visible-actions-batch-b
 import { verifiedVisibleActionsBatchC } from './verified-visible-actions-batch-c';
 import { verifiedVisibleActionsBatchD } from './verified-visible-actions-batch-d';
 import { verifiedVisibleActionsBatchE } from './verified-visible-actions-batch-e';
+import { verifiedVisibleActionsBatchF } from './verified-visible-actions-batch-f';
+
+export type ActionScalingStat = 'atk' | 'def' | 'max-hp';
 
 export interface VerifiedVisibleAction {
   id: string;
@@ -10,6 +13,8 @@ export interface VerifiedVisibleAction {
   title: LocalizedText;
   description: LocalizedText;
   multiplier: number;
+  /** Omitted values preserve the legacy final-ATK calculation path. */
+  scalingStat?: ActionScalingStat;
   requiredSkill: 'basic' | 'skill' | 'ultimate' | 'support';
   requiredLevel: number | '—';
   minimumAwakening?: number;
@@ -211,6 +216,7 @@ export const verifiedVisibleActions: readonly VerifiedVisibleAction[] = [
   ...verifiedVisibleActionsBatchC,
   ...verifiedVisibleActionsBatchD,
   ...verifiedVisibleActionsBatchE,
+  ...verifiedVisibleActionsBatchF,
 ];
 
 export const visibleActionById = new Map(verifiedVisibleActions.map((action) => [action.id, action]));
