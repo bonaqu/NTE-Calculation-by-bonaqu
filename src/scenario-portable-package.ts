@@ -25,7 +25,7 @@ import {
   ROTATION_SCENARIO_IMPORT_VERSION,
   type RotationScenarioImportMetadata,
 } from './rotation-scenario-import';
-import { verifiedTeamEffectById } from './team-effects';
+import { verifiedTeamEffectById, type VerifiedTeamEffectId } from './team-effects';
 import type { EsperCycleId } from './types';
 import { visibleActionById } from './verified-visible-actions';
 
@@ -201,7 +201,7 @@ function normalizeTeamPayload(value: unknown):
 function blockedModelRow(step: CombatScenarioStep, lineup: readonly string[]): boolean {
   const owner = lineup[step.sourceSlot];
   if (step.kind === 'action') return visibleActionById.get(step.actionId)?.characterName !== owner;
-  if (step.kind === 'activate-effect') return verifiedTeamEffectById.get(step.effectId)?.sourceCharacter !== owner;
+  if (step.kind === 'activate-effect') return verifiedTeamEffectById.get(step.effectId as VerifiedTeamEffectId)?.sourceCharacter !== owner;
   if (step.kind === 'activate-cycle') return !verifiedCombatCycleModelById.has(step.cycleId as EsperCycleId);
   return false;
 }
