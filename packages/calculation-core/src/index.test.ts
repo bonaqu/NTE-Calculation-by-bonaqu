@@ -26,10 +26,49 @@ const emptyModifiers = {
 };
 
 describe('calculation core', () => {
-  it('calculates deterministic expected damage', () => {
+  it('calculates deterministic expected damage with legacy ATK behavior', () => {
     const result = calculateDamage(baseInput);
     expect(result.totalAtk).toBe(2250);
+    expect(result.scalingValue).toBe(result.totalAtk);
     expect(result.expected).toBeCloseTo(1350, 6);
+  });
+
+  it('uses an explicit final scaling value without relabeling or mutating total ATK', () => {
+    const result = calculateDamage({ ...baseInput, scalingValue: 3000 });
+    expect(result.totalAtk).toBe(2250);
+    expect(result.scalingValue).toBe(3000);
+    expect(result.expected).toBeCloseTo(1800, 6);
+  });
+
+  it('does not apply ATK-only modifiers to an explicit DEF or Max-HP scaling value', () => {
+    const baseline = calculateDamage({
+      ...baseInput,
+      baseAtk: 100,
+      arcAtk: 0,
+      flatAtk: 0,
+      atkPercent: 0,
+      teamAtkPercent: 0,
+      scalingValue: 4000,
+    });
+    const withAtkModifiers = calculateDamage({
+      ...baseInput,
+      baseAtk: 100,
+      arcAtk: 900,
+      flatAtk: 700,
+      atkPercent: 200,
+      teamAtkPercent: 100,
+      scalingValue: 4000,
+    });
+    expect(withAtkModifiers.totalAtk).not.toBe(baseline.totalAtk);
+    expect(withAtkModifiers.scalingValue).toBe(4000);
+    expect(withAtkModifiers.expected).toBeCloseTo(baseline.expected, 8);
+  });
+
+  it('sanitizes invalid explicit scaling values without falling back to ATK', () => {
+    const result = calculateDamage({ ...baseInput, scalingValue: Number.NaN });
+    expect(result.totalAtk).toBe(2250);
+    expect(result.scalingValue).toBe(0);
+    expect(result.expected).toBe(0);
   });
 
   it('matches the documented equal-level DEF multiplier', () => {
