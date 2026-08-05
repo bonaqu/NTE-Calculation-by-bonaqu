@@ -28,6 +28,10 @@ describe('game-visible build profile', () => {
       'Aurelia',
       'Chiz',
       'Edgar',
+      'Hotori',
+      'Iroi',
+      'Mint',
+      'Skia',
     ];
     expect(characterCombatCoverage).toHaveLength(released.length);
     expect(new Set(characterCombatCoverage.map((record) => record.characterName)).size).toBe(released.length);

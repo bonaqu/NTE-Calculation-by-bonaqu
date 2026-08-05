@@ -31,8 +31,8 @@ function combatBuild(characterName: string): GameVisibleCharacterBuild {
 describe('verified game-visible actions batch B', () => {
   it('keeps five unique Batch B records inside the expanded public catalog', () => {
     expect(verifiedVisibleActionsBatchB).toHaveLength(5);
-    expect(verifiedVisibleActions).toHaveLength(49);
-    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(49);
+    expect(verifiedVisibleActions).toHaveLength(75);
+    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(75);
     expect(new Set(verifiedVisibleActionsBatchB.map((action) => action.characterName)))
       .toEqual(new Set(['Hathor', 'Jiuyuan']));
     for (const action of verifiedVisibleActionsBatchB) {
