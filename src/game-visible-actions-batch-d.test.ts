@@ -31,10 +31,10 @@ function multiplier(id: string): number | undefined {
 }
 
 describe('verified game-visible actions batch D', () => {
-  it('adds fourteen unique ATK-scaling records inside the seventy-five-action catalog', () => {
+  it('adds fourteen unique ATK-scaling records inside the complete action catalog', () => {
     expect(verifiedVisibleActionsBatchD).toHaveLength(14);
-    expect(verifiedVisibleActions).toHaveLength(75);
-    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(75);
+    expect(verifiedVisibleActions).toHaveLength(86);
+    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(86);
     expect(new Set(verifiedVisibleActionsBatchD.map((action) => action.characterName))).toEqual(
       new Set(['Aurelia', 'Chiz', 'Edgar']),
     );
@@ -81,9 +81,11 @@ describe('verified game-visible actions batch D', () => {
     }
   });
 
-  it('keeps DEF and Max-HP scalers outside the ATK-only action batch', () => {
+  it('keeps DEF and Max-HP scalers outside the ATK-only Batch D records', () => {
     expect(verifiedVisibleActionsBatchD.some((action) => action.characterName === 'Adler')).toBe(false);
     expect(verifiedVisibleActionsBatchD.some((action) => action.characterName === 'Fadia')).toBe(false);
+    expect(combatCoverageByCharacter.get('Adler')?.coverage).toBe('partial');
+    expect(combatCoverageByCharacter.get('Fadia')?.coverage).toBe('partial');
   });
 
   it('blocks unsourced skill levels and activates the exact level-10 record', () => {
@@ -104,14 +106,11 @@ describe('verified game-visible actions batch D', () => {
     expect(active.multiplier).toBeCloseTo(1000.1, 8);
   });
 
-  it('promotes exactly the three new characters to partial verified-action coverage', () => {
+  it('promotes exactly the three Batch D characters to partial verified-action coverage', () => {
     for (const characterName of ['Aurelia', 'Chiz', 'Edgar']) {
       const coverage = combatCoverageByCharacter.get(characterName);
       expect(coverage?.coverage).toBe('partial');
       expect(coverage?.supportedModes).toContain('verified-action');
-    }
-    for (const characterName of ['Adler', 'Fadia']) {
-      expect(combatCoverageByCharacter.get(characterName)?.coverage).toBe('relative-only');
     }
   });
 
