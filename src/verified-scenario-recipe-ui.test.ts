@@ -3,7 +3,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import panelSource from './components/VerifiedScenarioRecipePanel.tsx?raw';
-import compositionSource from './components/TeamCombatScenarioPanel.ts?raw';
+import compositionSource from './components/TeamCombatScenarioPanel.tsx?raw';
+import manualEditorSource from './components/ManualTeamCombatScenarioEditor.tsx?raw';
 import calculatorSource from './pages/GameVisibleTeamCalculatorPage.tsx?raw';
 import {
   verifiedActionScenarioRecipes,
@@ -64,12 +65,17 @@ describe('verified scenario recipe UI', () => {
     expect(panelSource).toContain('Источник ротации');
   });
 
-  it('composes the recipe picker before the existing manual scenario editor', () => {
+  it('composes recipes before the existing manual editor through one canonical TSX entry', () => {
     expect(calculatorSource).toContain("from '../components/TeamCombatScenarioPanel'");
-    expect(compositionSource.indexOf('createElement(VerifiedScenarioRecipePanel')).toBeGreaterThan(-1);
-    expect(compositionSource.indexOf('createElement(ManualTeamCombatScenarioPanel')).toBeGreaterThan(
-      compositionSource.indexOf('createElement(VerifiedScenarioRecipePanel'),
+    expect(compositionSource).toContain("from './ManualTeamCombatScenarioEditor'");
+    expect(compositionSource.indexOf('<VerifiedScenarioRecipePanel {...props} />')).toBeGreaterThan(-1);
+    expect(compositionSource.indexOf('<ManualTeamCombatScenarioEditor {...props} />')).toBeGreaterThan(
+      compositionSource.indexOf('<VerifiedScenarioRecipePanel {...props} />'),
     );
+    expect(compositionSource).not.toContain('createElement');
+    expect(compositionSource).not.toContain('@ts-ignore');
+    expect(compositionSource).not.toMatch(/\.tsx['"]/u);
+    expect(manualEditorSource).toContain('export function TeamCombatScenarioPanel');
   });
 
   it('uses a border-led responsive layout without gradients or shadows', () => {
