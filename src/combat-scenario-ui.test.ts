@@ -2,7 +2,8 @@
 // @ts-expect-error Vitest evaluates raw source contracts in Node without Node types.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import componentSource from './components/TeamCombatScenarioPanel.tsx?raw';
+import compositionSource from './components/TeamCombatScenarioPanel.tsx?raw';
+import manualEditorSource from './components/ManualTeamCombatScenarioEditor.tsx?raw';
 import engineSource from './combat-scenario.ts?raw';
 import importSource from './rotation-scenario-import.ts?raw';
 import mainSource from './main.tsx?raw';
@@ -13,12 +14,17 @@ import wranglerSource from '../workers/api/wrangler.jsonc?raw';
 const css = readFileSync(new URL('./combat-scenario.css', import.meta.url), 'utf8');
 
 describe('verified team combat scenario product contract', () => {
-  it('adds a dedicated scenario workspace to Team Calculator', () => {
+  it('adds one canonical scenario workspace composition to Team Calculator', () => {
     expect(pageSource).toContain("import { TeamCombatScenarioPanel }");
     expect(pageSource).toContain("'scenario'");
     expect(pageSource).toContain("scenario: { ru: 'Сценарий', en: 'Scenario' }");
     expect(pageSource).toContain('<TeamCombatScenarioPanel team={state} locale={locale} />');
     expect(pageSource).toContain("tab !== 'scenario'");
+    expect(compositionSource).toContain("from './ManualTeamCombatScenarioEditor'");
+    expect(compositionSource).toContain('<VerifiedScenarioRecipePanel {...props} />');
+    expect(compositionSource).toContain('<ManualTeamCombatScenarioEditor {...props} />');
+    expect(compositionSource).not.toContain('@ts-ignore');
+    expect(compositionSource).not.toContain('.tsx\'');
   });
 
   it('stores the scenario and Rotation Lab provenance in independent v1 records', () => {
@@ -27,17 +33,17 @@ describe('verified team combat scenario product contract', () => {
     expect(engineSource).toContain('normalizeCombatScenarioState');
     expect(importSource).toContain("ROTATION_SCENARIO_IMPORT_STORAGE_KEY = 'nte.team.scenario.rotation-import.v1'");
     expect(importSource).toContain("timingStatus: 'order-only'");
-    expect(componentSource).toContain('{ normalize: normalizeCombatScenarioState }');
-    expect(componentSource).toContain('{ normalize: normalizeRotationScenarioImportMetadata }');
+    expect(manualEditorSource).toContain('{ normalize: normalizeCombatScenarioState }');
+    expect(manualEditorSource).toContain('{ normalize: normalizeRotationScenarioImportMetadata }');
   });
 
   it('imports sourced rotations without fuzzy matching or invented seconds', () => {
-    expect(componentSource).toContain('Импорт из Rotation Lab');
-    expect(componentSource).toContain('Порядок без подтверждённых секунд');
-    expect(componentSource).toContain('Полный шаг = 1, частичный = 0,5');
-    expect(componentSource).toContain('Взвешенное покрытие');
-    expect(componentSource).toContain('confirmRotationScenarioTiming');
-    expect(componentSource).toContain('invalidateRotationScenarioTiming');
+    expect(manualEditorSource).toContain('Импорт из Rotation Lab');
+    expect(manualEditorSource).toContain('Порядок без подтверждённых секунд');
+    expect(manualEditorSource).toContain('Полный шаг = 1, частичный = 0,5');
+    expect(manualEditorSource).toContain('Взвешенное покрытие');
+    expect(manualEditorSource).toContain('confirmRotationScenarioTiming');
+    expect(manualEditorSource).toContain('invalidateRotationScenarioTiming');
     expect(importSource).toContain('Exact source-step bindings only');
     expect(importSource).toContain('RotationScenarioBindingAtom');
     expect(importSource).toContain('generatedPartialRemainderSteps');
@@ -45,23 +51,23 @@ describe('verified team combat scenario product contract', () => {
   });
 
   it('exposes only verified actions, effects, supported cycles and timing instead of hidden formula inputs', () => {
-    expect(componentSource).toContain("addStep('action')");
-    expect(componentSource).toContain("addStep('activate-effect')");
-    expect(componentSource).toContain("addStep('activate-cycle')");
-    expect(componentSource).toContain("addStep('wait')");
-    expect(componentSource).toContain('actionsForCharacter');
-    expect(componentSource).toContain('teamEffectsForCharacter');
-    expect(componentSource).toContain('verifiedCombatCycleModels');
-    expect(componentSource).not.toContain('skillMultiplier');
-    expect(componentSource).not.toContain('actionsPerRotation');
-    expect(componentSource).not.toContain('hitCount');
+    expect(manualEditorSource).toContain("addStep('action')");
+    expect(manualEditorSource).toContain("addStep('activate-effect')");
+    expect(manualEditorSource).toContain("addStep('activate-cycle')");
+    expect(manualEditorSource).toContain("addStep('wait')");
+    expect(manualEditorSource).toContain('actionsForCharacter');
+    expect(manualEditorSource).toContain('teamEffectsForCharacter');
+    expect(manualEditorSource).toContain('verifiedCombatCycleModels');
+    expect(manualEditorSource).not.toContain('skillMultiplier');
+    expect(manualEditorSource).not.toContain('actionsPerRotation');
+    expect(manualEditorSource).not.toContain('hitCount');
   });
 
   it('states partial verified coverage instead of claiming full rotation DPS', () => {
-    expect(componentSource).toContain('Это не полный DPS ротации');
-    expect(componentSource).toContain('Покрытие действий');
-    expect(componentSource).toContain('Остальные циклы не превращаются в выдуманный урон');
-    expect(componentSource).toContain("coverage-${origin.coverage}");
+    expect(manualEditorSource).toContain('Это не полный DPS ротации');
+    expect(manualEditorSource).toContain('Покрытие действий');
+    expect(manualEditorSource).toContain('Остальные циклы не превращаются в выдуманный урон');
+    expect(manualEditorSource).toContain("coverage-${origin.coverage}");
     expect(engineSource).toContain('coveragePercent');
     expect(engineSource).toContain("status: 'blocked'");
     expect(engineSource).toContain("status: 'wait'");
