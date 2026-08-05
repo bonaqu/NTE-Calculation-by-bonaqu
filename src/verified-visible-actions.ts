@@ -1,6 +1,7 @@
 import type { LocalizedText } from './types';
 import { verifiedVisibleActionsBatchB } from './verified-visible-actions-batch-b';
 import { verifiedVisibleActionsBatchC } from './verified-visible-actions-batch-c';
+import { verifiedVisibleActionsBatchD } from './verified-visible-actions-batch-d';
 
 export interface VerifiedVisibleAction {
   id: string;
@@ -207,6 +208,7 @@ export const verifiedVisibleActions: readonly VerifiedVisibleAction[] = [
   ...verifiedVisibleActionsBase,
   ...verifiedVisibleActionsBatchB,
   ...verifiedVisibleActionsBatchC,
+  ...verifiedVisibleActionsBatchD,
 ];
 
 export const visibleActionById = new Map(verifiedVisibleActions.map((action) => [action.id, action]));

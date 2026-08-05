@@ -1,0 +1,277 @@
+import type { VerifiedVisibleAction } from './verified-visible-actions';
+
+const verifiedAt = '2026-08-05';
+const icy = (character: string) => `https://www.icy-veins.com/neverness-to-everness/${character}-profile-skills`;
+
+/**
+ * Batch D adds ATK-scaling records only. Adler's DEF-scaled actions and Fadia's
+ * Max-HP-scaled actions remain excluded until the visible calculation contract
+ * supports an explicit scaling stat instead of treating every ratio as ATK.
+ *
+ * One record is one exact published action or trigger. Repeat counts, field
+ * duration, Grain-dependent values and healing are never inferred here.
+ */
+export const verifiedVisibleActionsBatchD: readonly VerifiedVisibleAction[] = [
+  {
+    id: 'aurelia.cappella.legato-full-sequence.level-10',
+    characterName: 'Aurelia',
+    title: { ru: 'Cappella · полная последовательность Legato', en: 'Cappella: full Legato sequence' },
+    description: {
+      ru: 'Все четыре опубликованные ступени обычной базовой атаки: 69,4% + 125,9% + 60% × 3 + 19,8% × 4 = 454,5% АТК. Staccato, воздушная атака и ответный удар не включены.',
+      en: 'All four published normal Basic Attack stages: 69.4% + 125.9% + 60% × 3 + 19.8% × 4 = 454.5% ATK. Staccato, plunge and riposte attacks are excluded.',
+    },
+    multiplier: 69.4 + 125.9 + 60 * 3 + 19.8 * 4,
+    requiredSkill: 'basic',
+    requiredLevel: 10,
+    assumedConditions: [{
+      ru: 'Все попадания четырёхступенчатой последовательности Legato пришлись по проверяемой цели.',
+      en: 'Every hit of the four-stage Legato sequence connects with the tested target.',
+    }],
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('aurelia'),
+    sourceUpdatedAt: '2026-07-28',
+    verifiedAt,
+  },
+  {
+    id: 'aurelia.cadenza-aria.direct.level-10',
+    characterName: 'Aurelia',
+    title: { ru: 'Cadenza Aria · прямой удар', en: 'Cadenza Aria: direct hit' },
+    description: {
+      ru: 'Один опубликованный прямой удар навыка: 199,9% АТК. Двенадцатисекундное состояние Cadenza и его последующие усиления сюда не входят.',
+      en: 'One published direct Skill hit: 199.9% ATK. The twelve-second Cadenza state and later bonuses are excluded.',
+    },
+    multiplier: 199.9,
+    requiredSkill: 'skill',
+    requiredLevel: 10,
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('aurelia'),
+    sourceUpdatedAt: '2026-07-28',
+    verifiedAt,
+  },
+  {
+    id: 'aurelia.canon-chorus.full-composition.level-10',
+    characterName: 'Aurelia',
+    title: { ru: 'Canon Chorus · полная композиция', en: 'Canon Chorus: full composition' },
+    description: {
+      ru: 'Шесть опубликованных попаданий сверхспособности: 177,9% АТК × 5 + 110,3% АТК = 999,8% АТК.',
+      en: 'Six published Ultimate hits: 177.9% ATK × 5 + 110.3% ATK = 999.8% ATK.',
+    },
+    multiplier: 177.9 * 5 + 110.3,
+    requiredSkill: 'ultimate',
+    requiredLevel: 10,
+    assumedConditions: [{
+      ru: 'Все шесть попаданий Canon Chorus попали по проверяемой цели.',
+      en: 'All six Canon Chorus hits connect with the tested target.',
+    }],
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('aurelia'),
+    sourceUpdatedAt: '2026-07-28',
+    verifiedAt,
+  },
+  {
+    id: 'aurelia.dissonance.level-10',
+    characterName: 'Aurelia',
+    title: { ru: 'Dissonance · одно применение', en: 'Dissonance: one cast' },
+    description: {
+      ru: 'Один опубликованный удар навыка поддержки: 399,8% АТК.',
+      en: 'One published Support Skill hit: 399.8% ATK.',
+    },
+    multiplier: 399.8,
+    requiredSkill: 'support',
+    requiredLevel: 10,
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('aurelia'),
+    sourceUpdatedAt: '2026-07-28',
+    verifiedAt,
+  },
+  {
+    id: 'aurelia.harmonics.nova-end-trigger',
+    characterName: 'Aurelia',
+    title: { ru: 'Harmonics · завершение Nova', en: 'Harmonics: Nova end trigger' },
+    description: {
+      ru: 'Один явно описанный пассивный триггер после завершения Nova: 50% АТК × 3 = 150% АТК. Это не включает урон, который наложил Nova.',
+      en: 'One explicitly described passive trigger after Nova ends: 50% ATK × 3 = 150% ATK. The damage that applied Nova is excluded.',
+    },
+    multiplier: 50 * 3,
+    requiredSkill: 'support',
+    requiredLevel: '—',
+    assumedConditions: [{
+      ru: 'Статус Nova завершился на проверяемой цели; учитываются ровно три указанных попадания.',
+      en: 'Nova ended on the tested target; exactly the three listed hits are counted.',
+    }],
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('aurelia'),
+    sourceUpdatedAt: '2026-07-28',
+    verifiedAt,
+  },
+
+  {
+    id: 'chiz.exiled-swordplay.full-sequence.level-10',
+    characterName: 'Chiz',
+    title: { ru: 'Exiled Swordplay · полная обычная последовательность', en: 'Exiled Swordplay: full normal sequence' },
+    description: {
+      ru: 'Все пять опубликованных ступеней: 69% + 34,2% × 3 + 111,9% + 41,8% × 5 + 79,4% × 2 = 651,3% АТК. Ответвления Blighted Vale, воздушная атака и Minsky Moment не включены.',
+      en: 'All five published stages: 69% + 34.2% × 3 + 111.9% + 41.8% × 5 + 79.4% × 2 = 651.3% ATK. Blighted Vale branches, plunge and Minsky Moment are excluded.',
+    },
+    multiplier: 69 + 34.2 * 3 + 111.9 + 41.8 * 5 + 79.4 * 2,
+    requiredSkill: 'basic',
+    requiredLevel: 10,
+    assumedConditions: [{
+      ru: 'Все попадания пятиступенчатой обычной последовательности пришлись по одной цели.',
+      en: 'Every hit of the five-stage normal sequence connects with one target.',
+    }],
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('chiz'),
+    sourceUpdatedAt: '2026-06-11',
+    verifiedAt,
+  },
+  {
+    id: 'chiz.blighted-vale.normal-attack-branch.level-10',
+    characterName: 'Chiz',
+    title: { ru: 'Blighted Vale · ответвление из базовой атаки', en: 'Blighted Vale: Basic Attack branch' },
+    description: {
+      ru: 'Ответвлённая атака при удержании Blighted Vale во время Exiled Swordplay: 191,9% АТК × 2 = 383,8% АТК.',
+      en: 'Branch attack from holding Blighted Vale during Exiled Swordplay: 191.9% ATK × 2 = 383.8% ATK.',
+    },
+    multiplier: 191.9 * 2,
+    requiredSkill: 'basic',
+    requiredLevel: 10,
+    assumedConditions: [{
+      ru: 'Выбран именно вариант ответвления во время обычной базовой атаки; оба попадания достигли цели.',
+      en: 'The branch during the normal Basic Attack is used and both hits connect.',
+    }],
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('chiz'),
+    sourceUpdatedAt: '2026-06-11',
+    verifiedAt,
+  },
+  {
+    id: 'chiz.blighted-vale.press.level-10',
+    characterName: 'Chiz',
+    title: { ru: 'Blighted Vale · отдельное нажатие', en: 'Blighted Vale: standalone press' },
+    description: {
+      ru: 'Отдельный вариант Blighted Vale при нажатии: 154,9% АТК × 2 = 309,8% АТК. Получение Grain и Fons не влияет на этот прямой коэффициент.',
+      en: 'Standalone press version of Blighted Vale: 154.9% ATK × 2 = 309.8% ATK. Grain and Fons gain do not alter this direct coefficient.',
+    },
+    multiplier: 154.9 * 2,
+    requiredSkill: 'basic',
+    requiredLevel: 10,
+    assumedConditions: [{
+      ru: 'Выбран отдельный вариант при нажатии; оба попадания достигли цели.',
+      en: 'The standalone press version is used and both hits connect.',
+    }],
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('chiz'),
+    sourceUpdatedAt: '2026-06-11',
+    verifiedAt,
+  },
+  {
+    id: 'chiz.zero-sum-game.direct.level-10',
+    characterName: 'Chiz',
+    title: { ru: 'Zero-Sum Game · прямой урон', en: 'Zero-Sum Game: direct damage' },
+    description: {
+      ru: 'Опубликованная прямая композиция сверхспособности: 89,2% АТК × 4 + 89,4% АТК + 553,9% АТК = 1000,1% АТК. Grain Market и последующий Grain Settlement не включены.',
+      en: 'Published direct Ultimate composition: 89.2% ATK × 4 + 89.4% ATK + 553.9% ATK = 1000.1% ATK. Grain Market and later Grain Settlement are excluded.',
+    },
+    multiplier: 89.2 * 4 + 89.4 + 553.9,
+    requiredSkill: 'ultimate',
+    requiredLevel: 10,
+    assumedConditions: [{
+      ru: 'Все опубликованные части прямого урона Zero-Sum Game попали по проверяемой цели.',
+      en: 'Every published direct-damage part of Zero-Sum Game connects with the tested target.',
+    }],
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('chiz'),
+    sourceUpdatedAt: '2026-06-11',
+    verifiedAt,
+  },
+  {
+    id: 'chiz.temporary-entry.level-10',
+    characterName: 'Chiz',
+    title: { ru: 'Temporary Entry · одно применение', en: 'Temporary Entry: one cast' },
+    description: {
+      ru: 'Один опубликованный удар навыка поддержки: 399,8% АТК.',
+      en: 'One published Support Skill hit: 399.8% ATK.',
+    },
+    multiplier: 399.8,
+    requiredSkill: 'support',
+    requiredLevel: 10,
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('chiz'),
+    sourceUpdatedAt: '2026-06-11',
+    verifiedAt,
+  },
+
+  {
+    id: 'edgar.combat-practice.full-sequence.level-10',
+    characterName: 'Edgar',
+    title: { ru: 'Combat Practice · полная последовательность', en: 'Combat Practice: full sequence' },
+    description: {
+      ru: 'Все пять опубликованных ступеней: 61,8% + 125,3% + 78% × 2 + 166,5% + 139,5% = 649,1% АТК. Воздушная атака и Crisis is Opportunity не включены.',
+      en: 'All five published stages: 61.8% + 125.3% + 78% × 2 + 166.5% + 139.5% = 649.1% ATK. The plunge and Crisis is Opportunity are excluded.',
+    },
+    multiplier: 61.8 + 125.3 + 78 * 2 + 166.5 + 139.5,
+    requiredSkill: 'basic',
+    requiredLevel: 10,
+    assumedConditions: [{
+      ru: 'Все попадания пятиступенчатой последовательности Combat Practice пришлись по одной цели.',
+      en: 'Every hit of the five-stage Combat Practice sequence connects with one target.',
+    }],
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('edgar'),
+    sourceUpdatedAt: '2026-07-28',
+    verifiedAt,
+  },
+  {
+    id: 'edgar.wild-current.full-channel.level-10',
+    characterName: 'Edgar',
+    title: { ru: 'Wild Current · полное опубликованное удержание', en: 'Wild Current: full published channel' },
+    description: {
+      ru: 'Семь явно опубликованных попаданий удерживаемого навыка: 159,9% АТК × 7 = 1119,3% АТК. Лечение не входит в формулу урона.',
+      en: 'Seven explicitly published channel hits: 159.9% ATK × 7 = 1119.3% ATK. Healing is outside the damage formula.',
+    },
+    multiplier: 159.9 * 7,
+    requiredSkill: 'skill',
+    requiredLevel: 10,
+    assumedConditions: [{
+      ru: 'Удержание завершило все семь опубликованных попаданий по проверяемой цели.',
+      en: 'The channel completes all seven published hits against the tested target.',
+    }],
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('edgar'),
+    sourceUpdatedAt: '2026-07-28',
+    verifiedAt,
+  },
+  {
+    id: 'edgar.finnegans-wake.direct.level-10',
+    characterName: 'Edgar',
+    title: { ru: 'Finnegan’s Wake · прямой удар', en: 'Finnegan’s Wake: direct hit' },
+    description: {
+      ru: 'Один опубликованный прямой удар сверхспособности: 799,6% АТК. Десятисекундное лечение области и его продление не включены.',
+      en: 'One published direct Ultimate hit: 799.6% ATK. The ten-second domain healing and duration extensions are excluded.',
+    },
+    multiplier: 799.6,
+    requiredSkill: 'ultimate',
+    requiredLevel: 10,
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('edgar'),
+    sourceUpdatedAt: '2026-07-28',
+    verifiedAt,
+  },
+  {
+    id: 'edgar.weight-of-knowledge.level-10',
+    characterName: 'Edgar',
+    title: { ru: 'Weight of Knowledge · одно применение', en: 'Weight of Knowledge: one cast' },
+    description: {
+      ru: 'Один опубликованный удар навыка поддержки: 399,8% АТК.',
+      en: 'One published Support Skill hit: 399.8% ATK.',
+    },
+    multiplier: 399.8,
+    requiredSkill: 'support',
+    requiredLevel: 10,
+    sourcePublisher: 'Icy Veins',
+    sourceUrl: icy('edgar'),
+    sourceUpdatedAt: '2026-07-28',
+    verifiedAt,
+  },
+];

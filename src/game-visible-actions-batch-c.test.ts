@@ -33,10 +33,10 @@ function multiplier(id: string): number | undefined {
 }
 
 describe('verified game-visible actions batch C', () => {
-  it('adds twenty-one unique level-10 records and expands the catalog to thirty-five', () => {
+  it('keeps twenty-one unique level-10 records inside the expanded forty-nine-action catalog', () => {
     expect(verifiedVisibleActionsBatchC).toHaveLength(21);
-    expect(verifiedVisibleActions).toHaveLength(35);
-    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(35);
+    expect(verifiedVisibleActions).toHaveLength(49);
+    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(49);
     expect(new Set(verifiedVisibleActionsBatchC.map((action) => action.characterName))).toEqual(
       new Set(['Haniel', 'Sakiri', 'Baicang', 'Daffodill']),
     );
@@ -113,7 +113,7 @@ describe('verified game-visible actions batch C', () => {
     expect(active.multiplier).toBeCloseTo(599.7, 8);
   });
 
-  it('promotes exactly the four new characters to partial coverage', () => {
+  it('keeps exactly the four batch-C characters on partial coverage', () => {
     for (const characterName of ['Haniel', 'Sakiri', 'Baicang', 'Daffodill']) {
       const coverage = combatCoverageByCharacter.get(characterName);
       expect(coverage?.coverage).toBe('partial');
@@ -122,7 +122,7 @@ describe('verified game-visible actions batch C', () => {
     }
   });
 
-  it('makes new actions selectable by the time-aware scenario engine', () => {
+  it('makes batch-C actions selectable by the time-aware scenario engine', () => {
     const state = initialGameVisibleTeamState();
     state.builds = [
       combatBuild('Haniel'),
