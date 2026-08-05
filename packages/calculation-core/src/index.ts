@@ -12,6 +12,11 @@ export interface DamageInput {
   flatAtk: number;
   atkPercent: number;
   teamAtkPercent: number;
+  /**
+   * Optional final visible stat used by the action coefficient instead of
+   * total ATK. Omit it for every legacy/ATK-scaled calculation.
+   */
+  scalingValue?: number;
   skillMultiplier: number;
   hits: number;
   damageBonus: number;
@@ -23,6 +28,8 @@ export interface DamageInput {
 
 export interface DamageResult {
   totalAtk: number;
+  /** Final value actually multiplied by the action ratio. Equals totalAtk for legacy inputs. */
+  scalingValue: number;
   nonCrit: number;
   crit: number;
   expected: number;
@@ -66,18 +73,30 @@ export function calculateDamage(input: DamageInput): DamageResult {
       (1 + (finite(input.atkPercent) + finite(input.teamAtkPercent)) / 100) +
       finite(input.flatAtk),
   );
+  const scalingValue = input.scalingValue === undefined
+    ? totalAtk
+    : Math.max(0, finite(input.scalingValue));
   const skill = Math.max(0, finite(input.skillMultiplier)) / 100;
   const hits = Math.max(0, finite(input.hits, 1));
   const bonus = 1 + (finite(input.damageBonus) + finite(input.teamDamageBonus)) / 100;
   const def = defenceMultiplier(input.characterLevel, input.enemy.level, input.enemy.defenceReduction);
   const res = resistanceMultiplier(input.enemy.resistance, input.enemy.resistanceReduction);
-  const nonCrit = totalAtk * skill * hits * Math.max(0, bonus) * def * res;
+  const nonCrit = scalingValue * skill * hits * Math.max(0, bonus) * def * res;
   const critRate = clamp(finite(input.critRate), 0, 100) / 100;
   const critBonus = Math.max(0, finite(input.critDamage)) / 100;
   const crit = nonCrit * (1 + critBonus);
   const expectedCritMultiplier = 1 + critRate * critBonus;
   const expected = nonCrit * expectedCritMultiplier;
-  return { totalAtk, nonCrit, crit, expected, defenceMultiplier: def, resistanceMultiplier: res, expectedCritMultiplier };
+  return {
+    totalAtk,
+    scalingValue,
+    nonCrit,
+    crit,
+    expected,
+    defenceMultiplier: def,
+    resistanceMultiplier: res,
+    expectedCritMultiplier,
+  };
 }
 
 export function calculateTeam(members: TeamMemberInput[], duration: number): TeamResult {
