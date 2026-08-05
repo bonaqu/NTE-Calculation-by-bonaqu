@@ -15,9 +15,10 @@ const baseCss = readFileSync(new URL('./game-visible-calculator.css', import.met
 const minimalCss = readFileSync(new URL('./game-visible-minimal-inputs.css', import.meta.url), 'utf8');
 
 describe('formula-driven Team Calculator product contract', () => {
-  it('keeps the game-visible calculator on the primary team route and migrates the existing storage shape', () => {
-    expect(appSource).toContain("import { GameVisibleTeamCalculatorPage }");
-    expect(appSource).toContain("route === 'team' ? <GameVisibleTeamCalculatorPage />");
+  it('keeps the game-visible calculator on the primary lazy team route and migrates the existing storage shape', () => {
+    expect(appSource).toContain("team: () => import('./pages/GameVisibleTeamCalculatorPage')");
+    expect(appSource).toContain('team: lazy(workspaceLoaders.team)');
+    expect(appSource).toContain("['home', Home], ['team', Users]");
     expect(modelSource).toContain("GAME_VISIBLE_TEAM_STORAGE_KEY = 'nte.team.visible.v1'");
     expect(pageSource).toContain('normalizeGameVisibleTeamState');
   });
