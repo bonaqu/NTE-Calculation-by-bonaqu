@@ -25,7 +25,7 @@ describe('game-visible combat evidence freshness', () => {
   });
 
   it('requires direct source metadata and hard freshness limits for exact actions', () => {
-    expect(verifiedVisibleActions).toHaveLength(35);
+    expect(verifiedVisibleActions).toHaveLength(49);
     expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(verifiedVisibleActions.length);
     for (const action of verifiedVisibleActions) {
       expect(action.sourceUrl).toMatch(/^https:\/\//u);
