@@ -54,21 +54,29 @@ describe('verified non-ATK action scaling', () => {
   });
 
   it('locks Adler ATK and DEF compositions without duration-derived DoT repeats', () => {
-    expect(action('adler.deliverance.full-sequence.level-10')).toMatchObject({ multiplier: 389.9, scalingStat: undefined });
+    const deliverance = action('adler.deliverance.full-sequence.level-10');
+    const support = action('adler.pristine-reflection.level-10');
+    expect(deliverance.multiplier).toBeCloseTo(389.9, 8);
+    expect(deliverance).not.toHaveProperty('scalingStat');
     expect(action('adler.evils-bane.initial-composition.level-10')).toMatchObject({ multiplier: 419.7, scalingStat: 'def' });
     expect(action('adler.evils-bane.one-dot-tick.level-10')).toMatchObject({ multiplier: 40, scalingStat: 'def' });
     expect(action('adler.tranquility.five-target-hits.level-10')).toMatchObject({ multiplier: 999.5, scalingStat: 'def' });
     expect(action('adler.tranquility.single-enemy-ten-hits.level-10')).toMatchObject({ multiplier: 1999, scalingStat: 'def' });
-    expect(action('adler.pristine-reflection.level-10')).toMatchObject({ multiplier: 399.8, scalingStat: undefined });
+    expect(support.multiplier).toBeCloseTo(399.8, 8);
+    expect(support).not.toHaveProperty('scalingStat');
     expect(verifiedVisibleActionsBatchF.some((entry) => entry.id.includes('ten-dot-ticks'))).toBe(false);
   });
 
   it('locks Fadia ATK and Max-HP compositions without healing or redirected damage', () => {
-    expect(action('fadia.wordless-rejection.full-sequence.level-10')).toMatchObject({ multiplier: 710.2, scalingStat: undefined });
+    const basic = action('fadia.wordless-rejection.full-sequence.level-10');
+    const support = action('fadia.outsider.level-10');
+    expect(basic.multiplier).toBeCloseTo(710.2, 8);
+    expect(basic).not.toHaveProperty('scalingStat');
     expect(action('fadia.existence.direct-composition.level-10')).toMatchObject({ multiplier: 13.2, scalingStat: 'max-hp' });
     expect(action('fadia.agony-to-euphoria.initial-composition.level-10')).toMatchObject({ multiplier: 30, scalingStat: 'max-hp' });
     expect(action('fadia.agony-to-euphoria.full-follow-up-sequence.level-10')).toMatchObject({ multiplier: 70.2, scalingStat: 'max-hp' });
-    expect(action('fadia.outsider.level-10')).toMatchObject({ multiplier: 399.8, scalingStat: undefined });
+    expect(support.multiplier).toBeCloseTo(399.8, 8);
+    expect(support).not.toHaveProperty('scalingStat');
     expect(verifiedVisibleActionsBatchF.some((entry) => entry.id.includes('healing'))).toBe(false);
     expect(verifiedVisibleActionsBatchF.some((entry) => entry.id.includes('redirection'))).toBe(false);
   });
