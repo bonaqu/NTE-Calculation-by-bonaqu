@@ -178,7 +178,13 @@ describe('imported-scenario build readiness', () => {
   });
 
   it('reports unsupported Cycle composition as a global scenario issue', () => {
-    const team = emptyScenarioTeam();
+    const team = initialGameVisibleTeamState();
+    team.builds = [
+      createEmptyGameVisibleBuild('Shinku'),
+      createEmptyGameVisibleBuild('Zero'),
+      createEmptyGameVisibleBuild('Chiz'),
+      createEmptyGameVisibleBuild('Nanally'),
+    ];
     const cycleScenario: CombatScenarioState = {
       version: 1,
       name: 'Invalid Stain team',
