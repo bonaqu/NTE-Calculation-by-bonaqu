@@ -21,8 +21,8 @@ import { verifiedTeamEffects } from '../../../src/team-effects';
 import { calculateDamage, calculateTeam, type DamageInput, type TeamMemberInput } from '../../../packages/calculation-core/src';
 
 const MAX_BODY_BYTES = 32_768;
-const FORMULA_VERSION = '0.2';
-const SERVICE_VERSION = '0.10.0';
+const FORMULA_VERSION = '0.3';
+const SERVICE_VERSION = '0.11.0';
 const DATASET_VERIFIED_AT = '2026-08-05';
 
 function corsHeaders(): Record<string, string> {
@@ -71,6 +71,8 @@ const enemyNumberKeys = ['level', 'resistance', 'defenceReduction', 'resistanceR
 
 function isDamageInput(value: unknown): value is DamageInput {
   if (!isRecord(value) || !hasFiniteNumbers(value, damageNumberKeys) || !isRecord(value.enemy)) return false;
+  if ('scalingValue' in value
+    && (typeof value.scalingValue !== 'number' || !Number.isFinite(value.scalingValue))) return false;
   return hasFiniteNumbers(value.enemy, enemyNumberKeys);
 }
 
