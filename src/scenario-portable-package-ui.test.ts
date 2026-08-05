@@ -11,9 +11,10 @@ const css = readFileSync(new URL('./scenario-portable-package.css', import.meta.
 
 describe('portable Combat Scenario package UI contract', () => {
   it('places transfer before scenario readiness without replacing readiness logic', () => {
-    expect(readinessSource).toContain('ScenarioPortablePackagePanel');
-    expect(readinessSource).toContain('<ScenarioPortablePackagePanel team={team} scenario={scenario} locale={locale} />');
-    expect(readinessSource.indexOf('ScenarioPortablePackagePanel')).toBeLessThan(readinessSource.indexOf('scenario-build-readiness'));
+    const transferMarkup = '<ScenarioPortablePackagePanel team={team} scenario={scenario} locale={locale} />';
+    const readinessMarkup = '<section className="scenario-build-readiness"';
+    expect(readinessSource).toContain(transferMarkup);
+    expect(readinessSource.indexOf(transferMarkup)).toBeLessThan(readinessSource.indexOf(readinessMarkup));
     expect(readinessSource).toContain('evaluateScenarioBuildReadiness');
   });
 
