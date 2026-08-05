@@ -1,0 +1,208 @@
+.verified-scenario-recipes {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.14));
+  background: color-mix(in srgb, var(--panel, #10151f) 94%, transparent);
+}
+
+.verified-scenario-recipes__heading,
+.verified-scenario-recipes__kind,
+.verified-scenario-recipes__source {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.verified-scenario-recipes__heading > svg,
+.verified-scenario-recipes__kind > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.verified-scenario-recipes__heading span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+}
+
+.verified-scenario-recipes__heading h3,
+.verified-scenario-recipes__kind b,
+.verified-scenario-recipes article p {
+  margin: 0;
+}
+
+.verified-scenario-recipes__heading h3 {
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+}
+
+.verified-scenario-recipes__heading p {
+  max-width: 78ch;
+  margin: 7px 0 0;
+  opacity: 0.78;
+}
+
+.verified-scenario-recipes__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.14));
+  background: var(--line, rgba(255, 255, 255, 0.14));
+}
+
+.verified-scenario-recipes article {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  background: var(--panel, #10151f);
+}
+
+.verified-scenario-recipes__kind {
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.14));
+}
+
+.verified-scenario-recipes__kind div {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.verified-scenario-recipes__kind small {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.64;
+}
+
+.verified-scenario-recipes label {
+  display: grid;
+  gap: 7px;
+}
+
+.verified-scenario-recipes label > span {
+  font-size: 0.78rem;
+  font-weight: 750;
+  opacity: 0.74;
+}
+
+.verified-scenario-recipes select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.18));
+  border-radius: 0;
+  background: var(--field, rgba(0, 0, 0, 0.2));
+  color: inherit;
+  padding: 8px 10px;
+}
+
+.verified-scenario-recipes__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.verified-scenario-recipes__facts span,
+.verified-scenario-recipes__order-only {
+  padding: 7px 9px;
+  border-left: 2px solid currentColor;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  font-size: 0.78rem;
+}
+
+.verified-scenario-recipes__facts span:last-child {
+  flex-basis: 100%;
+}
+
+.verified-scenario-recipes ol {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.verified-scenario-recipes__source {
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line, rgba(255, 255, 255, 0.14));
+  font-size: 0.77rem;
+}
+
+.verified-scenario-recipes__source span {
+  opacity: 0.66;
+}
+
+.verified-scenario-recipes__source a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.verified-scenario-recipes article > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.verified-scenario-recipes article > button:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.verified-scenario-recipes article > button:focus-visible,
+.verified-scenario-recipes select:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.verified-scenario-recipes__status {
+  padding: 10px 12px;
+  border-left: 3px solid currentColor;
+}
+
+.verified-scenario-recipes__status.success {
+  background: rgba(86, 194, 125, 0.09);
+}
+
+.verified-scenario-recipes__status.error {
+  background: rgba(231, 95, 95, 0.09);
+}
+
+.verified-scenario-recipes__scope {
+  opacity: 0.68;
+}
+
+@media (max-width: 900px) {
+  .verified-scenario-recipes__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .verified-scenario-recipes {
+    padding: 14px;
+  }
+
+  .verified-scenario-recipes article {
+    padding: 14px;
+  }
+
+  .verified-scenario-recipes__source {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
