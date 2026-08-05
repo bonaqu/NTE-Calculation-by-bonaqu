@@ -25,6 +25,9 @@ describe('game-visible build profile', () => {
       'Sakiri',
       'Baicang',
       'Daffodill',
+      'Aurelia',
+      'Chiz',
+      'Edgar',
     ];
     expect(characterCombatCoverage).toHaveLength(released.length);
     expect(new Set(characterCombatCoverage.map((record) => record.characterName)).size).toBe(released.length);
