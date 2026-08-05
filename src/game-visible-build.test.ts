@@ -11,36 +11,18 @@ import {
 import { calculateGameVisibleBuild } from './game-visible-calculation';
 
 describe('game-visible build profile', () => {
-  it('covers every released character without pretending every kit is verified', () => {
+  it('covers every released character with a partial exact-action model', () => {
     const released = characterCatalog.filter((character) => character.releaseStatus === 'released');
     const partialNames = [
-      'Shinku',
-      'Nanally',
-      'Chaos',
-      'Lacrimosa',
-      'Zero',
-      'Hathor',
-      'Jiuyuan',
-      'Haniel',
-      'Sakiri',
-      'Baicang',
-      'Daffodill',
-      'Aurelia',
-      'Chiz',
-      'Edgar',
-      'Hotori',
-      'Iroi',
-      'Mint',
-      'Skia',
+      'Shinku', 'Nanally', 'Chaos', 'Lacrimosa', 'Zero', 'Hathor', 'Jiuyuan', 'Haniel', 'Sakiri', 'Baicang',
+      'Daffodill', 'Aurelia', 'Chiz', 'Edgar', 'Hotori', 'Iroi', 'Mint', 'Skia', 'Adler', 'Fadia',
     ];
     expect(characterCombatCoverage).toHaveLength(released.length);
     expect(new Set(characterCombatCoverage.map((record) => record.characterName)).size).toBe(released.length);
     expect(characterCombatCoverage.filter((record) => record.coverage === 'partial').map((record) => record.characterName).sort())
       .toEqual([...partialNames].sort());
-    expect(characterCombatCoverage.filter((record) => !partialNames.includes(record.characterName))
-      .every((record) => record.coverage === 'relative-only')).toBe(true);
-    expect(characterCombatCoverage.filter((record) => record.coverage === 'partial')
-      .every((record) => record.supportedModes.includes('verified-action'))).toBe(true);
+    expect(characterCombatCoverage.filter((record) => record.coverage === 'relative-only')).toHaveLength(0);
+    expect(characterCombatCoverage.every((record) => record.supportedModes.includes('verified-action'))).toBe(true);
   });
 
   it('uses the screenshot-confirmed Shinku values and exact current-client labels', () => {

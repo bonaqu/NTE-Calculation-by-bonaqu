@@ -26,10 +26,10 @@ function multiplier(id: string): number | undefined {
 }
 
 describe('verified game-visible actions batch E', () => {
-  it('adds twenty-six unique ATK records and expands the public catalog to seventy-five', () => {
+  it('adds twenty-six unique ATK records inside the complete public catalog', () => {
     expect(verifiedVisibleActionsBatchE).toHaveLength(26);
-    expect(verifiedVisibleActions).toHaveLength(75);
-    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(75);
+    expect(verifiedVisibleActions).toHaveLength(86);
+    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(86);
     expect(new Set(verifiedVisibleActionsBatchE.map((action) => action.characterName)))
       .toEqual(new Set(['Hotori', 'Iroi', 'Mint', 'Skia']));
     for (const action of verifiedVisibleActionsBatchE) {
@@ -104,16 +104,14 @@ describe('verified game-visible actions batch E', () => {
     expect(active.multiplier).toBeCloseTo(1598.9, 8);
   });
 
-  it('promotes the four final-ATK characters and leaves only Adler and Fadia relative-only', () => {
-    for (const characterName of ['Hotori', 'Iroi', 'Mint', 'Skia']) {
+  it('keeps all Batch E characters on partial coverage after the final scaling pass', () => {
+    for (const characterName of ['Hotori', 'Iroi', 'Mint', 'Skia', 'Adler', 'Fadia']) {
       const coverage = combatCoverageByCharacter.get(characterName);
       expect(coverage?.coverage).toBe('partial');
       expect(coverage?.supportedModes).toContain('verified-action');
     }
     expect([...combatCoverageByCharacter.values()]
-      .filter((coverage) => coverage.coverage === 'relative-only')
-      .map((coverage) => coverage.characterName)
-      .sort()).toEqual(['Adler', 'Fadia']);
+      .filter((coverage) => coverage.coverage === 'relative-only')).toHaveLength(0);
   });
 
   it('reuses representative Batch E records in Combat Scenario', () => {

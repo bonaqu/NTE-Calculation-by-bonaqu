@@ -14,11 +14,12 @@ import type { LocalizedText } from './types';
 import {
   verifiedVisibleActions,
   visibleActionById,
+  type ActionScalingStat,
   type VerifiedVisibleAction,
 } from './verified-visible-actions';
 
 export { verifiedVisibleActions, visibleActionById };
-export type { VerifiedVisibleAction };
+export type { ActionScalingStat, VerifiedVisibleAction };
 
 export interface VisibleCalculationCondition {
   id: string;
@@ -161,6 +162,53 @@ function supportConditions(modifier: TeamEffectSlotModifier): VisibleCalculation
   }));
 }
 
+function scalingValue(build: GameVisibleCharacterBuild, stat: ActionScalingStat): number {
+  if (stat === 'def') return build.stats.def;
+  if (stat === 'max-hp') return build.stats.hp;
+  return build.stats.atk;
+}
+
+function scalingCondition(build: GameVisibleCharacterBuild, stat: ActionScalingStat): VisibleCalculationCondition {
+  if (stat === 'def') {
+    return {
+      id: 'visible.final-def',
+      label: { ru: `Итоговая ЗАЩ из клиента: ${build.stats.def}`, en: `Final in-client DEF: ${build.stats.def}` },
+      source: 'player',
+    };
+  }
+  if (stat === 'max-hp') {
+    return {
+      id: 'visible.final-max-hp',
+      label: { ru: `Максимальные ОЗ из клиента: ${build.stats.hp}`, en: `Final in-client Max HP: ${build.stats.hp}` },
+      source: 'player',
+    };
+  }
+  return {
+    id: 'visible.final-atk',
+    label: { ru: `Итоговая Атака из клиента: ${build.stats.atk}`, en: `Final in-client ATK: ${build.stats.atk}` },
+    source: 'player',
+  };
+}
+
+function missingScalingValue(stat: ActionScalingStat): LocalizedText {
+  if (stat === 'def') {
+    return {
+      ru: 'Введи итоговую «ЗАЩ» из окна «Атрибуты». Проценты и значение защиты снаряжения отдельно не прибавляются.',
+      en: 'Enter final DEF from the Attributes screen. Equipment DEF values and percentages are not added again.',
+    };
+  }
+  if (stat === 'max-hp') {
+    return {
+      ru: 'Введи итоговые максимальные ОЗ из окна «Атрибуты». ОЗ с дуги и консоли отдельно не прибавляются.',
+      en: 'Enter final Max HP from the Attributes screen. Arc and Console HP are not added again.',
+    };
+  }
+  return {
+    ru: 'Введи итоговую «Атаку» из окна «Атрибуты». Атака дуги отдельно к ней не прибавляется.',
+    en: 'Enter final ATK from the Attributes screen. Arc ATK is not added to it again.',
+  };
+}
+
 export function calculateGameVisibleBuild(
   build: GameVisibleCharacterBuild,
   state: GameVisibleTeamState,
@@ -173,27 +221,10 @@ export function calculateGameVisibleBuild(
       en: 'The selected test is not verified for this character yet. Use the visible-stat reference test instead.',
     });
   }
-  if (build.stats.atk <= 0) {
-    return blocked(build.testMode, {
-      ru: 'Введи итоговую «Атаку» из окна «Атрибуты». Атака дуги отдельно к ней не прибавляется.',
-      en: 'Enter final ATK from the Attributes screen. Arc ATK is not added to it again.',
-    });
-  }
 
-  let multiplier = 100;
-  let explanation = referenceExplanation;
-  let actionDefenceIgnore = 0;
-  const conditions: VisibleCalculationCondition[] = [{
-    id: 'visible.final-atk',
-    label: {
-      ru: `Итоговая Атака из клиента: ${build.stats.atk}`,
-      en: `Final in-client ATK: ${build.stats.atk}`,
-    },
-    source: 'player',
-  }, ...supportConditions(modifier)];
-
+  let action: VerifiedVisibleAction | undefined;
   if (build.testMode === 'verified-action') {
-    const action = visibleActionById.get(build.verifiedActionId);
+    action = visibleActionById.get(build.verifiedActionId);
     if (!action || action.characterName !== build.characterName) {
       return blocked(build.testMode, {
         ru: 'Выбери подтверждённое действие этого персонажа.',
@@ -202,7 +233,21 @@ export function calculateGameVisibleBuild(
     }
     const requirementError = validateActionRequirements(action, build, state);
     if (requirementError) return blocked(build.testMode, requirementError);
+  }
 
+  const actionScalingStat: ActionScalingStat = action?.scalingStat ?? 'atk';
+  const actionScalingValue = scalingValue(build, actionScalingStat);
+  if (actionScalingValue <= 0) return blocked(build.testMode, missingScalingValue(actionScalingStat));
+
+  let multiplier = 100;
+  let explanation = referenceExplanation;
+  let actionDefenceIgnore = 0;
+  const conditions: VisibleCalculationCondition[] = [
+    scalingCondition(build, actionScalingStat),
+    ...supportConditions(modifier),
+  ];
+
+  if (action) {
     multiplier = action.multiplier;
     explanation = action.description;
     actionDefenceIgnore = action.defenceIgnore ?? 0;
@@ -265,6 +310,7 @@ export function calculateGameVisibleBuild(
     flatAtk: modifier.flatAtk,
     atkPercent: 0,
     teamAtkPercent: 0,
+    scalingValue: actionScalingStat === 'atk' ? undefined : actionScalingValue,
     skillMultiplier: multiplier,
     hits: 1,
     damageBonus: build.stats.damageBonus + build.stats.attributeDamageBonus + conditional.damageBonus,
@@ -286,9 +332,7 @@ export function calculateGameVisibleBuild(
   return {
     supported: true,
     mode: build.testMode,
-    title: build.testMode === 'verified-action'
-      ? visibleActionById.get(build.verifiedActionId)?.title ?? titleByMode[build.testMode]
-      : titleByMode[build.testMode],
+    title: action?.title ?? titleByMode[build.testMode],
     explanation,
     result,
     multiplier,
