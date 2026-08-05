@@ -1,20 +1,54 @@
-import { useEffect, useRef, useState } from 'react';
-import { BarChart3, BookOpen, Boxes, ChevronDown, Database, GitBranch, Home, Languages, Menu, Route, Users, X } from 'lucide-react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+} from 'react';
+import { BarChart3, BookOpen, Boxes, ChevronDown, Database, GitBranch, Home, Languages, LoaderCircle, Menu, Route, Users, X } from 'lucide-react';
 import { useI18n } from './i18n';
 import type { RouteKey } from './types';
 import { HomePage } from './pages/HomePage';
-import { GameVisibleTeamCalculatorPage } from './pages/GameVisibleTeamCalculatorPage';
-import { RotationLabPage } from './pages/RotationLabPage';
-import { ArcExperiencePage } from './pages/ArcExperiencePage';
-import { ProgressionPage } from './pages/ProgressionPage';
-import { DatabasePage } from './pages/DatabasePage';
-import { MethodologyPage } from './pages/MethodologyPage';
+
+type WorkspaceRoute = Exclude<RouteKey, 'home'>;
+type WorkspaceModule = Promise<{ default: ComponentType }>;
+
+const workspaceLoaders = {
+  team: () => import('./pages/GameVisibleTeamCalculatorPage').then((module) => ({ default: module.GameVisibleTeamCalculatorPage })),
+  rotations: () => import('./pages/RotationLabPage').then((module) => ({ default: module.RotationLabPage })),
+  arcs: () => import('./pages/ArcExperiencePage').then((module) => ({ default: module.ArcExperiencePage })),
+  progression: () => import('./pages/ProgressionPage').then((module) => ({ default: module.ProgressionPage })),
+  database: () => import('./pages/DatabasePage').then((module) => ({ default: module.DatabasePage })),
+  methodology: () => import('./pages/MethodologyPage').then((module) => ({ default: module.MethodologyPage })),
+} satisfies Record<WorkspaceRoute, () => WorkspaceModule>;
+
+const workspacePages = {
+  team: lazy(workspaceLoaders.team),
+  rotations: lazy(workspaceLoaders.rotations),
+  arcs: lazy(workspaceLoaders.arcs),
+  progression: lazy(workspaceLoaders.progression),
+  database: lazy(workspaceLoaders.database),
+  methodology: lazy(workspaceLoaders.methodology),
+} satisfies Record<WorkspaceRoute, ComponentType>;
 
 const routes: RouteKey[] = ['home', 'team', 'rotations', 'arcs', 'progression', 'database', 'methodology'];
 const routeFromHash = (): RouteKey => {
   const value = location.hash.replace('#/', '') as RouteKey;
   return routes.includes(value) ? value : 'home';
 };
+
+function preloadRoute(route: RouteKey): void {
+  if (route === 'home') return;
+  void workspaceLoaders[route]();
+}
+
+function RouteLoading({ locale }: { locale: 'ru' | 'en' }) {
+  return <div className="route-loading" role="status" aria-live="polite">
+    <LoaderCircle size={24} aria-hidden="true" />
+    <div><b>{locale === 'ru' ? 'Открываем инструмент' : 'Opening workspace'}</b><span>{locale === 'ru' ? 'Загружается только код выбранного раздела.' : 'Only the selected workspace code is loading.'}</span></div>
+  </div>;
+}
 
 export default function App() {
   const { locale, setLocale, t } = useI18n();
@@ -47,17 +81,16 @@ export default function App() {
   const nav = [
     ['home', Home], ['team', Users], ['rotations', Route], ['arcs', BarChart3], ['progression', Boxes], ['database', Database], ['methodology', BookOpen],
   ] as const;
-  const page = route === 'home' ? <HomePage navigate={navigate} />
-    : route === 'team' ? <GameVisibleTeamCalculatorPage />
-      : route === 'rotations' ? <RotationLabPage />
-        : route === 'arcs' ? <ArcExperiencePage />
-          : route === 'progression' ? <ProgressionPage />
-            : route === 'database' ? <DatabasePage />
-              : <MethodologyPage />;
+  const page = route === 'home'
+    ? <HomePage navigate={navigate} preload={preloadRoute} />
+    : (() => {
+        const WorkspacePage = workspacePages[route];
+        return <Suspense fallback={<RouteLoading locale={locale} />}><WorkspacePage /></Suspense>;
+      })();
 
   return <div className="app-shell">
     <header className="topbar"><button className="mobile-menu" onClick={() => setMobileOpen((value) => !value)} aria-label={locale === 'ru' ? 'Открыть меню' : 'Open menu'} aria-expanded={mobileOpen}>{mobileOpen ? <X /> : <Menu />}</button><button className="logo" onClick={() => navigate('home')} aria-label="NTE Calculation by bonaqu"><span>N</span><div><b>NTE Calculation</b><small>by bonaqu</small></div></button>
-      <nav className={mobileOpen ? 'open' : ''} aria-label={locale === 'ru' ? 'Основная навигация' : 'Primary navigation'}>{nav.map(([key, Icon]) => <button key={key} className={route === key ? 'active' : ''} aria-current={route === key ? 'page' : undefined} onClick={() => navigate(key)}><Icon size={17} />{t.nav[key]}</button>)}</nav>
+      <nav className={mobileOpen ? 'open' : ''} aria-label={locale === 'ru' ? 'Основная навигация' : 'Primary navigation'}>{nav.map(([key, Icon]) => <button key={key} className={route === key ? 'active' : ''} aria-current={route === key ? 'page' : undefined} onPointerEnter={() => preloadRoute(key)} onFocus={() => preloadRoute(key)} onClick={() => navigate(key)}><Icon size={17} />{t.nav[key]}</button>)}</nav>
       <div className="header-actions"><a className="icon-button" href="https://github.com/bonaqu/NTE-Calculation-by-bonaqu" target="_blank" rel="noreferrer" aria-label="GitHub"><GitBranch size={20} /></a><div className="language" ref={langRef}><button className="language-button" onClick={() => setLangOpen((value) => !value)} aria-haspopup="menu" aria-expanded={langOpen}><Languages size={18} /><span>{locale === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}</span><ChevronDown size={15} /></button>{langOpen ? <div className="language-menu" role="menu"><button role="menuitem" onClick={() => { setLocale('ru'); setLangOpen(false); }}>🇷🇺 <span>Русский</span><small>RU</small></button><button role="menuitem" onClick={() => { setLocale('en'); setLangOpen(false); }}>🇬🇧 <span>English</span><small>EN</small></button></div> : null}</div></div>
     </header>
     <main>{page}</main>

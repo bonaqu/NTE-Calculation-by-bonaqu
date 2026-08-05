@@ -1,13 +1,20 @@
 import { ArrowRight, BarChart3, Boxes, Database, Languages, Route, ShieldCheck, Users } from 'lucide-react';
-import { arcDirectory } from '../arc-directory';
-import { characterArcGuides } from '../arc-recommendations';
-import { arcBenchmarkScenarios } from '../data';
+import { homeProductStats } from '../home-product-stats';
 import { useI18n } from '../i18n';
 import type { RouteKey } from '../types';
 
-export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) {
+interface HomePageProps {
+  navigate: (route: RouteKey) => void;
+  preload: (route: RouteKey) => void;
+}
+
+export function HomePage({ navigate, preload }: HomePageProps) {
   const { locale } = useI18n();
   const ru = locale === 'ru';
+  const intent = (route: RouteKey) => ({
+    onPointerEnter: () => preload(route),
+    onFocus: () => preload(route),
+  });
   const tools = [
     {
       route: 'team' as const,
@@ -35,9 +42,9 @@ export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) 
     },
   ];
   const facts = [
-    { value: characterArcGuides.length, label: ru ? 'персонажей с гайдами по дугам' : 'characters with Arc guides' },
-    { value: arcDirectory.length, label: ru ? 'дуг в проверяемом каталоге' : 'Arcs in the validated catalog' },
-    { value: arcBenchmarkScenarios.length, label: ru ? 'отдельных сценария сравнения Ирой' : 'separate Iroi benchmark scenarios' },
+    { value: homeProductStats.arcGuideCharacters, label: ru ? 'персонажей с гайдами по дугам' : 'characters with Arc guides' },
+    { value: homeProductStats.sourcedArcs, label: ru ? 'дуг в проверяемом каталоге' : 'Arcs in the validated catalog' },
+    { value: homeProductStats.iroiBenchmarkScenarios, label: ru ? 'отдельных сценария сравнения Ирой' : 'separate Iroi benchmark scenarios' },
   ];
 
   return <div className="page home-page product-home">
@@ -47,8 +54,8 @@ export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) 
         <h1>{ru ? 'Инструменты NTE, которые объясняют результат.' : 'NTE tools that explain the result.'}</h1>
         <p>{ru ? 'Рекомендации источника, пользовательские расчёты и ограничения модели больше не смешиваются. Выбирай задачу — нужные данные и пояснения будут рядом.' : 'Sourced recommendations, custom calculations and model limits stay separate. Choose a task and keep the relevant data plus explanation together.'}</p>
         <div className="home-actions">
-          <button className="button primary" onClick={() => navigate('arcs')}>{ru ? 'Подобрать дугу' : 'Choose an Arc'} <ArrowRight size={18} /></button>
-          <button className="button ghost" onClick={() => navigate('methodology')}>{ru ? 'Проверить методику' : 'Review methodology'}</button>
+          <button className="button primary" {...intent('arcs')} onClick={() => navigate('arcs')}>{ru ? 'Подобрать дугу' : 'Choose an Arc'} <ArrowRight size={18} /></button>
+          <button className="button ghost" {...intent('methodology')} onClick={() => navigate('methodology')}>{ru ? 'Проверить методику' : 'Review methodology'}</button>
         </div>
         <div className="home-trust"><span><ShieldCheck size={16} /> {ru ? 'Источники и даты рядом с данными' : 'Sources and dates beside the data'}</span><span><Languages size={16} /> RU / EN</span><span><Database size={16} /> {ru ? 'Состояние хранится локально' : 'State is stored locally'}</span></div>
         <dl className="home-facts">{facts.map((fact) => <div key={fact.label}><dt>{fact.value}</dt><dd>{fact.label}</dd></div>)}</dl>
@@ -62,7 +69,7 @@ export function HomePage({ navigate }: { navigate: (route: RouteKey) => void }) 
 
     <section className="home-tool-index" aria-labelledby="home-tools-title">
       <header><span>{ru ? 'С чего начать' : 'Start here'}</span><h2 id="home-tools-title">{ru ? 'Выбери задачу, а не раздел меню' : 'Choose a task, not a dashboard tile'}</h2><p>{ru ? 'Каждый инструмент отвечает на отдельный вопрос и явно показывает границы своих данных.' : 'Each tool answers one distinct question and states the boundary of its data.'}</p></header>
-      <div>{tools.map(({ route, icon: Icon, title, text }, index) => <button key={route} className="home-tool-row" onClick={() => navigate(route)}><span className="home-tool-number">{String(index + 1).padStart(2, '0')}</span><Icon size={22} /><span className="home-tool-copy"><b>{title}</b><small>{text}</small></span><ArrowRight size={19} /></button>)}</div>
+      <div>{tools.map(({ route, icon: Icon, title, text }, index) => <button key={route} className="home-tool-row" {...intent(route)} onClick={() => navigate(route)}><span className="home-tool-number">{String(index + 1).padStart(2, '0')}</span><Icon size={22} /><span className="home-tool-copy"><b>{title}</b><small>{text}</small></span><ArrowRight size={19} /></button>)}</div>
     </section>
   </div>;
 }
