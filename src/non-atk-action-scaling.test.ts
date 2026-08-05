@@ -98,9 +98,12 @@ describe('verified non-ATK action scaling', () => {
       ...noModifier,
       flatAtk: 5_000,
       provenance: [{
-        effectId: 'test.atk-only',
+        effectId: 'haniel.friendship.nova-atk-drain',
         sourceSlot: 1,
-        label: { ru: 'Тестовый бонус Атаки', en: 'Test ATK bonus' },
+        sourceCharacter: 'Haniel',
+        amount: 5_000,
+        kind: 'flat-atk',
+        label: { ru: 'Проверенный бонус Атаки', en: 'Verified ATK bonus' },
       }],
     });
     expect(buffed.result?.totalAtk).toBe(7_000);
