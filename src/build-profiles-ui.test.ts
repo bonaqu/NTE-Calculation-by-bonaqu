@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import domainSource from './build-profiles.ts?raw';
 import managerSource from './components/BuildProfileManager.tsx?raw';
-import scenarioSource from './components/TeamCombatScenarioPanel.tsx?raw';
+import scenarioSource from './components/ManualTeamCombatScenarioEditor.tsx?raw';
 import mainSource from './main.tsx?raw';
 
 const css = readFileSync(new URL('./build-profiles.css', import.meta.url), 'utf8');
