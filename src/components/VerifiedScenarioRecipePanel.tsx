@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CheckCircle2, ExternalLink, Layers3, ShieldCheck, Sparkles } from 'lucide-react';
+import { CheckCircle2, ExternalLink, Layers3, ListTree, ShieldCheck, Sparkles } from 'lucide-react';
 import {
   COMBAT_SCENARIO_STORAGE_KEY,
   initialCombatScenarioState,
@@ -23,6 +23,11 @@ import {
   type VerifiedActionScenarioRecipe,
   type VerifiedRotationFragment,
 } from '../verified-action-scenario-recipes';
+import {
+  compileVerifiedRotationRecipe,
+  verifiedRotationRecipes,
+  type VerifiedRotationRecipe,
+} from '../verified-rotation-recipes';
 import { visibleActionById } from '../verified-visible-actions';
 import '../verified-scenario-recipes.css';
 
@@ -60,6 +65,18 @@ function timingLabel(recipe: VerifiedActionScenarioRecipe, ru: boolean): string 
   return ru
     ? `Минимум ${timing.seconds} с после предыдущего срабатывания; повтор не добавляется.`
     : `At least ${timing.seconds}s after the previous trigger; no repeat is added.`;
+}
+
+function rotationCoverageLabel(recipe: VerifiedRotationRecipe, ru: boolean): string {
+  return recipe.coverage === 'complete-action-order'
+    ? (ru ? 'Полный подтверждённый порядок действий' : 'Complete verified action order')
+    : (ru ? 'Частичный подтверждённый порядок' : 'Partial verified action order');
+}
+
+function rotationTimingLabel(recipe: VerifiedRotationRecipe, ru: boolean): string {
+  return recipe.timingMode === 'confirmed-seconds'
+    ? (ru ? 'Посекундный таймлайн подтверждён' : 'Confirmed-second timeline')
+    : (ru ? 'Только порядок · секунды не подтверждены' : 'Order only · seconds unverified');
 }
 
 function groupedRecipes(recipes: readonly VerifiedActionScenarioRecipe[]): Array<{
@@ -101,15 +118,22 @@ export function VerifiedScenarioRecipePanel({ team, locale }: VerifiedScenarioRe
     () => verifiedRotationFragments.filter((fragment) => teamNames.has(fragment.characterName)),
     [teamNames],
   );
+  const availableRotationRecipes = useMemo(
+    () => verifiedRotationRecipes.filter((recipe) => recipe.team.every((characterName) => teamNames.has(characterName))),
+    [teamNames],
+  );
   const groups = useMemo(() => groupedRecipes(availableRecipes), [availableRecipes]);
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
   const [selectedFragmentId, setSelectedFragmentId] = useState('');
+  const [selectedRotationRecipeId, setSelectedRotationRecipeId] = useState('');
   const [status, setStatus] = useState<ApplyStatus>({ kind: 'idle' });
 
   const selectedRecipe = availableRecipes.find((recipe) => recipe.id === selectedRecipeId)
     ?? availableRecipes[0];
   const selectedFragment = availableFragments.find((fragment) => fragment.id === selectedFragmentId)
     ?? availableFragments[0];
+  const selectedRotationRecipe = availableRotationRecipes.find((recipe) => recipe.id === selectedRotationRecipeId)
+    ?? availableRotationRecipes[0];
   const selectedAction = selectedRecipe ? visibleActionById.get(selectedRecipe.actionId) : undefined;
 
   const confirmReplacement = (current: CombatScenarioState): boolean => (
@@ -165,15 +189,38 @@ export function VerifiedScenarioRecipePanel({ team, locale }: VerifiedScenarioRe
     });
   };
 
+  const applyRotationRecipe = () => {
+    if (!selectedRotationRecipe) return;
+    const compiled = compileVerifiedRotationRecipe(selectedRotationRecipe.id, team, locale);
+    if (!compiled.ok) {
+      setStatus({ kind: 'error', message: compiled.reason[locale] });
+      return;
+    }
+    let applied = false;
+    setScenario((current) => {
+      if (!confirmReplacement(current)) return current;
+      applied = true;
+      return compiled.scenario;
+    });
+    if (!applied) return;
+    setImportMetadata(compiled.metadata);
+    setStatus({
+      kind: 'success',
+      message: ru
+        ? 'Частичный подтверждённый порядок применён. Пробелы не синтезированы, provenance Rotation Lab сохранён.'
+        : 'The partial verified order was applied. Gaps were not synthesized and Rotation Lab provenance was preserved.',
+    });
+  };
+
   return <section className="verified-scenario-recipes" aria-label={ru ? 'Готовые подтверждённые сценарии' : 'Verified scenario recipes'}>
     <div className="verified-scenario-recipes__heading">
       <ShieldCheck size={21} />
       <div>
-        <span>{ru ? '86 ДЕЙСТВИЙ → ВОСПРОИЗВОДИМЫЕ СЦЕНАРИИ' : '86 ACTIONS → REPRODUCIBLE SCENARIOS'}</span>
+        <span>{ru ? '86 ДЕЙСТВИЙ + АУДИТ ROTATION LAB' : '86 ACTIONS + ROTATION LAB AUDIT'}</span>
         <h3>{ru ? 'Готовые подтверждённые сценарии' : 'Verified scenario recipes'}</h3>
         <p>{ru
-          ? 'Показываются только персонажи текущей команды. Один рецепт — одно доказанное действие; повторения и секунды не появляются без прямого источника.'
-          : 'Only current-team characters are shown. One recipe equals one sourced action; repeats and seconds appear only with direct evidence.'}</p>
+          ? 'Одиночные действия, точные связки и частичные ротации разделены. Повторения, эффекты, циклы и секунды появляются только при прямом подтверждении.'
+          : 'Standalone actions, exact fragments and partial rotations are separated. Repeats, effects, Cycles and seconds appear only with direct evidence.'}</p>
       </div>
     </div>
 
@@ -207,7 +254,7 @@ export function VerifiedScenarioRecipePanel({ team, locale }: VerifiedScenarioRe
       </article>
 
       <article>
-        <div className="verified-scenario-recipes__kind"><Layers3 size={18} /><div><b>{ru ? 'Подтверждённый фрагмент ротации' : 'Verified rotation fragment'}</b><small>{availableFragments.length}</small></div></div>
+        <div className="verified-scenario-recipes__kind"><Layers3 size={18} /><div><b>{ru ? 'Точная атакующая связка' : 'Exact action fragment'}</b><small>{availableFragments.length}</small></div></div>
         {selectedFragment ? <>
           <label>
             <span>{ru ? 'Опубликованный порядок' : 'Published order'}</span>
@@ -232,14 +279,56 @@ export function VerifiedScenarioRecipePanel({ team, locale }: VerifiedScenarioRe
           </div>
           <button type="button" onClick={applyFragment}><Layers3 size={16} />{ru ? 'Собрать фрагмент' : 'Build fragment'}</button>
         </> : <p>{ru
-          ? 'Для текущей команды пока нет многодейственного фрагмента с подтверждённым порядком.'
-          : 'The current team has no multi-action fragment with verified order yet.'}</p>}
+          ? 'Для текущей команды пока нет многодейственного фрагмента с полностью подтверждённым порядком.'
+          : 'The current team has no multi-action fragment with fully verified order yet.'}</p>}
+      </article>
+
+      <article>
+        <div className="verified-scenario-recipes__kind"><ListTree size={18} /><div><b>{ru ? 'Аудированный рецепт Rotation Lab' : 'Audited Rotation Lab recipe'}</b><small>{availableRotationRecipes.length} / 4</small></div></div>
+        {selectedRotationRecipe ? <>
+          <label>
+            <span>{ru ? 'Требуется полный исходный состав' : 'Requires the complete source lineup'}</span>
+            <select value={selectedRotationRecipe.id} onChange={(event) => {
+              setSelectedRotationRecipeId(event.target.value);
+              setStatus({ kind: 'idle' });
+            }}>
+              {availableRotationRecipes.map((recipe) => <option key={recipe.id} value={recipe.id}>{recipe.title[locale]}</option>)}
+            </select>
+          </label>
+          <div className="verified-scenario-recipes__facts rotation-audit">
+            <span>{rotationCoverageLabel(selectedRotationRecipe, ru)}</span>
+            <span>{selectedRotationRecipe.steps.length} {ru ? 'действий' : 'actions'}</span>
+            <span>{selectedRotationRecipe.gaps.length} {ru ? 'пробелов покрытия' : 'coverage gaps'}</span>
+            <span>{rotationTimingLabel(selectedRotationRecipe, ru)}</span>
+          </div>
+          <p>{selectedRotationRecipe.description[locale]}</p>
+          <ol>{selectedRotationRecipe.steps.map((step) => {
+            const action = visibleActionById.get(step.actionId);
+            return <li key={`${step.sourceStepId}-${step.part}-${step.actionId}`}>
+              <b>{localizedCharacterName(step.characterName, locale)}</b> · {action?.title[locale] ?? step.actionId}
+            </li>;
+          })}</ol>
+          <details className="verified-scenario-recipes__gaps">
+            <summary>{ru ? `Что не вошло: ${selectedRotationRecipe.gaps.length}` : `What remains uncovered: ${selectedRotationRecipe.gaps.length}`}</summary>
+            <ul>{selectedRotationRecipe.gaps.map((gap, index) => <li key={`${gap.sourceStepId}-${gap.part}-${gap.kind}-${index}`}>{gap.note[locale]}</li>)}</ul>
+          </details>
+          <div className="verified-scenario-recipes__order-only">{ru
+            ? 'В сценарий попадут только перечисленные действия. Эффекты, циклы и неподдерживаемые части останутся пробелами; все отметки 0 с означают только порядок.'
+            : 'Only the listed actions enter the scenario. Effects, Cycles and unsupported parts remain gaps; every 0s marker represents order only.'}</div>
+          <div className="verified-scenario-recipes__source">
+            <span>{selectedRotationRecipe.sourcePublisher} · {selectedRotationRecipe.sourceUpdatedAt}</span>
+            <a href={selectedRotationRecipe.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Источник ротации' : 'Rotation source'} <ExternalLink size={13} /></a>
+          </div>
+          <button type="button" onClick={applyRotationRecipe}><ListTree size={16} />{ru ? 'Собрать частичный порядок' : 'Build partial order'}</button>
+        </> : <p>{ru
+          ? 'Ни один из четырёх аудированных рецептов не совпадает с текущим полным составом команды.'
+          : 'None of the four audited recipes matches the current complete team lineup.'}</p>}
       </article>
     </div>
 
     {status.kind !== 'idle' ? <div className={`verified-scenario-recipes__status ${status.kind}`} role="status">{status.message}</div> : null}
     <small className="verified-scenario-recipes__scope">{ru
-      ? 'Это библиотека доказанных частей, а не процент полного DPS-ротации.'
-      : 'This is a library of verified parts, not a full-rotation DPS percentage.'}</small>
+      ? 'Частичный порядок — это библиотека доказанных действий с видимыми пробелами, а не полная DPS-ротация.'
+      : 'A partial order is a library of verified actions with visible gaps, not a complete DPS rotation.'}</small>
   </section>;
 }
