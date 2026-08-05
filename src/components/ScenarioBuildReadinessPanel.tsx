@@ -29,6 +29,7 @@ import {
   type ScenarioProfileReadiness,
   type ScenarioSlotBuildReadiness,
 } from '../scenario-build-readiness';
+import { ScenarioPortablePackagePanel } from './ScenarioPortablePackagePanel';
 
 interface ScenarioBuildReadinessPanelProps {
   team: GameVisibleTeamState;
@@ -134,70 +135,73 @@ export function ScenarioBuildReadinessPanel({
     });
   };
 
-  return <section className="scenario-build-readiness" aria-label={ru ? 'Готовность сборок сценария' : 'Scenario build readiness'}>
-    <div className="scenario-build-readiness-heading">
-      <ListChecks size={21} />
-      <div>
-        <h3>{ru ? 'Готовность сборок к сценарию' : 'Scenario build readiness'}</h3>
-        <p>{ru
-          ? 'Проверяет только требования точных действий и эффектов. Профили не ранжируются по силе и не применяются без подтверждения.'
-          : 'Checks only exact action and effect requirements. Profiles are not power-ranked or applied without confirmation.'}</p>
+  return <>
+    <ScenarioPortablePackagePanel team={team} scenario={scenario} locale={locale} />
+    <section className="scenario-build-readiness" aria-label={ru ? 'Готовность сборок сценария' : 'Scenario build readiness'}>
+      <div className="scenario-build-readiness-heading">
+        <ListChecks size={21} />
+        <div>
+          <h3>{ru ? 'Готовность сборок к сценарию' : 'Scenario build readiness'}</h3>
+          <p>{ru
+            ? 'Проверяет только требования точных действий и эффектов. Профили не ранжируются по силе и не применяются без подтверждения.'
+            : 'Checks only exact action and effect requirements. Profiles are not power-ranked or applied without confirmation.'}</p>
+        </div>
+        <span>{report.readySlotCount}/{report.requiredSlotCount}</span>
       </div>
-      <span>{report.readySlotCount}/{report.requiredSlotCount}</span>
-    </div>
 
-    <div className="scenario-build-readiness-summary">
-      <div><span>{ru ? 'Нужны сценарию' : 'Required slots'}</span><b>{report.requiredSlotCount}</b></div>
-      <div><span>{ru ? 'Готовы сейчас' : 'Ready now'}</span><b>{report.readySlotCount}</b></div>
-      <div><span>{ru ? 'Есть готовый профиль' : 'Ready profile exists'}</span><b>{report.slotsWithReadyProfile}</b></div>
-      <div><span>{ru ? 'Совпавших профилей' : 'Matching profiles'}</span><b>{report.totalMatchingProfiles}</b></div>
-    </div>
+      <div className="scenario-build-readiness-summary">
+        <div><span>{ru ? 'Нужны сценарию' : 'Required slots'}</span><b>{report.requiredSlotCount}</b></div>
+        <div><span>{ru ? 'Готовы сейчас' : 'Ready now'}</span><b>{report.readySlotCount}</b></div>
+        <div><span>{ru ? 'Есть готовый профиль' : 'Ready profile exists'}</span><b>{report.slotsWithReadyProfile}</b></div>
+        <div><span>{ru ? 'Совпавших профилей' : 'Matching profiles'}</span><b>{report.totalMatchingProfiles}</b></div>
+      </div>
 
-    {report.globalIssues.length ? <div className="scenario-build-global-issues">
-      <CircleAlert size={17} />
-      <div><b>{ru ? 'Условия всей команды' : 'Team-wide conditions'}</b>{report.globalIssues.map((issue) => <p key={`${issue.code}-${issue.stepId}`}>{issue.label[locale]}</p>)}</div>
-    </div> : null}
+      {report.globalIssues.length ? <div className="scenario-build-global-issues">
+        <CircleAlert size={17} />
+        <div><b>{ru ? 'Условия всей команды' : 'Team-wide conditions'}</b>{report.globalIssues.map((issue) => <p key={`${issue.code}-${issue.stepId}`}>{issue.label[locale]}</p>)}</div>
+      </div> : null}
 
-    {requiredSlots.length ? <div className="scenario-build-slot-list">{requiredSlots.map((slot) => {
-      const selectedId = validSelections[slot.slot] ?? '';
-      const selected = slot.matchingProfiles.find((candidate) => candidate.profile.id === selectedId);
-      const ready = slot.status === 'ready';
-      return <article className={`status-${slot.status}`} key={`${slot.slot}-${slot.characterName}`}>
-        <header>
-          <span>{slot.slot + 1}</span>
-          <div><h4>{localizedCharacterName(slot.characterName, locale)}</h4><small>{slot.requiredActionIds.length} {ru ? 'действ.' : 'actions'} · {slot.requiredEffectIds.length} {ru ? 'эффект.' : 'effects'}</small></div>
-          <b>{ready ? <CheckCircle2 size={15} /> : <CircleAlert size={15} />}{statusLabel(slot, ru)}</b>
-        </header>
+      {requiredSlots.length ? <div className="scenario-build-slot-list">{requiredSlots.map((slot) => {
+        const selectedId = validSelections[slot.slot] ?? '';
+        const selected = slot.matchingProfiles.find((candidate) => candidate.profile.id === selectedId);
+        const ready = slot.status === 'ready';
+        return <article className={`status-${slot.status}`} key={`${slot.slot}-${slot.characterName}`}>
+          <header>
+            <span>{slot.slot + 1}</span>
+            <div><h4>{localizedCharacterName(slot.characterName, locale)}</h4><small>{slot.requiredActionIds.length} {ru ? 'действ.' : 'actions'} · {slot.requiredEffectIds.length} {ru ? 'эффект.' : 'effects'}</small></div>
+            <b>{ready ? <CheckCircle2 size={15} /> : <CircleAlert size={15} />}{statusLabel(slot, ru)}</b>
+          </header>
 
-        {slot.currentIssues.length ? <ul>{slot.currentIssues.map((issue) => <li key={`${issue.code}-${issue.field ?? ''}-${issue.required ?? ''}`}>{issue.label[locale]}</li>)}</ul> : <p className="scenario-build-current-ready"><UserRoundCheck size={16} />{ru ? 'Текущая сборка проходит требования импортированных строк.' : 'The current build passes imported-row requirements.'}</p>}
+          {slot.currentIssues.length ? <ul>{slot.currentIssues.map((issue) => <li key={`${issue.code}-${issue.field ?? ''}-${issue.required ?? ''}`}>{issue.label[locale]}</li>)}</ul> : <p className="scenario-build-current-ready"><UserRoundCheck size={16} />{ru ? 'Текущая сборка проходит требования импортированных строк.' : 'The current build passes imported-row requirements.'}</p>}
 
-        <label>
-          <span>{ru ? 'Сохранённый профиль этого персонажа' : 'Saved profile for this character'}</span>
-          <select value={selectedId} onChange={(event) => setSelections((current) => ({
-            ...current,
-            [slot.slot]: event.target.value,
-          }))}>
-            <option value="">{slot.matchingProfiles.length
-              ? (ru ? 'Не применять профиль' : 'Do not apply a profile')
-              : (ru ? 'Нет сохранённых профилей' : 'No saved profiles')}</option>
-            {slot.matchingProfiles.map((candidate) => <option value={candidate.profile.id} key={candidate.profile.id}>{candidateLabel(candidate, ru)}</option>)}
-          </select>
-        </label>
+          <label>
+            <span>{ru ? 'Сохранённый профиль этого персонажа' : 'Saved profile for this character'}</span>
+            <select value={selectedId} onChange={(event) => setSelections((current) => ({
+              ...current,
+              [slot.slot]: event.target.value,
+            }))}>
+              <option value="">{slot.matchingProfiles.length
+                ? (ru ? 'Не применять профиль' : 'Do not apply a profile')
+                : (ru ? 'Нет сохранённых профилей' : 'No saved profiles')}</option>
+              {slot.matchingProfiles.map((candidate) => <option value={candidate.profile.id} key={candidate.profile.id}>{candidateLabel(candidate, ru)}</option>)}
+            </select>
+          </label>
 
-        {selected ? <div className={`scenario-build-profile-preview ${selected.ready ? 'ready' : 'incomplete'}`}>
-          <b>{selected.ready
-            ? (ru ? 'Профиль закрывает требования этого слота' : 'Profile satisfies this slot')
-            : (ru ? `После применения останется проблем: ${selected.issues.length}` : `${selected.issues.length} issues remain after applying`)}</b>
-          {selected.issues.map((issue) => <small key={`${issue.code}-${issue.field ?? ''}-${issue.required ?? ''}`}>{issue.label[locale]}</small>)}
-        </div> : null}
-      </article>;
-    })}</div> : <div className="scenario-build-readiness-empty"><UsersRound size={21} /><span>{ru ? 'Добавь или импортируй точные действия и эффекты — тогда появится проверка сборок.' : 'Add or import exact actions and effects to see build readiness.'}</span></div>}
+          {selected ? <div className={`scenario-build-profile-preview ${selected.ready ? 'ready' : 'incomplete'}`}>
+            <b>{selected.ready
+              ? (ru ? 'Профиль закрывает требования этого слота' : 'Profile satisfies this slot')
+              : (ru ? `После применения останется проблем: ${selected.issues.length}` : `${selected.issues.length} issues remain after applying`)}</b>
+            {selected.issues.map((issue) => <small key={`${issue.code}-${issue.field ?? ''}-${issue.required ?? ''}`}>{issue.label[locale]}</small>)}
+          </div> : null}
+        </article>;
+      })}</div> : <div className="scenario-build-readiness-empty"><UsersRound size={21} /><span>{ru ? 'Добавь или импортируй точные действия и эффекты — тогда появится проверка сборок.' : 'Add or import exact actions and effects to see build readiness.'}</span></div>}
 
-    <div className="scenario-build-readiness-actions">
-      <button type="button" onClick={fillUnambiguous}><WandSparkles size={16} />{ru ? 'Подставить однозначные' : 'Select unambiguous'}</button>
-      <button type="button" className="primary" disabled={!selectedCount} onClick={applySelected}><CheckCircle2 size={16} />{ru ? `Применить выбранные (${selectedCount})` : `Apply selected (${selectedCount})`}</button>
-    </div>
+      <div className="scenario-build-readiness-actions">
+        <button type="button" onClick={fillUnambiguous}><WandSparkles size={16} />{ru ? 'Подставить однозначные' : 'Select unambiguous'}</button>
+        <button type="button" className="primary" disabled={!selectedCount} onClick={applySelected}><CheckCircle2 size={16} />{ru ? `Применить выбранные (${selectedCount})` : `Apply selected (${selectedCount})`}</button>
+      </div>
 
-    {notice ? <div className={`scenario-build-readiness-notice ${notice.kind}`}>{notice.kind === 'ok' ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<span>{notice.text}</span></div> : null}
-  </section>;
+      {notice ? <div className={`scenario-build-readiness-notice ${notice.kind}`}>{notice.kind === 'ok' ? <CheckCircle2 size={16} /> : <CircleAlert size={16} />}<span>{notice.text}</span></div> : null}
+    </section>
+  </>;
 }
