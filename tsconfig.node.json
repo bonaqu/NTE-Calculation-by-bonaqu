@@ -34,6 +34,7 @@
     "src/combat-scenario.ts",
     "src/rotation-scenario-import.ts",
     "src/build-profiles.ts",
+    "src/scenario-build-readiness.ts",
     "src/arc-directory.ts",
     "src/arc-catalog.ts",
     "src/arc-presets.ts",

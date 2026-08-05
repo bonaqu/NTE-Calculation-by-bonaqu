@@ -26,6 +26,12 @@ import {
   type BuildProfileLibrary,
 } from '../build-profiles';
 import {
+  COMBAT_SCENARIO_STORAGE_KEY,
+  initialCombatScenarioState,
+  normalizeCombatScenarioState,
+  type CombatScenarioState,
+} from '../combat-scenario';
+import {
   GAME_VISIBLE_TEAM_STORAGE_KEY,
   initialGameVisibleTeamState,
   normalizeGameVisibleTeamState,
@@ -33,6 +39,7 @@ import {
 } from '../game-visible-build';
 import { localizedArcName, localizedCharacterName } from '../gameTerms';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { ScenarioBuildReadinessPanel } from './ScenarioBuildReadinessPanel';
 
 interface BuildProfileManagerProps {
   team: GameVisibleTeamState;
@@ -74,6 +81,11 @@ export function BuildProfileManager({ team, locale }: BuildProfileManagerProps) 
     GAME_VISIBLE_TEAM_STORAGE_KEY,
     initialGameVisibleTeamState(),
     { normalize: normalizeGameVisibleTeamState },
+  );
+  const [scenario] = useLocalStorage<CombatScenarioState>(
+    COMBAT_SCENARIO_STORAGE_KEY,
+    initialCombatScenarioState(),
+    { normalize: normalizeCombatScenarioState },
   );
   const [library, setLibrary] = useLocalStorage<BuildProfileLibrary>(
     BUILD_PROFILE_LIBRARY_STORAGE_KEY,
@@ -180,40 +192,44 @@ export function BuildProfileManager({ team, locale }: BuildProfileManagerProps) 
     setNotice({ kind: 'ok', text: ru ? 'Профиль проверен и добавлен в библиотеку.' : 'Profile validated and added to the library.' });
   };
 
-  return <section className="build-profile-manager" aria-label={ru ? 'Профили сборок' : 'Build profiles'}>
-    <div className="build-profile-heading"><UserRoundCog size={20} /><div><h3>{ru ? 'Профили сборок' : 'Build profiles'}</h3><p>{ru
-      ? 'Хранят реальные введённые данные персонажа. Активные эффекты, цель и временные окна не переносятся.'
-      : 'Stores real player-entered character data. Active effects, target state and timed windows are not transferred.'}</p></div><span>{library.profiles.length}/{BUILD_PROFILE_MAX_COUNT}</span></div>
+  return <>
+    <ScenarioBuildReadinessPanel team={team} scenario={scenario} locale={locale} />
 
-    <div className="build-profile-save">
-      <label><span>{ru ? 'Название нового профиля' : 'New profile name'}</span><input value={newName} maxLength={60} onChange={(event) => setNewName(event.target.value)} placeholder={`${localizedCharacterName(activeBuild.characterName, locale)} · ${ru ? 'основная' : 'main'}`} /></label>
-      <button type="button" onClick={saveCurrent}><Save size={16} />{ru ? 'Сохранить активную сборку' : 'Save active build'}</button>
-    </div>
+    <section className="build-profile-manager" aria-label={ru ? 'Профили сборок' : 'Build profiles'}>
+      <div className="build-profile-heading"><UserRoundCog size={20} /><div><h3>{ru ? 'Профили сборок' : 'Build profiles'}</h3><p>{ru
+        ? 'Хранят реальные введённые данные персонажа. Активные эффекты, цель и временные окна не переносятся.'
+        : 'Stores real player-entered character data. Active effects, target state and timed windows are not transferred.'}</p></div><span>{library.profiles.length}/{BUILD_PROFILE_MAX_COUNT}</span></div>
 
-    <label className="build-profile-filter"><input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} /><span>{ru ? 'Показывать профили всех персонажей' : 'Show profiles for all characters'}</span></label>
+      <div className="build-profile-save">
+        <label><span>{ru ? 'Название нового профиля' : 'New profile name'}</span><input value={newName} maxLength={60} onChange={(event) => setNewName(event.target.value)} placeholder={`${localizedCharacterName(activeBuild.characterName, locale)} · ${ru ? 'основная' : 'main'}`} /></label>
+        <button type="button" onClick={saveCurrent}><Save size={16} />{ru ? 'Сохранить активную сборку' : 'Save active build'}</button>
+      </div>
 
-    {visibleProfiles.length ? <div className="build-profile-list">{visibleProfiles.map((profile) => {
-      const sameCharacter = profile.build.characterName === activeBuild.characterName;
-      return <article key={profile.id}>
-        <div className="build-profile-name"><b>{localizedCharacterName(profile.build.characterName, locale)}</b><input aria-label={ru ? 'Название профиля' : 'Profile name'} value={draftNames[profile.id] ?? profile.name} maxLength={60} onChange={(event) => setDraftNames((current) => ({ ...current, [profile.id]: event.target.value }))} /></div>
-        <p>{profileSummary(profile, locale)}</p>
-        <small>{ru ? 'Обновлён' : 'Updated'}: {new Date(profile.updatedAt).toLocaleString(locale)}</small>
-        <div className="build-profile-actions">
-          <button type="button" onClick={() => applyProfile(profile)}><CheckCircle2 size={14} />{ru ? 'Применить' : 'Apply'}</button>
-          <button type="button" disabled={!sameCharacter} title={!sameCharacter ? (ru ? 'Активный слот содержит другого персонажа' : 'The active slot contains another character') : undefined} onClick={() => updateProfile(profile)}><Save size={14} />{ru ? 'Обновить' : 'Update'}</button>
-          <button type="button" onClick={() => renameProfile(profile)}><Pencil size={14} />{ru ? 'Переименовать' : 'Rename'}</button>
-          <button type="button" onClick={() => exportProfile(profile)}><Clipboard size={14} />{ru ? 'Экспорт' : 'Export'}</button>
-          <button type="button" className="danger" onClick={() => removeProfile(profile)}><Trash2 size={14} />{ru ? 'Удалить' : 'Delete'}</button>
-        </div>
-      </article>;
-    })}</div> : <div className="build-profile-empty"><FileJson size={22} /><span>{ru ? 'Для выбранного персонажа профилей пока нет.' : 'There are no profiles for the selected character yet.'}</span></div>}
+      <label className="build-profile-filter"><input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} /><span>{ru ? 'Показывать профили всех персонажей' : 'Show profiles for all characters'}</span></label>
 
-    <div className="build-profile-transfer">
-      <div><Download size={17} /><span><b>{ru ? 'Импорт и экспорт JSON' : 'JSON import and export'}</b><small>{ru ? 'Импорт проверяет версию, контрольную сумму и текущие лимиты полей.' : 'Import validates version, checksum and current field limits.'}</small></span></div>
-      <textarea value={transferText} onChange={(event) => setTransferText(event.target.value)} spellCheck={false} placeholder={ru ? 'Вставь сюда экспорт профиля…' : 'Paste a profile export here…'} />
-      <button type="button" onClick={importProfile} disabled={!transferText.trim()}><Upload size={16} />{ru ? 'Проверить и импортировать' : 'Validate and import'}</button>
-    </div>
+      {visibleProfiles.length ? <div className="build-profile-list">{visibleProfiles.map((profile) => {
+        const sameCharacter = profile.build.characterName === activeBuild.characterName;
+        return <article key={profile.id}>
+          <div className="build-profile-name"><b>{localizedCharacterName(profile.build.characterName, locale)}</b><input aria-label={ru ? 'Название профиля' : 'Profile name'} value={draftNames[profile.id] ?? profile.name} maxLength={60} onChange={(event) => setDraftNames((current) => ({ ...current, [profile.id]: event.target.value }))} /></div>
+          <p>{profileSummary(profile, locale)}</p>
+          <small>{ru ? 'Обновлён' : 'Updated'}: {new Date(profile.updatedAt).toLocaleString(locale)}</small>
+          <div className="build-profile-actions">
+            <button type="button" onClick={() => applyProfile(profile)}><CheckCircle2 size={14} />{ru ? 'Применить' : 'Apply'}</button>
+            <button type="button" disabled={!sameCharacter} title={!sameCharacter ? (ru ? 'Активный слот содержит другого персонажа' : 'The active slot contains another character') : undefined} onClick={() => updateProfile(profile)}><Save size={14} />{ru ? 'Обновить' : 'Update'}</button>
+            <button type="button" onClick={() => renameProfile(profile)}><Pencil size={14} />{ru ? 'Переименовать' : 'Rename'}</button>
+            <button type="button" onClick={() => exportProfile(profile)}><Clipboard size={14} />{ru ? 'Экспорт' : 'Export'}</button>
+            <button type="button" className="danger" onClick={() => removeProfile(profile)}><Trash2 size={14} />{ru ? 'Удалить' : 'Delete'}</button>
+          </div>
+        </article>;
+      })}</div> : <div className="build-profile-empty"><FileJson size={22} /><span>{ru ? 'Для выбранного персонажа профилей пока нет.' : 'There are no profiles for the selected character yet.'}</span></div>}
 
-    {notice ? <div className={`build-profile-notice ${notice.kind}`}>{notice.kind === 'ok' ? <CheckCircle2 size={16} /> : <FileJson size={16} />}<span>{notice.text}</span></div> : null}
-  </section>;
+      <div className="build-profile-transfer">
+        <div><Download size={17} /><span><b>{ru ? 'Импорт и экспорт JSON' : 'JSON import and export'}</b><small>{ru ? 'Импорт проверяет версию, контрольную сумму и текущие лимиты полей.' : 'Import validates version, checksum and current field limits.'}</small></span></div>
+        <textarea value={transferText} onChange={(event) => setTransferText(event.target.value)} spellCheck={false} placeholder={ru ? 'Вставь сюда экспорт профиля…' : 'Paste a profile export here…'} />
+        <button type="button" onClick={importProfile} disabled={!transferText.trim()}><Upload size={16} />{ru ? 'Проверить и импортировать' : 'Validate and import'}</button>
+      </div>
+
+      {notice ? <div className={`build-profile-notice ${notice.kind}`}>{notice.kind === 'ok' ? <CheckCircle2 size={16} /> : <FileJson size={16} />}<span>{notice.text}</span></div> : null}
+    </section>
+  </>;
 }

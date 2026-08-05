@@ -19,6 +19,7 @@ import './game-visible-calculator.css';
 import './game-visible-minimal-inputs.css';
 import './team-effects.css';
 import './combat-scenario.css';
+import './scenario-build-readiness.css';
 import './build-profiles.css';
 import './home-tools.css';
 import './rotation-lab.css';
