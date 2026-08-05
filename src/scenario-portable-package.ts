@@ -26,6 +26,7 @@ import {
   type RotationScenarioImportMetadata,
 } from './rotation-scenario-import';
 import { verifiedTeamEffectById } from './team-effects';
+import type { EsperCycleId } from './types';
 import { visibleActionById } from './verified-visible-actions';
 
 export const SCENARIO_PORTABLE_PACKAGE_KIND = 'nte-combat-scenario-package' as const;
@@ -160,12 +161,11 @@ function normalizeTeamPayload(value: unknown):
   | { ok: true; value: ScenarioPortableTeamPayload }
   | { ok: false; error: 'invalid-lineup' | 'invalid-team' } {
   if (!isRecord(value) || !validLineup(value.lineup)) return { ok: false, error: 'invalid-lineup' };
+  if (value.buildMode !== 'sanitized-builds' && value.buildMode !== 'lineup-only') {
+    return { ok: false, error: 'invalid-team' };
+  }
   const lineup = [...value.lineup];
-  const buildMode: ScenarioPackageBuildMode = value.buildMode === 'sanitized-builds'
-    ? 'sanitized-builds'
-    : value.buildMode === 'lineup-only'
-      ? 'lineup-only'
-      : 'lineup-only';
+  const buildMode = value.buildMode;
 
   let builds: GameVisibleCharacterBuild[] | undefined;
   if (buildMode === 'sanitized-builds') {
@@ -202,7 +202,7 @@ function blockedModelRow(step: CombatScenarioStep, lineup: readonly string[]): b
   const owner = lineup[step.sourceSlot];
   if (step.kind === 'action') return visibleActionById.get(step.actionId)?.characterName !== owner;
   if (step.kind === 'activate-effect') return verifiedTeamEffectById.get(step.effectId)?.sourceCharacter !== owner;
-  if (step.kind === 'activate-cycle') return !verifiedCombatCycleModelById.has(step.cycleId as never);
+  if (step.kind === 'activate-cycle') return !verifiedCombatCycleModelById.has(step.cycleId as EsperCycleId);
   return false;
 }
 
