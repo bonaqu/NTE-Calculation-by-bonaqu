@@ -22,8 +22,8 @@ import { calculateDamage, calculateTeam, type DamageInput, type TeamMemberInput 
 
 const MAX_BODY_BYTES = 32_768;
 const FORMULA_VERSION = '0.2';
-const SERVICE_VERSION = '0.8.0';
-const DATASET_VERIFIED_AT = '2026-08-04';
+const SERVICE_VERSION = '0.9.0';
+const DATASET_VERIFIED_AT = '2026-08-05';
 
 function corsHeaders(): Record<string, string> {
   return {
