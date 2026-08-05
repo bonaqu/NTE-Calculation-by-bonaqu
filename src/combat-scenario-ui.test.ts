@@ -34,11 +34,13 @@ describe('verified team combat scenario product contract', () => {
   it('imports sourced rotations without fuzzy matching or invented seconds', () => {
     expect(componentSource).toContain('Импорт из Rotation Lab');
     expect(componentSource).toContain('Порядок без подтверждённых секунд');
-    expect(componentSource).toContain('Покрытие импорта не означает полный DPS ротации');
+    expect(componentSource).toContain('Полный шаг = 1, частичный = 0,5');
+    expect(componentSource).toContain('Взвешенное покрытие');
     expect(componentSource).toContain('confirmRotationScenarioTiming');
     expect(componentSource).toContain('invalidateRotationScenarioTiming');
     expect(importSource).toContain('Exact source-step bindings only');
-    expect(importSource).toContain('rotationScenarioBindings');
+    expect(importSource).toContain('RotationScenarioBindingAtom');
+    expect(importSource).toContain('generatedPartialRemainderSteps');
     expect(importSource).not.toMatch(/fuzzyMatch|similarityScore|levenshtein/iu);
   });
 
@@ -59,6 +61,7 @@ describe('verified team combat scenario product contract', () => {
     expect(componentSource).toContain('Это не полный DPS ротации');
     expect(componentSource).toContain('Покрытие действий');
     expect(componentSource).toContain('Остальные циклы не превращаются в выдуманный урон');
+    expect(componentSource).toContain("coverage-${origin.coverage}");
     expect(engineSource).toContain('coveragePercent');
     expect(engineSource).toContain("status: 'blocked'");
     expect(engineSource).toContain("status: 'wait'");
@@ -80,6 +83,7 @@ describe('verified team combat scenario product contract', () => {
     expect(mainSource).toContain("import './combat-scenario.css'");
     expect(css).toContain('.rotation-scenario-import');
     expect(css).toContain('.rotation-scenario-timing');
+    expect(css).toContain('.rotation-origin.coverage-partial');
     expect(css).toContain('.combat-scenario-value-cell');
     expect(css).toContain('.combat-scenario-editor-row');
     expect(css).toContain('.combat-scenario-results li');
