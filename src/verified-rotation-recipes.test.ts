@@ -34,14 +34,14 @@ describe('verified Rotation Lab recipes', () => {
   it('audits every preset and every current exact binding', () => {
     expect(verifiedRotationRecipeCoverage).toMatchObject({
       presetCount: 6,
-      bindingCount: 29,
+      bindingCount: 33,
       totalSourceStepCount: 58,
-      fullyBoundSourceStepCount: 8,
+      fullyBoundSourceStepCount: 12,
       partiallyBoundSourceStepCount: 21,
-      unsupportedSourceStepCount: 29,
-      boundActionStepCount: 45,
+      unsupportedSourceStepCount: 25,
+      boundActionStepCount: 49,
       promotedRecipeCount: 6,
-      promotedActionStepCount: 45,
+      promotedActionStepCount: 49,
       completeActionOrderRecipeCount: 0,
       partialActionOrderRecipeCount: 6,
       orderOnlyRecipeCount: 6,
@@ -101,21 +101,21 @@ describe('verified Rotation Lab recipes', () => {
     });
     expect(rotationPresetRecipeAuditById.get('lacrimosa-discord-dot')).toMatchObject({
       totalSourceSteps: 11,
-      fullyBoundSourceSteps: 0,
+      fullyBoundSourceSteps: 2,
       partiallyBoundSourceSteps: 3,
-      unsupportedSourceSteps: 8,
-      verifiedActionSteps: 5,
+      unsupportedSourceSteps: 6,
+      verifiedActionSteps: 7,
       omittedEffectConditions: 3,
       promotedCoverage: 'partial-action-order',
     });
     expect(rotationPresetRecipeAuditById.get('baicang-firefly-hyper')).toMatchObject({
       totalSourceSteps: 10,
-      fullyBoundSourceSteps: 2,
+      fullyBoundSourceSteps: 4,
       partiallyBoundSourceSteps: 3,
-      unsupportedSourceSteps: 5,
-      exactActionSourceSteps: 2,
+      unsupportedSourceSteps: 3,
+      exactActionSourceSteps: 4,
       partialActionSourceSteps: 3,
-      verifiedActionSteps: 6,
+      verifiedActionSteps: 8,
       omittedEffectConditions: 2,
       promotedCoverage: 'partial-action-order',
     });
@@ -179,6 +179,8 @@ describe('verified Rotation Lab recipes', () => {
       'sakiri.feast-of-gluttony.level-10',
       'daffodill.finale.initial-composition.level-10',
       'daffodill.echoes.enhanced-sequence.level-10',
+      'daffodill.phantom-step.level-10',
+      'daffodill.phantom-step.level-10',
     ]);
     expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'baicang-firefly-hyper')?.steps.map((step) => step.actionId)).toEqual([
       'sakiri.feast-of-gluttony.level-10',
@@ -186,7 +188,9 @@ describe('verified Rotation Lab recipes', () => {
       'daffodill.echoes.enhanced-sequence.level-10',
       'baicang.judgment-of-autumn.expansion.level-10',
       'baicang.heart-of-heaven-and-earth.level-10',
+      'daffodill.phantom-step.level-10',
       'baicang.silenced-thought.full-composition.level-10',
+      'daffodill.phantom-step.level-10',
     ]);
     expect(verifiedRotationRecipes.every((recipe) => recipe.gaps.length > 0)).toBe(true);
   });

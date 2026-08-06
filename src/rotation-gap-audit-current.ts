@@ -91,13 +91,6 @@ export { rotationGapClassificationLabels };
 export const currentRotationMissingActionPriorities: readonly RotationMissingActionPriority[] = [
   {
     rank: 1,
-    characterName: 'Daffodill',
-    capability: { ru: 'первая и вторая усиленные базовые атаки', en: 'first and second enhanced Basic Attacks' },
-    sourceSteps: ['lacrimosa-phantom-one', 'lacrimosa-phantom-two', 'baicang-phantom-one', 'baicang-phantom-two'],
-    reason: { ru: 'Одна пара точных записей закроет четыре повторно используемых шага двух пресетов.', en: 'One exact pair closes four reused source steps across two presets.' },
-  },
-  {
-    rank: 2,
     characterName: 'Zero',
     capability: { ru: 'прямые сверхспособность и навык перенаправления', en: 'direct Ultimate and Redirect Skill' },
     sourceSteps: ['zero-fill', 'zero-blossom', 'zero-third-strike', 'nanally-zero-blossom', 'chaos-zero-remora'],
@@ -140,9 +133,9 @@ export function validateCurrentRotationGapAudit(): string[] {
   }
 
   if (currentRotationGapAuditSummary.baselineTotal !== 41) errors.push('Expected the immutable 41-step baseline');
-  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 12) errors.push('Expected twelve source steps resolved since baseline');
-  if (currentRotationGapAuditSummary.total !== 29) errors.push(`Expected 29 current gaps, got ${currentRotationGapAuditSummary.total}`);
-  if (currentRotationGapAuditSummary.missingActionRecord !== 13) errors.push('Expected 13 current missing-action records');
+  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 16) errors.push('Expected sixteen source steps resolved since baseline');
+  if (currentRotationGapAuditSummary.total !== 25) errors.push(`Expected 25 current gaps, got ${currentRotationGapAuditSummary.total}`);
+  if (currentRotationGapAuditSummary.missingActionRecord !== 9) errors.push('Expected 9 current missing-action records');
   if (currentRotationGapAuditSummary.effectOrCycleCondition !== 3) errors.push('Expected 3 current effect/Cycle conditions');
   if (currentRotationGapAuditSummary.nonDamageOperation !== 8) errors.push('Expected 8 current non-damage operations');
   if (currentRotationGapAuditSummary.ambiguousSourceStep !== 5) errors.push('Expected 5 current ambiguous source steps');

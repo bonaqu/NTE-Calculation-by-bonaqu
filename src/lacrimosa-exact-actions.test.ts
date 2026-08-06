@@ -7,10 +7,10 @@ import { verifiedVisibleActions } from './verified-visible-actions';
 const byId = new Map(verifiedVisibleActionsBatchJ.map((action) => [action.id, action]));
 
 describe('verified Lacrimosa exact action variants', () => {
-  it('adds six unique level-10 records to the 106-action catalog', () => {
+  it('adds six unique level-10 records to the 107-action catalog', () => {
     expect(verifiedVisibleActionsBatchJ).toHaveLength(6);
     expect(new Set(verifiedVisibleActionsBatchJ.map((action) => action.id)).size).toBe(6);
-    expect(verifiedVisibleActions).toHaveLength(106);
+    expect(verifiedVisibleActions).toHaveLength(107);
     expect(verifiedVisibleActionsBatchJ.every((action) => action.characterName === 'Lacrimosa')).toBe(true);
     expect(verifiedVisibleActionsBatchJ.every((action) => action.requiredLevel === 10)).toBe(true);
   });
@@ -37,17 +37,17 @@ describe('verified Lacrimosa exact action variants', () => {
     }
   });
 
-  it('keeps 29 gaps while moving three rows from missing to ambiguous', () => {
+  it('keeps Lacrimosa ambiguity while Phantom Step reduces the current gap total', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 12,
-      total: 29,
-      missingActionRecord: 13,
+      resolvedSinceBaseline: 16,
+      total: 25,
+      missingActionRecord: 9,
       ambiguousSourceStep: 5,
-      verifiedActionCatalogCount: 106,
+      verifiedActionCatalogCount: 107,
     });
-    expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual(['Daffodill', 'Zero']);
+    expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual(['Zero']);
   });
 
   it('retains complete current source provenance', () => {
