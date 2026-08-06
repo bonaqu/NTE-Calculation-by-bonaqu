@@ -9,12 +9,13 @@ if text.count(duplicate) != 1:
     raise RuntimeError(f'Expected one duplicate replacement line, found {text.count(duplicate)}')
 text = text.replace(duplicate, '')
 
-blossom_atom = "      { kind: 'activate-cycle', cycleId: 'blossom' },\n"
+# The atoms live inside Python string literals, so the generator source contains literal backslash-n pairs.
+blossom_atom = "      { kind: 'activate-cycle', cycleId: 'blossom' },\\n"
 if text.count(blossom_atom) != 3:
     raise RuntimeError(f'Expected three unsupported Blossom atoms, found {text.count(blossom_atom)}')
 text = text.replace(blossom_atom, '')
 
-remora_atom = "      { kind: 'activate-cycle', cycleId: 'remora' },\n"
+remora_atom = "      { kind: 'activate-cycle', cycleId: 'remora' },\\n"
 if text.count(remora_atom) != 1:
     raise RuntimeError(f'Expected one unsupported Remora atom, found {text.count(remora_atom)}')
 text = text.replace(remora_atom, '')
