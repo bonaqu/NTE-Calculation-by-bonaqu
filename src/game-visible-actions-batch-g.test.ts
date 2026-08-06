@@ -38,7 +38,7 @@ describe('verified Shinku direct actions', () => {
     });
     expect(37 + 239.9 + 109.9 * 5 + 287.9 + 85).toBeCloseTo(1199.3, 10);
     expect(action?.description.ru).toContain('только прямой входной урон');
-    expect(action?.description.en).toContain('13-second state is modeled separately');
+    expect(action?.description.en).toContain('The following 13-second state is modeled separately');
   });
 
   it('models one Crimson Judgment dash and the finisher as separate actions', () => {
