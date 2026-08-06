@@ -15,29 +15,29 @@ describe('Rotation Lab gap audit', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 16,
-      total: 25,
+      resolvedSinceBaseline: 22,
+      total: 19,
       effectOrCycleCondition: 3,
-      missingActionRecord: 9,
+      missingActionRecord: 3,
       nonDamageOperation: 8,
       ambiguousSourceStep: 5,
-      verifiedActionCatalogCount: 107,
+      verifiedActionCatalogCount: 110,
     });
     const unsupportedKeys = rotationPresets.flatMap((preset) => preset.steps.filter((step) => !rotationScenarioBindings[`${preset.id}:${step.id}`]).map((step) => `${preset.id}:${step.id}`));
-    expect(unsupportedKeys).toHaveLength(25);
+    expect(unsupportedKeys).toHaveLength(19);
     expect([...currentRotationGapAuditByKey.keys()].sort()).toEqual(unsupportedKeys.sort());
   });
 
   it('promotes Nanally and expands Chaos without semantic substitutions', () => {
-    expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.steps).toHaveLength(7);
+    expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.steps).toHaveLength(9);
     expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.gaps).toHaveLength(10);
-    expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(7);
+    expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(8);
     expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.gaps).toHaveLength(9);
     expect(currentRotationGapAuditByKey.has('nanally-hexed-dual:nanally-energy-recovery')).toBe(true);
     expect(currentRotationGapAuditByKey.has('chaos-remora-bomb:chaos-restart')).toBe(true);
   });
 
-  it('moves missing-action research priority to Zero', () => {
-    expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([[1, 'Zero']]);
+  it('moves missing-action research priority to Jiuyuan and held Hathor Skill', () => {
+    expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([[1, 'Jiuyuan'], [2, 'Hathor']]);
   });
 });

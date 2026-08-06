@@ -11,19 +11,19 @@ import { rotationPresetById } from './rotation-presets';
 const preset = rotationPresetById.get('shinku-charge')!;
 
 describe('Shinku Rotation Lab exact bindings', () => {
-  it('reports one full, five partial and two unsupported source steps', () => {
+  it('reports one full and seven partial source steps without unsupported setup', () => {
     expect(previewRotationScenarioImport(preset)).toMatchObject({
       presetId: 'shinku-charge',
       totalSourceSteps: 8,
       fullyMappedSourceSteps: 1,
-      partiallyMappedSourceSteps: 5,
-      mappedSourceSteps: 6,
-      generatedActionSteps: 14,
+      partiallyMappedSourceSteps: 7,
+      mappedSourceSteps: 8,
+      generatedActionSteps: 18,
       generatedEffectSteps: 2,
       generatedCycleSteps: 0,
-      generatedPartialRemainderSteps: 5,
-      unsupportedSourceSteps: 2,
-      coveragePercent: 43.8,
+      generatedPartialRemainderSteps: 7,
+      unsupportedSourceSteps: 0,
+      coveragePercent: 56.3,
     });
   });
 
@@ -90,15 +90,19 @@ describe('Shinku Rotation Lab exact bindings', () => {
     });
   });
 
-  it('leaves Zero and Nanally setup unsupported instead of synthesizing their actions', () => {
+  it('binds Zero and Nanally setup actions while leaving unsupported Cycle parts visible', () => {
     const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');
-    for (const sourceStepId of ['zero-fill', 'nanally-charge']) {
+    const expected = {
+      'zero-fill': ['zero.divide-by-zero.level-10', 'zero.appraise-and-engrave.main.level-10'],
+      'nanally-charge': ['nanally.colucci-ultimate-technique.initial.level-10', 'nanally.colucci-howling-technique.level-10'],
+    } as const;
+    for (const [sourceStepId, actionIds] of Object.entries(expected)) {
       const generated = imported.scenario.steps.filter((step) => (
         imported.metadata.originsByStepId[step.id]?.sourceStepId === sourceStepId
       ));
-      expect(generated).toHaveLength(1);
-      expect(generated[0]).toMatchObject({ kind: 'wait', actionId: '' });
-      expect(imported.metadata.originsByStepId[generated[0]!.id]?.coverage).toBe('unsupported');
+      expect(generated.filter((step) => step.kind === 'action').map((step) => step.actionId)).toEqual(actionIds);
+      expect(generated.filter((step) => step.kind === 'wait' && step.note.startsWith('Непокрытая часть'))).toHaveLength(1);
+      expect(generated.every((step) => imported.metadata.originsByStepId[step.id]?.coverage === 'partial')).toBe(true);
     }
   });
 });

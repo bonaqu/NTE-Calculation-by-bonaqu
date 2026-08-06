@@ -244,6 +244,7 @@ export function calculateGameVisibleBuild(
   let multiplier = 100;
   let explanation = referenceExplanation;
   let actionDefenceIgnore = 0;
+  let actionDamageBonus = 0;
   const conditions: VisibleCalculationCondition[] = [
     scalingCondition(build, actionScalingStat),
     ...supportConditions(modifier),
@@ -253,6 +254,7 @@ export function calculateGameVisibleBuild(
     multiplier = action.multiplier;
     explanation = action.description;
     actionDefenceIgnore = action.defenceIgnore ?? 0;
+    actionDamageBonus = action.damageBonus ?? 0;
     conditions.push({ id: action.id, label: action.title, source: 'verified-data' });
     action.assumedConditions?.forEach((label, index) => conditions.push({
       id: `${action.id}.condition.${index + 1}`,
@@ -277,6 +279,16 @@ export function calculateGameVisibleBuild(
           en: `Target level ${state.target.level} is below character level ${build.level}`,
         },
         source: 'player',
+      });
+    }
+    if (action.damageBonus) {
+      conditions.push({
+        id: `${action.id}.damage-bonus`,
+        label: {
+          ru: `Пассив действия: +${action.damageBonus}% к урону`,
+          en: `Action passive: +${action.damageBonus}% damage`,
+        },
+        source: 'verified-data',
       });
     }
     if (action.defenceIgnore) {
@@ -318,6 +330,7 @@ export function calculateGameVisibleBuild(
     damageBonus: build.stats.damageBonus
       + build.stats.attributeDamageBonus
       + modifier.damageBonus
+      + actionDamageBonus
       + conditional.damageBonus,
     teamDamageBonus: 0,
     critRate: build.stats.critRate + modifier.critRate,

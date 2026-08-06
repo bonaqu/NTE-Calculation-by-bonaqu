@@ -10,7 +10,7 @@ import { verifiedVisibleActions } from './verified-visible-actions';
 const action = verifiedVisibleActionsBatchK[0];
 
 describe('verified Daffodill Phantom Step integration', () => {
-  it('adds one exact raw Phantom Step to the 107-action catalog', () => {
+  it('adds one exact raw Phantom Step to the 110-action catalog', () => {
     expect(verifiedVisibleActionsBatchK).toHaveLength(1);
     expect(action).toMatchObject({
       id: 'daffodill.phantom-step.level-10',
@@ -20,7 +20,7 @@ describe('verified Daffodill Phantom Step integration', () => {
       requiredLevel: 10,
     });
     expect(136.1 + 110.5 * 4 + 220.9).toBeCloseTo(799, 8);
-    expect(verifiedVisibleActions).toHaveLength(107);
+    expect(verifiedVisibleActions).toHaveLength(110);
   });
 
   it('keeps Finale, Cicada Shell and successful-parry extra damage outside the ratio', () => {
@@ -71,25 +71,25 @@ describe('verified Daffodill Phantom Step integration', () => {
     expect(validateVerifiedRotationRecipes()).toEqual([]);
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(verifiedRotationRecipeCoverage).toMatchObject({
-      bindingCount: 33,
+      bindingCount: 39,
       fullyBoundSourceStepCount: 12,
-      partiallyBoundSourceStepCount: 21,
-      unsupportedSourceStepCount: 25,
-      boundActionStepCount: 49,
+      partiallyBoundSourceStepCount: 27,
+      unsupportedSourceStepCount: 19,
+      boundActionStepCount: 58,
       promotedRecipeCount: 6,
-      promotedActionStepCount: 49,
+      promotedActionStepCount: 58,
     });
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 16,
-      total: 25,
-      missingActionRecord: 9,
+      resolvedSinceBaseline: 22,
+      total: 19,
+      missingActionRecord: 3,
       effectOrCycleCondition: 3,
       nonDamageOperation: 8,
       ambiguousSourceStep: 5,
-      verifiedActionCatalogCount: 107,
+      verifiedActionCatalogCount: 110,
     });
-    expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual(['Zero']);
+    expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual(['Jiuyuan', 'Hathor']);
   });
 
   it('imports two independent Phantom Step actions per preset without parry-extra', () => {
