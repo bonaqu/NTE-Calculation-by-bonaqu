@@ -28,6 +28,7 @@ function durationLabel(effect: VerifiedTeamEffect, ru: boolean): string {
 function recipientLabel(effect: VerifiedTeamEffect, ru: boolean): string {
   if (effect.recipientPolicy === 'all-team-members') return ru ? 'Все 4 слота команды' : 'All 4 team slots';
   if (effect.recipientPolicy === 'other-team-members') return ru ? 'Все, кроме источника' : 'Everyone except the source';
+  if (effect.recipientPolicy === 'source-only') return ru ? 'Только персонаж-источник' : 'Source character only';
   return ru ? 'Защита общей цели' : 'Shared target DEF';
 }
 
@@ -46,6 +47,11 @@ function activeEffectLabel(
     return ru
       ? `Применяется: +${amount}% к шансу крит. удара по цели под Реморой`
       : `Applied: +${amount}% CRIT Rate against the Remora target`;
+  }
+  if (effect.damageBonus !== undefined) {
+    return ru
+      ? `Применяется: +${amount}% к урону персонажа-источника`
+      : `Applied: +${amount}% source-character DMG`;
   }
   return ru
     ? `Применяется: −${amount}% защиты цели`
@@ -112,7 +118,7 @@ export function VerifiedTeamEffectsPanel({
       <div className="nte-team-effects-heading">
         <Users size={20} />
         <div>
-          <h3>{ru ? 'Проверенные эффекты команды' : 'Verified team effects'}</h3>
+          <h3>{ru ? 'Проверенные временные эффекты' : 'Verified temporary effects'}</h3>
           <p>{ru
             ? 'Включай только окно, которое действительно активно в проверяемом моменте боя. Неактивные эффекты ничего не добавляют.'
             : 'Enable only the combat window that is actually active at the tested moment. Inactive effects add nothing.'}</p>
@@ -135,6 +141,7 @@ export function VerifiedTeamEffectsPanel({
             {effect.baseAtkPercent ? <span><Sparkles size={14} /> {effect.baseAtkPercent}% {ru ? 'базовой Атаки' : 'Base ATK'}</span> : null}
             {effect.enemyDefenceReduction ? <span><Shield size={14} /> −{effect.enemyDefenceReduction}% {ru ? 'защиты' : 'DEF'}</span> : null}
             {effect.critRate ? <span><CircleDot size={14} /> +{effect.critRate}% {ru ? 'к шансу крит. удара' : 'CRIT Rate'}</span> : null}
+            {effect.damageBonus ? <span><Sparkles size={14} /> +{effect.damageBonus}% {ru ? 'к урону' : 'DMG'}</span> : null}
           </div>
 
           {enabled && effect.baseAtkPercent !== undefined ? <label className="nte-team-effect-base-atk">
