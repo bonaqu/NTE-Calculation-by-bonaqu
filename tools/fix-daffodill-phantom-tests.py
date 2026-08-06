@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Runs after the main guarded generator and updates only cumulative factual tests.
 
 def replace_exact(path: str, old: str, new: str, expected: int = 1) -> None:
     target = Path(path)
@@ -10,7 +11,6 @@ def replace_exact(path: str, old: str, new: str, expected: int = 1) -> None:
     target.write_text(text.replace(old, new), encoding='utf-8')
 
 
-# Lacrimosa's own action research remains valid, but the cumulative audit moves forward.
 replace_exact('src/lacrimosa-exact-actions.test.ts', '106-action catalog', '107-action catalog')
 replace_exact('src/lacrimosa-exact-actions.test.ts', 'expect(verifiedVisibleActions).toHaveLength(106);', 'expect(verifiedVisibleActions).toHaveLength(107);')
 replace_exact('src/lacrimosa-exact-actions.test.ts', "it('keeps 29 gaps while moving three rows from missing to ambiguous'", "it('keeps Lacrimosa ambiguity while Phantom Step reduces the current gap total'")
@@ -20,7 +20,6 @@ replace_exact('src/lacrimosa-exact-actions.test.ts', 'missingActionRecord: 13', 
 replace_exact('src/lacrimosa-exact-actions.test.ts', 'verifiedActionCatalogCount: 106', 'verifiedActionCatalogCount: 107')
 replace_exact("src/lacrimosa-exact-actions.test.ts", "toEqual(['Daffodill', 'Zero'])", "toEqual(['Zero'])")
 
-# Nanally/Chaos integration test is cumulative and must reflect the later exact bindings.
 replace_exact('src/nanally-chaos-integration.test.ts', 'publishes 106 unique actions', 'publishes 107 unique actions')
 replace_exact('src/nanally-chaos-integration.test.ts', 'expect(verifiedVisibleActions).toHaveLength(106);', 'expect(verifiedVisibleActions).toHaveLength(107);')
 replace_exact('src/nanally-chaos-integration.test.ts', ').size).toBe(106);', ').size).toBe(107);')
