@@ -1,5 +1,5 @@
 import type { GameVisibleTeamState } from '../game-visible-build';
-import { ManualTeamCombatScenarioEditor } from './ManualTeamCombatScenarioEditor';
+import { TeamCombatScenarioPanel as ManualTeamCombatScenarioEditor } from './ManualTeamCombatScenarioEditor';
 import { RotationGapAuditPanel } from './RotationGapAuditPanel';
 import { VerifiedScenarioRecipePanel } from './VerifiedScenarioRecipePanel';
 
