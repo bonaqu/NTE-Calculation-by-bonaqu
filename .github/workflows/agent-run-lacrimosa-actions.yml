@@ -33,7 +33,9 @@ jobs:
           node-version: 24
       - name: Apply guarded patch
         if: steps.guard.outputs.apply == 'true'
-        run: python tools/apply-lacrimosa-exact-actions.py
+        run: |
+          python tools/apply-lacrimosa-exact-actions.py
+          python tools/fix-lacrimosa-generated-tests.py
       - name: Install dependencies
         if: steps.guard.outputs.apply == 'true'
         run: npm install --no-audit --no-fund
@@ -53,6 +55,7 @@ jobs:
         if: steps.guard.outputs.apply == 'true'
         run: |
           rm tools/apply-lacrimosa-exact-actions.py
+          rm tools/fix-lacrimosa-generated-tests.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
