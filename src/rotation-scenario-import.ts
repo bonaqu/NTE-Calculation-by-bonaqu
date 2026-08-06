@@ -182,6 +182,13 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     items: [{ kind: 'action-sequence', actionIds: ['shinku.high-speed-breach.level-10'] }],
   },
 
+  [binding('hathor-hyper', 'jiuyuan-open')]: {
+    coverage: 'partial',
+    items: [{
+      kind: 'action-sequence',
+      actionIds: ['jiuyuan.final-reckoning.direct.level-10', 'jiuyuan.intel-hunter.direct.level-10'],
+    }],
+  },
   [binding('hathor-hyper', 'zero-blossom')]: {
     coverage: 'partial',
     items: [
@@ -243,6 +250,13 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     items: [{ kind: 'action-sequence', actionIds: ['hathor.rider-express.level-10'] }],
   },
 
+  [binding('nanally-hexed-dual', 'nanally-jiuyuan-hexed')]: {
+    coverage: 'partial',
+    items: [{
+      kind: 'action-sequence',
+      actionIds: ['jiuyuan.final-reckoning.direct.level-10', 'jiuyuan.intel-hunter.direct.level-10'],
+    }],
+  },
   [binding('nanally-hexed-dual', 'nanally-zero-blossom')]: {
     coverage: 'partial',
     items: [

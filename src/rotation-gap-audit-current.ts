@@ -91,13 +91,6 @@ export { rotationGapClassificationLabels };
 export const currentRotationMissingActionPriorities: readonly RotationMissingActionPriority[] = [
   {
     rank: 1,
-    characterName: 'Jiuyuan',
-    capability: { ru: 'прямые сверхспособность и навык перенаправления', en: 'direct Ultimate and Redirect Skill' },
-    sourceSteps: ['jiuyuan-open', 'nanally-jiuyuan-hexed'],
-    reason: { ru: 'Одна точная пара действий закроет два шага в ротациях Хатор и Наналли; текущий A6-триггер относится к другой механике.', en: 'One exact action pair closes two steps in Hathor and Nanally rotations; the current A6 trigger is a different mechanic.' },
-  },
-  {
-    rank: 2,
     characterName: 'Hathor',
     capability: { ru: 'полностью удерживаемое Aerial Command', en: 'fully held Aerial Command' },
     sourceSteps: ['chaos-hathor-redirect'],
@@ -140,9 +133,9 @@ export function validateCurrentRotationGapAudit(): string[] {
   }
 
   if (currentRotationGapAuditSummary.baselineTotal !== 41) errors.push('Expected the immutable 41-step baseline');
-  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 22) errors.push('Expected twenty-two source steps resolved since baseline');
-  if (currentRotationGapAuditSummary.total !== 19) errors.push(`Expected 19 current gaps, got ${currentRotationGapAuditSummary.total}`);
-  if (currentRotationGapAuditSummary.missingActionRecord !== 3) errors.push('Expected 3 current missing-action records');
+  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 24) errors.push('Expected twenty-four source steps resolved since baseline');
+  if (currentRotationGapAuditSummary.total !== 17) errors.push(`Expected 17 current gaps, got ${currentRotationGapAuditSummary.total}`);
+  if (currentRotationGapAuditSummary.missingActionRecord !== 1) errors.push('Expected 1 current missing-action record');
   if (currentRotationGapAuditSummary.effectOrCycleCondition !== 3) errors.push('Expected 3 current effect/Cycle conditions');
   if (currentRotationGapAuditSummary.nonDamageOperation !== 8) errors.push('Expected 8 current non-damage operations');
   if (currentRotationGapAuditSummary.ambiguousSourceStep !== 5) errors.push('Expected 5 current ambiguous source steps');
