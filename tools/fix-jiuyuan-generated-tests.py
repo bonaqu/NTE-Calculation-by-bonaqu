@@ -26,4 +26,10 @@ replace_exact(
     "    expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'nanally-hexed-dual')?.steps.map((step) => step.actionId)).toEqual([\n      'zero.appraise-and-engrave.main.level-10',\n      'zero.divide-by-zero.level-10',\n      'sakiri.feast-of-gluttony.level-10',\n      'jiuyuan.final-reckoning.direct.level-10',\n      'jiuyuan.intel-hunter.direct.level-10',",
 )
 
+replace_exact(
+    'src/nanally-chaos-integration.test.ts',
+    "expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([\n      [1, 'Jiuyuan'],\n      [2, 'Hathor'],\n    ]);",
+    "expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([\n      [1, 'Hathor'],\n    ]);",
+)
+
 print('Jiuyuan cumulative test expectations corrected')
