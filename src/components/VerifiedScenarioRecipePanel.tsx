@@ -99,6 +99,7 @@ function groupedRecipes(recipes: readonly VerifiedActionScenarioRecipe[]): Array
 
 export function VerifiedScenarioRecipePanel({ team, locale }: VerifiedScenarioRecipePanelProps) {
   const ru = locale === 'ru';
+  const verifiedActionCount = verifiedActionScenarioRecipes.length;
   const [, setScenario] = useLocalStorage<CombatScenarioState>(
     COMBAT_SCENARIO_STORAGE_KEY,
     initialCombatScenarioState(),
@@ -216,7 +217,7 @@ export function VerifiedScenarioRecipePanel({ team, locale }: VerifiedScenarioRe
     <div className="verified-scenario-recipes__heading">
       <ShieldCheck size={21} />
       <div>
-        <span>{ru ? '86 ДЕЙСТВИЙ + АУДИТ ROTATION LAB' : '86 ACTIONS + ROTATION LAB AUDIT'}</span>
+        <span>{ru ? `${verifiedActionCount} ДЕЙСТВИЙ + АУДИТ ROTATION LAB` : `${verifiedActionCount} ACTIONS + ROTATION LAB AUDIT`}</span>
         <h3>{ru ? 'Готовые подтверждённые сценарии' : 'Verified scenario recipes'}</h3>
         <p>{ru
           ? 'Одиночные действия, точные связки и частичные ротации разделены. Повторения, эффекты, циклы и секунды появляются только при прямом подтверждении.'
@@ -226,7 +227,7 @@ export function VerifiedScenarioRecipePanel({ team, locale }: VerifiedScenarioRe
 
     <div className="verified-scenario-recipes__grid">
       <article>
-        <div className="verified-scenario-recipes__kind"><Sparkles size={18} /><div><b>{ru ? 'Одиночное действие' : 'Standalone action'}</b><small>{availableRecipes.length} / 86</small></div></div>
+        <div className="verified-scenario-recipes__kind"><Sparkles size={18} /><div><b>{ru ? 'Одиночное действие' : 'Standalone action'}</b><small>{availableRecipes.length} / {verifiedActionCount}</small></div></div>
         {selectedRecipe && selectedAction ? <>
           <label>
             <span>{ru ? 'Рецепт для текущей команды' : 'Recipe for current team'}</span>

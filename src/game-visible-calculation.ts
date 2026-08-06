@@ -63,6 +63,7 @@ const emptyModifier: TeamEffectSlotModifier = {
   flatAtk: 0,
   enemyDefenceReduction: 0,
   critRate: 0,
+  damageBonus: 0,
   provenance: [],
 };
 
@@ -313,7 +314,10 @@ export function calculateGameVisibleBuild(
     scalingValue: actionScalingStat === 'atk' ? undefined : actionScalingValue,
     skillMultiplier: multiplier,
     hits: 1,
-    damageBonus: build.stats.damageBonus + build.stats.attributeDamageBonus + conditional.damageBonus,
+    damageBonus: build.stats.damageBonus
+      + build.stats.attributeDamageBonus
+      + modifier.damageBonus
+      + conditional.damageBonus,
     teamDamageBonus: 0,
     critRate: build.stats.critRate + modifier.critRate,
     critDamage: build.stats.critDamage,

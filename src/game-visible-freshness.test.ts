@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { characterCombatCoverage } from './game-visible-build';
 import { verifiedVisibleActions } from './game-visible-calculation';
 
-const AS_OF = Date.parse('2026-08-05T00:00:00.000Z');
+const AS_OF = Date.parse('2026-08-06T00:00:00.000Z');
 const DAY_MS = 86_400_000;
 
 function ageDays(value: string): number {
@@ -25,7 +25,7 @@ describe('game-visible combat evidence freshness', () => {
   });
 
   it('requires direct source metadata and hard freshness limits for exact actions', () => {
-    expect(verifiedVisibleActions).toHaveLength(86);
+    expect(verifiedVisibleActions).toHaveLength(91);
     expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(verifiedVisibleActions.length);
     for (const action of verifiedVisibleActions) {
       expect(action.sourceUrl).toMatch(/^https:\/\//u);

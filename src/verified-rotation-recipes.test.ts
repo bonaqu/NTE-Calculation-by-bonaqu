@@ -34,14 +34,14 @@ describe('verified Rotation Lab recipes', () => {
   it('audits every preset and every current exact binding', () => {
     expect(verifiedRotationRecipeCoverage).toMatchObject({
       presetCount: 6,
-      bindingCount: 17,
+      bindingCount: 22,
       totalSourceStepCount: 58,
-      fullyBoundSourceStepCount: 3,
-      partiallyBoundSourceStepCount: 14,
-      unsupportedSourceStepCount: 41,
-      boundActionStepCount: 23,
+      fullyBoundSourceStepCount: 4,
+      partiallyBoundSourceStepCount: 18,
+      unsupportedSourceStepCount: 36,
+      boundActionStepCount: 35,
       promotedRecipeCount: 5,
-      promotedActionStepCount: 22,
+      promotedActionStepCount: 34,
       completeActionOrderRecipeCount: 0,
       partialActionOrderRecipeCount: 5,
       orderOnlyRecipeCount: 5,
@@ -55,13 +55,13 @@ describe('verified Rotation Lab recipes', () => {
   it('keeps per-preset coverage honest', () => {
     expect(rotationPresetRecipeAuditById.get('shinku-charge')).toMatchObject({
       totalSourceSteps: 8,
-      fullyBoundSourceSteps: 0,
-      partiallyBoundSourceSteps: 1,
-      unsupportedSourceSteps: 7,
-      exactActionSourceSteps: 0,
-      partialActionSourceSteps: 1,
-      verifiedActionSteps: 2,
-      omittedEffectConditions: 1,
+      fullyBoundSourceSteps: 1,
+      partiallyBoundSourceSteps: 5,
+      unsupportedSourceSteps: 2,
+      exactActionSourceSteps: 1,
+      partialActionSourceSteps: 5,
+      verifiedActionSteps: 14,
+      omittedEffectConditions: 2,
       omittedCycleConditions: 0,
       promotedRecipeId: 'rotation-lab.shinku-charge.verified-actions',
       promotedCoverage: 'partial-action-order',
@@ -130,9 +130,22 @@ describe('verified Rotation Lab recipes', () => {
       'baicang-firefly-hyper',
     ]);
     expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'shinku-charge')?.steps.map((step) => step.actionId)).toEqual([
+      'shinku.high-speed-breach.level-10',
       'hathor.rider-express.level-10',
       'hathor.cyclone-strike-first.level-10',
+      'shinku.crimson-fury.level-10',
+      'shinku.scarlet-descent.level-10',
+      'shinku.scarlet-descent.level-10',
+      'shinku.scarlet-descent.level-10',
+      'shinku.scarlet-descent.level-10',
+      'shinku.scarlet-descent.level-10',
+      'shinku.crimson-judgment.one-dash.level-10',
+      'shinku.crimson-judgment.one-dash.level-10',
+      'shinku.crimson-judgment.one-dash.level-10',
+      'shinku.dragonflame-verdict.level-10',
+      'shinku.high-speed-breach.level-10',
     ]);
+    expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'shinku-charge')?.gaps).toHaveLength(9);
     expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'hathor-hyper')?.steps.map((step) => step.actionId)).toEqual([
       'haniel.silent-moonlit-forest-guardian.direct.level-10',
       'haniel.a-melody-named-haniel.initial.level-10',
@@ -165,6 +178,10 @@ describe('verified Rotation Lab recipes', () => {
   });
 
   it('records sourced repetition without inventing missing action IDs or counts', () => {
+    const shinkuSkills = rotationRepeatEvidence.find((entry) => entry.presetId === 'shinku-charge' && entry.count === 5);
+    const shinkuDashes = rotationRepeatEvidence.find((entry) => entry.presetId === 'shinku-charge' && entry.count === 3);
+    expect(shinkuSkills).toMatchObject({ kind: 'fixed-count', count: 5 });
+    expect(shinkuDashes).toMatchObject({ kind: 'fixed-count', count: 3 });
     const hathorRepeat = rotationRepeatEvidence.find((entry) => entry.presetId === 'hathor-hyper');
     expect(hathorRepeat).toMatchObject({ kind: 'fixed-count', count: 3 });
     expect(hathorRepeat?.promotedActionIds).toEqual([

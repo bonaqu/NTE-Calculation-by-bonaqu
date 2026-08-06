@@ -5,13 +5,14 @@ export type VerifiedTeamEffectId =
   | 'haniel.friendship.nova-atk-drain'
   | 'sakiri.awakening-four.team-atk'
   | 'sakiri.impish-trick.def-reduction'
-  | 'hathor.delay-warning.remora-crit-rate';
+  | 'hathor.delay-warning.remora-crit-rate'
+  | 'shinku.surging-crimson.damage';
 
-export type TeamEffectRecipientPolicy = 'all-team-members' | 'other-team-members' | 'enemy';
+export type TeamEffectRecipientPolicy = 'all-team-members' | 'other-team-members' | 'source-only' | 'enemy';
 
 export interface VerifiedTeamEffect {
   id: VerifiedTeamEffectId;
-  sourceCharacter: 'Haniel' | 'Sakiri' | 'Hathor';
+  sourceCharacter: 'Haniel' | 'Sakiri' | 'Hathor' | 'Shinku';
   title: LocalizedText;
   description: LocalizedText;
   trigger: LocalizedText;
@@ -20,6 +21,7 @@ export interface VerifiedTeamEffect {
   baseAtkPercent?: number;
   enemyDefenceReduction?: number;
   critRate?: number;
+  damageBonus?: number;
   minimumAwakening?: number;
   sourcePublisher: string;
   sourceUrl: string;
@@ -32,6 +34,7 @@ export interface TeamEffectSlotModifier {
   flatAtk: number;
   enemyDefenceReduction: number;
   critRate: number;
+  damageBonus: number;
   provenance: readonly TeamEffectProvenance[];
 }
 
@@ -40,7 +43,7 @@ export interface TeamEffectProvenance {
   sourceSlot: number;
   sourceCharacter: string;
   amount: number;
-  kind: 'flat-atk' | 'enemy-defence-reduction' | 'crit-rate';
+  kind: 'flat-atk' | 'enemy-defence-reduction' | 'crit-rate' | 'damage-bonus';
   label: LocalizedText;
 }
 
@@ -140,6 +143,27 @@ export const verifiedTeamEffects: readonly VerifiedTeamEffect[] = [
     sourceUpdatedAt: '2026-06-27',
     verifiedAt,
   },
+  {
+    id: 'shinku.surging-crimson.damage',
+    sourceCharacter: 'Shinku',
+    title: { ru: 'Surging Crimson · бонус урона', en: 'Surging Crimson · DMG bonus' },
+    description: {
+      ru: 'После применения Crimson Fury Шинку входит в Surging Crimson на 13 секунд и получает +30% к урону. Эффект действует только на Шинку. Увеличение коэффициентов A6 и бонус R1 моделируются отдельно и сюда не входят.',
+      en: 'After casting Crimson Fury, Shinku enters Surging Crimson for 13 seconds and gains +30% DMG. The effect applies only to Shinku. Awakening 6 ratio increases and the Resonance 1 bonus are separate.',
+    },
+    trigger: {
+      ru: 'Применена Crimson Fury',
+      en: 'Crimson Fury was cast',
+    },
+    durationSeconds: 13,
+    recipientPolicy: 'source-only',
+    damageBonus: 30,
+    sourcePublisher: 'Icy Veins / Prydwen Institute',
+    sourceUrl: 'https://www.icy-veins.com/neverness-to-everness/shinku-profile-skills',
+    supportingSourceUrl: prydwen('shinku'),
+    sourceUpdatedAt: '2026-07-31',
+    verifiedAt: '2026-08-06',
+  },
 ];
 
 export const verifiedTeamEffectById = new Map(verifiedTeamEffects.map((effect) => [effect.id, effect]));
@@ -151,12 +175,14 @@ export function teamEffectsForCharacter(characterName: string): readonly Verifie
 function recipientSlots(policy: TeamEffectRecipientPolicy, sourceSlot: number, slotCount: number): number[] {
   const all = Array.from({ length: slotCount }, (_, index) => index);
   if (policy === 'other-team-members') return all.filter((index) => index !== sourceSlot);
+  if (policy === 'source-only') return [sourceSlot];
   return all;
 }
 
 function sourceCharacterRussianName(characterName: VerifiedTeamEffect['sourceCharacter']): string {
   if (characterName === 'Haniel') return 'Ханиэль';
   if (characterName === 'Sakiri') return 'Сакири';
+  if (characterName === 'Shinku') return 'Шинку';
   return 'Хатор';
 }
 
@@ -179,7 +205,8 @@ function blockedReason(effect: VerifiedTeamEffect, baseAtk: number, awakeningLev
 function effectAmount(effect: VerifiedTeamEffect, baseAtk: number): number {
   if (effect.baseAtkPercent !== undefined) return baseAtk * effect.baseAtkPercent / 100;
   if (effect.enemyDefenceReduction !== undefined) return effect.enemyDefenceReduction;
-  return effect.critRate ?? 0;
+  if (effect.critRate !== undefined) return effect.critRate;
+  return effect.damageBonus ?? 0;
 }
 
 export function deriveVerifiedTeamEffects(state: GameVisibleTeamState): DerivedTeamEffects {
@@ -187,6 +214,7 @@ export function deriveVerifiedTeamEffects(state: GameVisibleTeamState): DerivedT
     flatAtk: 0,
     enemyDefenceReduction: 0,
     critRate: 0,
+    damageBonus: 0,
     provenance: [] as TeamEffectProvenance[],
   }));
   const evaluations: TeamEffectEvaluation[] = [];
@@ -253,6 +281,20 @@ export function deriveVerifiedTeamEffects(state: GameVisibleTeamState): DerivedT
             label: {
               ru: `${effect.title.ru}: +${effect.critRate}% к шансу крит. удара по цели под Реморой`,
               en: `${effect.title.en}: +${effect.critRate}% CRIT Rate against the Remora target`,
+            },
+          });
+        }
+        if (effect.damageBonus !== undefined) {
+          target.damageBonus += effect.damageBonus;
+          target.provenance.push({
+            effectId: effect.id,
+            sourceSlot,
+            sourceCharacter: sourceBuild.characterName,
+            amount: effect.damageBonus,
+            kind: 'damage-bonus',
+            label: {
+              ru: `${effect.title.ru}: +${effect.damageBonus}% к урону Шинку на ${effect.durationSeconds} секунд`,
+              en: `${effect.title.en}: +${effect.damageBonus}% Shinku DMG for ${effect.durationSeconds} seconds`,
             },
           });
         }

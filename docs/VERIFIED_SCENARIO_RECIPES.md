@@ -22,9 +22,12 @@ Alternative records remain separate. For example:
 - Chaos Remora at the base five-second duration;
 - Chaos Remora at the maximum twelve-second duration;
 - Adler Tranquility with five tested hits;
-- Adler Tranquility against one remaining enemy with ten tested hits.
+- Adler Tranquility against one remaining enemy with ten tested hits;
+- Shinku one Scarlet Descent cast;
+- Shinku one Crimson Judgment dash;
+- Shinku Dragonflame Verdict finisher.
 
-The compiler never adds those alternatives together.
+The compiler never adds alternatives together. Fixed repeated uses enter a Rotation Lab recipe only through a separate source-count record and exact bindings.
 
 ## Timing evidence
 
@@ -40,6 +43,8 @@ Current explicit constraints:
 
 A minimum-spacing constraint is metadata, not permission to synthesize another trigger. Jiuyuan therefore still compiles into one action step.
 
+Shinku's 13-second Surging Crimson state is stored as a temporary effect rather than an action timestamp. It remains pending in order-only imports until activation seconds are confirmed.
+
 ## Multi-action fragments
 
 Multi-action fragments are a manually reviewed allow-list. They require stable action IDs and a direct source for order or count.
@@ -52,6 +57,8 @@ The first fragment is Hathor's published main burst:
 4. Cyclone Strike, third use.
 
 All four steps keep the same zero-second reference timestamp. Their array order is meaningful; elapsed seconds are unknown.
+
+Rotation Lab recipes are a separate generated layer. Shinku's current partial recipe uses exact counts for five Scarlet Descent casts and three Crimson Judgment dashes, followed by Dragonflame Verdict, while retaining unsupported operations as gaps.
 
 ## Validation contract
 
@@ -67,8 +74,8 @@ All four steps keep the same zero-second reference timestamp. Their array order 
 
 The current aggregate contract is:
 
-- 86 verified actions;
-- 86 standalone recipes;
+- 91 verified actions;
+- 91 standalone recipes;
 - 20 represented released characters;
 - 0 automatic repeats;
 - 2 explicit relative offsets;
@@ -84,7 +91,7 @@ This layer does not estimate:
 - energy generation or cooldown recovery;
 - Cycle gauge timing;
 - DoT tick count from duration;
-- uses per rotation;
+- uses per rotation without direct count evidence;
 - complete rotation DPS.
 
 Those values can be introduced only through separate source-backed evidence and focused tests.

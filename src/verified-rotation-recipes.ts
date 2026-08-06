@@ -135,22 +135,24 @@ export const rotationRepeatEvidence: readonly RotationRepeatEvidence[] = [
     sourceStepIds: ['shinku-enhanced-skills'],
     kind: 'fixed-count',
     count: 5,
-    action: { ru: 'усиленный навык Шинку', en: 'Shinku enhanced Skill' },
+    action: { ru: 'Scarlet Descent Шинку', en: 'Shinku Scarlet Descent' },
     note: {
-      ru: 'Источник прямо требует выполнить пять усиленных навыков. Точных action ID для этой пятишаговой последовательности пока нет.',
-      en: 'The source explicitly requires five enhanced Skills. Exact action IDs for this five-step sequence are not available yet.',
+      ru: 'Источник прямо требует пять применений. Они представлены пятью экземплярами одного подтверждённого action ID; обычные атаки между применениями остаются пробелом.',
+      en: 'The source explicitly requires five casts. They are represented by five instances of one verified action ID; the Basic Attacks between casts remain a gap.',
     },
+    promotedActionIds: Array.from({ length: 5 }, () => 'shinku.scarlet-descent.level-10'),
   },
   {
     presetId: 'shinku-charge',
     sourceStepIds: ['shinku-dashes'],
     kind: 'fixed-count',
     count: 3,
-    action: { ru: 'рывок сверхспособности Шинку', en: 'Shinku Ultimate dash' },
+    action: { ru: 'Crimson Judgment Шинку', en: 'Shinku Crimson Judgment' },
     note: {
-      ru: 'Источник прямо указывает три рывка. Они остаются только в аудите до появления отдельных подтверждённых action ID.',
-      en: 'The source explicitly lists three dashes. They remain audit-only until separate verified action IDs exist.',
+      ru: 'Источник прямо указывает три рывка. Они представлены тремя экземплярами одного подтверждённого action ID, после которых отдельно следует Dragonflame Verdict.',
+      en: 'The source explicitly lists three dashes. They are represented by three instances of one verified action ID followed separately by Dragonflame Verdict.',
     },
+    promotedActionIds: Array.from({ length: 3 }, () => 'shinku.crimson-judgment.one-dash.level-10'),
   },
   {
     presetId: 'hathor-hyper',
@@ -406,7 +408,7 @@ function buildRecipe(preset: RotationPreset): VerifiedRotationRecipe | null {
     sourcePublisher: preset.sourcePublisher,
     sourceUrl: preset.sourceUrl,
     sourceUpdatedAt: preset.sourceUpdatedAt,
-    verifiedAt: '2026-08-05',
+    verifiedAt: '2026-08-06',
   };
 }
 

@@ -109,8 +109,21 @@ const hathorBurstItems: readonly RotationScenarioBindingAtom[] = [
   },
 ];
 
+const fiveScarletDescentActions = Array.from(
+  { length: 5 },
+  () => 'shinku.scarlet-descent.level-10',
+);
+const threeCrimsonJudgmentActions = Array.from(
+  { length: 3 },
+  () => 'shinku.crimson-judgment.one-dash.level-10',
+);
+
 /** Exact source-step bindings only. Text similarity is deliberately not used. */
 export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioBinding>> = {
+  [binding('shinku-charge', 'shinku-prep')]: {
+    coverage: 'partial',
+    items: [{ kind: 'action-sequence', actionIds: ['shinku.high-speed-breach.level-10'] }],
+  },
   [binding('shinku-charge', 'hathor-open')]: {
     coverage: 'partial',
     items: [
@@ -123,6 +136,31 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
       },
       { kind: 'activate-effect', effectId: 'hathor.delay-warning.remora-crit-rate' },
     ],
+  },
+  [binding('shinku-charge', 'shinku-ultimate')]: {
+    coverage: 'partial',
+    items: [
+      { kind: 'action-sequence', actionIds: ['shinku.crimson-fury.level-10'] },
+      { kind: 'activate-effect', effectId: 'shinku.surging-crimson.damage' },
+    ],
+  },
+  [binding('shinku-charge', 'shinku-enhanced-skills')]: {
+    coverage: 'partial',
+    items: [{ kind: 'action-sequence', actionIds: fiveScarletDescentActions }],
+  },
+  [binding('shinku-charge', 'shinku-dashes')]: {
+    coverage: 'full',
+    items: [{
+      kind: 'action-sequence',
+      actionIds: [
+        ...threeCrimsonJudgmentActions,
+        'shinku.dragonflame-verdict.level-10',
+      ],
+    }],
+  },
+  [binding('shinku-charge', 'shinku-recovery')]: {
+    coverage: 'partial',
+    items: [{ kind: 'action-sequence', actionIds: ['shinku.high-speed-breach.level-10'] }],
   },
 
   [binding('hathor-hyper', 'haniel-buffs')]: {

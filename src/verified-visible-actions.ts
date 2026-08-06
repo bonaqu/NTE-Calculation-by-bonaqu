@@ -4,6 +4,7 @@ import { verifiedVisibleActionsBatchC } from './verified-visible-actions-batch-c
 import { verifiedVisibleActionsBatchD } from './verified-visible-actions-batch-d';
 import { verifiedVisibleActionsBatchE } from './verified-visible-actions-batch-e';
 import { verifiedVisibleActionsBatchF } from './verified-visible-actions-batch-f';
+import { verifiedVisibleActionsBatchG } from './verified-visible-actions-batch-g';
 
 export type ActionScalingStat = 'atk' | 'def' | 'max-hp';
 
@@ -217,6 +218,7 @@ export const verifiedVisibleActions: readonly VerifiedVisibleAction[] = [
   ...verifiedVisibleActionsBatchD,
   ...verifiedVisibleActionsBatchE,
   ...verifiedVisibleActionsBatchF,
+  ...verifiedVisibleActionsBatchG,
 ];
 
 export const visibleActionById = new Map(verifiedVisibleActions.map((action) => [action.id, action]));

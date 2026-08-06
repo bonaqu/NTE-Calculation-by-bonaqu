@@ -34,15 +34,15 @@ function team(builds: GameVisibleCharacterBuild[]): GameVisibleTeamState {
 }
 
 describe('verified team support effects', () => {
-  it('publishes four uniquely sourced effects', () => {
-    expect(verifiedTeamEffects).toHaveLength(4);
-    expect(new Set(verifiedTeamEffects.map((effect) => effect.id)).size).toBe(4);
-    expect(verifiedTeamEffects.map((effect) => effect.sourceCharacter)).toEqual(['Haniel', 'Sakiri', 'Sakiri', 'Hathor']);
+  it('publishes five uniquely sourced temporary effects', () => {
+    expect(verifiedTeamEffects).toHaveLength(5);
+    expect(new Set(verifiedTeamEffects.map((effect) => effect.id)).size).toBe(5);
+    expect(verifiedTeamEffects.map((effect) => effect.sourceCharacter)).toEqual(['Haniel', 'Sakiri', 'Sakiri', 'Hathor', 'Shinku']);
     for (const effect of verifiedTeamEffects) {
       expect(effect.sourceUrl).toMatch(/^https:\/\//u);
       expect(effect.supportingSourceUrl).toMatch(/^https:\/\//u);
       expect(effect.sourceUpdatedAt).toMatch(/^2026-\d{2}-\d{2}$/u);
-      expect(effect.verifiedAt).toBe('2026-08-04');
+      expect(effect.verifiedAt).toMatch(/^2026-\d{2}-\d{2}$/u);
     }
   });
 
@@ -145,6 +145,7 @@ describe('verified team support effects', () => {
     expect(enabled.teamEffects[0]).toMatchObject({ active: true, derivedAmount: 10, recipients: [0, 1, 2, 3] });
     expect(derived.slotModifiers.every((modifier) => modifier.critRate === 10)).toBe(true);
     expect(derived.slotModifiers.every((modifier) => modifier.flatAtk === 0)).toBe(true);
+    expect(derived.slotModifiers.every((modifier) => modifier.damageBonus === 0)).toBe(true);
     expect(derived.slotModifiers.every((modifier) => modifier.provenance.some((entry) => entry.kind === 'crit-rate'))).toBe(true);
     expect(enabled.rows.every((row) => row.result?.totalAtk === 1_000)).toBe(true);
     expect(enabled.rows.every((row) => row.result?.expectedCritMultiplier === 1.6)).toBe(true);
@@ -152,6 +153,42 @@ describe('verified team support effects', () => {
     expect(enabled.rows.every((row) => row.conditions.some((condition) => condition.id.startsWith('hathor.delay-warning.remora-crit-rate')))).toBe(true);
     expect(JSON.stringify(enabledState)).toBe(before);
     expect(enabledState.builds.every((build) => build.stats.critRate === 50)).toBe(true);
+  });
+
+  it('applies Surging Crimson +30% DMG only to Shinku', () => {
+    const baselineState = team([
+      damageBuild('Shinku'),
+      damageBuild('Hathor'),
+      damageBuild('Zero'),
+      damageBuild('Nanally'),
+    ]);
+    const baseline = calculateGameVisibleTeam(baselineState);
+    const enabledState = {
+      ...baselineState,
+      builds: baselineState.builds.map((build, index) => index === 0 ? {
+        ...build,
+        activeTeamEffectIds: ['shinku.surging-crimson.damage'],
+      } : build),
+    };
+    const before = JSON.stringify(enabledState);
+    const enabled = calculateGameVisibleTeam(enabledState);
+    const derived = deriveVerifiedTeamEffects(enabledState);
+
+    expect(enabled.teamEffects).toHaveLength(1);
+    expect(enabled.teamEffects[0]).toMatchObject({ active: true, derivedAmount: 30, recipients: [0] });
+    expect(derived.slotModifiers.map((modifier) => modifier.damageBonus)).toEqual([30, 0, 0, 0]);
+    expect(derived.slotModifiers[0]?.provenance).toContainEqual(expect.objectContaining({
+      effectId: 'shinku.surging-crimson.damage',
+      kind: 'damage-bonus',
+      amount: 30,
+    }));
+    expect(enabled.rows[0]?.result?.expected).toBeCloseTo((baseline.rows[0]?.result?.expected ?? 0) * 1.3, 8);
+    expect(enabled.rows.slice(1).map((row) => row.result?.expected)).toEqual(
+      baseline.rows.slice(1).map((row) => row.result?.expected),
+    );
+    expect(enabled.rows[0]?.conditions.some((condition) => condition.id.startsWith('shinku.surging-crimson.damage'))).toBe(true);
+    expect(enabled.rows.slice(1).every((row) => row.conditions.every((condition) => !condition.id.startsWith('shinku.surging-crimson.damage')))).toBe(true);
+    expect(JSON.stringify(enabledState)).toBe(before);
   });
 
   it('clamps temporary Hathor CRIT Rate through calculation-core at 100%', () => {

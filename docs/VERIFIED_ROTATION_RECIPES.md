@@ -8,15 +8,25 @@ It does not convert the full prose rotation into a damage timeline.
 
 | Preset | Source steps | Full bindings | Partial bindings | Unsupported | Verified action steps | Promoted |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| Shinku · Charge team | 8 | 0 | 1 | 7 | 2 | partial action order — Hathor preparation only |
+| Shinku · Charge team | 8 | 1 | 5 | 2 | 14 | partial action order |
 | Hathor · Hypercarry | 11 | 1 | 3 | 7 | 6 | partial action order |
 | Chaos · Remora Bomb | 9 | 0 | 3 | 6 | 3 | partial action order |
 | Nanally · Dual DPS Hexed | 9 | 0 | 1 | 8 | 1 | no — only one exact action |
 | Lacrimosa · DoT Discord | 11 | 0 | 3 | 8 | 5 | partial action order |
 | Baicang · Firefly Hyper | 10 | 2 | 3 | 5 | 6 | partial action order |
-| **Total** | **58** | **3** | **14** | **41** | **23** | **5 recipes / 22 actions** |
+| **Total** | **58** | **4** | **18** | **36** | **35** | **5 recipes / 34 actions** |
 
-The Shinku recipe contains only the exact Hathor setup published inside the source step: Rider Express followed by the first Cyclone Strike. It does not claim to model Shinku's Ultimate window.
+Shinku now has a source-ordered 14-action partial recipe:
+
+1. one High-Speed Breach from the preparation step;
+2. Rider Express and first Cyclone Strike from Hathor setup;
+3. Crimson Fury;
+4. five Scarlet Descent casts;
+5. three Crimson Judgment instances;
+6. Dragonflame Verdict;
+7. one recovery High-Speed Breach.
+
+Its nine gaps remain visible: two completely unsupported support steps, five partial remainders and two unconfirmed temporary effects.
 
 Nanally remains audit-only because its preset still exposes only one exact bound action.
 
@@ -34,18 +44,21 @@ The recipe preserves source-step order and binding-array order. No title similar
 
 ## Gap classification
 
-All 41 unsupported source steps are classified in `src/rotation-gap-audit.ts`:
+The immutable PR #123 baseline keeps all original 41 unsupported source steps in `src/rotation-gap-audit.ts`.
 
-| Classification | Count | Meaning |
-| --- | ---: | --- |
-| `missing-action-record` | 26 | The source names a damage action or sequence that has no semantically matching catalog record. |
-| `effect-or-cycle-condition` | 3 | The source step is an effect or Esper Cycle condition, not a standalone damage action. |
-| `non-damage-operation` | 8 | Swap, Energy routing, recovery or restart operation. |
-| `ambiguous-source-step` | 4 | The step mixes alternatives, variable repetition or unresolved variants. |
-| `exact-existing-action` | 0 | No unsupported step safely maps to one current action. |
-| `compound-existing-actions` | 0 | No unsupported step safely maps to a current action combination. |
+`src/rotation-gap-audit-current.ts` filters that baseline through current exact bindings. Five Shinku steps were resolved, leaving:
 
-The existing 86-action catalog was exhausted before producing this result. Similar passives, different Skill variants and conditional extra hits are recorded as rejected look-alikes rather than silently substituted.
+| Classification | Current count | Baseline count |
+| --- | ---: | ---: |
+| `missing-action-record` | 23 | 26 |
+| `effect-or-cycle-condition` | 3 | 3 |
+| `non-damage-operation` | 8 | 8 |
+| `ambiguous-source-step` | 2 | 4 |
+| `exact-existing-action` | 0 | 0 |
+| `compound-existing-actions` | 0 | 0 |
+| **Total** | **36** | **41** |
+
+The current 91-action catalog is exhausted against the remaining unsupported steps. Similar passives, different Skill variants and conditional extra hits remain rejected look-alikes rather than substitutions.
 
 ## Gaps
 
@@ -66,22 +79,22 @@ Every generated action receives the same local `0s` marker. Array order is meani
 
 Rotation Lab currently contains no direct per-step second evidence. A recipe cannot become `confirmed-seconds` unless a separate evidence record identifies the source step, numeric time and timing relation.
 
+Shinku's Surging Crimson is a verified 13-second +30% DMG state, but the Rotation Lab source does not provide a confirmed activation timestamp for the imported timeline. The effect therefore stays pending until the user confirms scenario timing.
+
 ## Repetition audit
 
 Fixed counts are recorded only when the source explicitly states or enumerates them. Current examples include:
 
-- five Shinku enhanced Skills;
-- three Shinku Ultimate dashes;
-- three Hathor Cyclone Strikes;
-- two Chaos enhanced Heavy Attacks;
-- five Nanally Basic Attacks and three Charged Attacks;
-- five Lacrimosa Basic Attacks;
-- two Daffodill enhanced attacks in the Lacrimosa and Baicang plans;
-- three Baicang Basic Attacks.
+- five Shinku Scarlet Descent casts — promoted as five explicit instances;
+- three Shinku Crimson Judgment instances — promoted as three explicit instances;
+- three Hathor Cyclone Strikes — promoted with first/second/third action IDs;
+- two Chaos enhanced Heavy Attacks — still missing action records;
+- five Nanally Basic Attacks and three Charged Attacks — still missing;
+- five Lacrimosa Basic Attacks — still missing;
+- two Daffodill enhanced attacks in the Lacrimosa and Baicang plans — still missing;
+- three Baicang Basic Attacks — the existing partial binding covers only the following Redirect Skill.
 
-Only Hathor currently has separate verified action IDs for every published repeated use in its own burst step. Those uses compile as three explicit actions, not a repeat-count field.
-
-The Shinku setup uses only the first Cyclone Strike because that source step names one Redirect Skill after Rider Express; it does not import Hathor's second and third burst variants.
+The Shinku finisher is not folded into the third dash. Dragonflame Verdict remains a separate action after three Crimson Judgment instances.
 
 Condition-bound repetition remains count-free:
 
@@ -101,16 +114,15 @@ A promoted recipe requires the complete four-character source lineup already to 
 
 ## Missing-action research priority
 
-The gap registry ranks the next exact records by how much real recipe coverage they unlock:
+The current gap registry ranks the next exact records by how much real recipe coverage they unlock:
 
-1. Shinku Ultimate window, five enhanced Skills and three dashes;
-2. Nanally Redirect Skill, Ultimate, five Basics and three Charged Attacks;
-3. Chaos Ultimate and two enhanced Heavy Attacks;
-4. Lacrimosa transformation and Basic sequence;
-5. Daffodill first and second enhanced Basic Attacks;
-6. Zero direct Ultimate and Redirect Skill.
+1. Nanally Redirect Skill, Ultimate, five Basics and three Charged Attacks;
+2. Chaos Ultimate and two enhanced Heavy Attacks;
+3. Lacrimosa transformation and Basic sequence;
+4. Daffodill first and second enhanced Basic Attacks;
+5. Zero direct Ultimate and Redirect Skill.
 
-This is a research backlog, not permission to bind a generic action with a similar name.
+Shinku direct-action research is complete for the currently sourced Rotation Lab window. This does not imply that every possible Shinku action or passive combination is modeled.
 
 ## Non-goals
 
@@ -121,5 +133,6 @@ This layer does not infer:
 - cooldown recovery;
 - energy generation;
 - number of DoT ticks;
+- variable Basic Attack count between Scarlet Descent casts;
 - attacks performed “until the window ends”;
 - full-rotation DPS coverage.

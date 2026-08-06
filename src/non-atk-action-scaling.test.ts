@@ -39,14 +39,15 @@ const noModifier: TeamEffectSlotModifier = {
   flatAtk: 0,
   enemyDefenceReduction: 0,
   critRate: 0,
+  damageBonus: 0,
   provenance: [],
 };
 
 describe('verified non-ATK action scaling', () => {
-  it('adds eleven unique records and completes partial coverage for all released characters', () => {
+  it('adds eleven unique records and keeps partial coverage for all released characters', () => {
     expect(verifiedVisibleActionsBatchF).toHaveLength(11);
-    expect(verifiedVisibleActions).toHaveLength(86);
-    expect(new Set(verifiedVisibleActions.map((entry) => entry.id)).size).toBe(86);
+    expect(verifiedVisibleActions).toHaveLength(91);
+    expect(new Set(verifiedVisibleActions.map((entry) => entry.id)).size).toBe(91);
     expect(new Set(verifiedVisibleActionsBatchF.map((entry) => entry.characterName)))
       .toEqual(new Set(['Adler', 'Fadia']));
     expect([...combatCoverageByCharacter.values()].filter((coverage) => coverage.coverage === 'partial')).toHaveLength(20);
