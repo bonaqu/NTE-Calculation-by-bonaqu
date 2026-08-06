@@ -57,5 +57,10 @@ replace_exact(
     "      omittedEffectConditions: 2,\n      omittedCycleConditions: 2,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
     "      omittedEffectConditions: 2,\n      omittedCycleConditions: 1,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
 )
+replace_exact(
+    'src/verified-rotation-recipes.test.ts',
+    "      omittedEffectConditions: 1,\n      omittedCycleConditions: 2,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
+    "      omittedEffectConditions: 1,\n      omittedCycleConditions: 1,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
+)
 
 print('Zero cumulative test expectations corrected')
