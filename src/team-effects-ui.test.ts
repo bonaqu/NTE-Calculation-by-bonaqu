@@ -13,13 +13,14 @@ import mainSource from './main.tsx?raw';
 const css = readFileSync(new URL('./team-effects.css', import.meta.url), 'utf8');
 
 describe('verified team effect UI contract', () => {
-  it('places support effects in the conditional section rather than the ordinary damage form', () => {
+  it('places temporary effects in the conditional section rather than the ordinary damage form', () => {
     expect(pageSource).toContain('VerifiedTeamEffectsPanel');
     expect(pageSource).toContain('evaluations={teamCalculation.teamEffects}');
     expect(pageSource).toContain("tab === 'conditions'");
     expect(pageSource).not.toContain("key: 'baseAtk'");
     expect(panelSource).toContain('enabled && effect.baseAtkPercent !== undefined');
     expect(panelSource).toContain('Левое число в подробной строке «Атака»');
+    expect(panelSource).toContain('Проверенные временные эффекты');
   });
 
   it('stores only conditional base ATK and enabled IDs with safe v1 migration defaults', () => {
@@ -56,13 +57,28 @@ describe('verified team effect UI contract', () => {
     expect(panelSource).not.toContain("build.characterName === 'Hathor'");
   });
 
+  it('renders Surging Crimson as a source-only 13-second +30% DMG window', () => {
+    expect(effectSource).toContain("'shinku.surging-crimson.damage'");
+    expect(effectSource).toContain("sourceCharacter: 'Shinku'");
+    expect(effectSource).toContain("recipientPolicy: 'source-only'");
+    expect(effectSource).toContain('durationSeconds: 13');
+    expect(effectSource).toContain('damageBonus: 30');
+    expect(effectSource).toContain('A6 и бонус R1 моделируются отдельно');
+    expect(panelSource).toContain("effect.recipientPolicy === 'source-only'");
+    expect(panelSource).toContain('Только персонаж-источник');
+    expect(panelSource).toContain('effect.damageBonus');
+    expect(panelSource).toContain("'к урону'");
+  });
+
   it('renders derived provenance while keeping final stats and temporary modifiers separate', () => {
     expect(calculationSource).toContain('baseAtk: build.stats.atk');
     expect(calculationSource).toContain('flatAtk: modifier.flatAtk');
     expect(calculationSource).toContain('critRate: build.stats.critRate + modifier.critRate');
+    expect(calculationSource).toContain('+ modifier.damageBonus');
     expect(calculationSource).toContain('supportConditions(modifier)');
     expect(calculationSource).toContain('modifier.enemyDefenceReduction');
     expect(calculationSource).toContain('deriveVerifiedTeamEffects(state)');
+    expect(effectSource).toContain("kind: 'damage-bonus'");
   });
 
   it('loads a responsive, border-led effect layer without decorative gradients or shadows', () => {
