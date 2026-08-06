@@ -13,9 +13,9 @@ import { verifiedVisibleActions } from './verified-visible-actions';
 const byChaosId = new Map(verifiedVisibleActionsBatchI.map((action) => [action.id, action]));
 
 describe('Nanally completion and Chaos exact action integration', () => {
-  it('publishes 100 unique actions and exact Chaos arithmetic', () => {
-    expect(verifiedVisibleActions).toHaveLength(100);
-    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(100);
+  it('publishes 106 unique actions and exact Chaos arithmetic', () => {
+    expect(verifiedVisibleActions).toHaveLength(106);
+    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(106);
     expect(verifiedVisibleActionsBatchH).toHaveLength(6);
     expect(verifiedVisibleActionsBatchI).toHaveLength(3);
     expect(byChaosId.get('chaos.doubtmark.full-sequence.level-10')?.multiplier).toBeCloseTo(599.7, 8);
@@ -86,11 +86,11 @@ describe('Nanally completion and Chaos exact action integration', () => {
       baselineTotal: 41,
       resolvedSinceBaseline: 12,
       total: 29,
-      missingActionRecord: 16,
+      missingActionRecord: 13,
       effectOrCycleCondition: 3,
       nonDamageOperation: 8,
-      ambiguousSourceStep: 2,
-      verifiedActionCatalogCount: 100,
+      ambiguousSourceStep: 5,
+      verifiedActionCatalogCount: 106,
     });
     for (const key of [
       'nanally-hexed-dual:nanally-redirect',
@@ -102,9 +102,8 @@ describe('Nanally completion and Chaos exact action integration', () => {
       'chaos-remora-bomb:chaos-heavy-two',
     ]) expect(currentRotationGapAuditByKey.has(key)).toBe(false);
     expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([
-      [1, 'Lacrimosa'],
-      [2, 'Daffodill'],
-      [3, 'Zero'],
+      [1, 'Daffodill'],
+      [2, 'Zero'],
     ]);
   });
 });

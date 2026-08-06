@@ -18,10 +18,10 @@ describe('Rotation Lab gap audit', () => {
       resolvedSinceBaseline: 12,
       total: 29,
       effectOrCycleCondition: 3,
-      missingActionRecord: 16,
+      missingActionRecord: 13,
       nonDamageOperation: 8,
-      ambiguousSourceStep: 2,
-      verifiedActionCatalogCount: 100,
+      ambiguousSourceStep: 5,
+      verifiedActionCatalogCount: 106,
     });
     const unsupportedKeys = rotationPresets.flatMap((preset) => preset.steps.filter((step) => !rotationScenarioBindings[`${preset.id}:${step.id}`]).map((step) => `${preset.id}:${step.id}`));
     expect(unsupportedKeys).toHaveLength(29);
@@ -37,7 +37,7 @@ describe('Rotation Lab gap audit', () => {
     expect(currentRotationGapAuditByKey.has('chaos-remora-bomb:chaos-restart')).toBe(true);
   });
 
-  it('moves research priority to Lacrimosa, Daffodill and Zero', () => {
-    expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([[1, 'Lacrimosa'], [2, 'Daffodill'], [3, 'Zero']]);
+  it('moves missing-action research priority to Daffodill and Zero', () => {
+    expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([[1, 'Daffodill'], [2, 'Zero']]);
   });
 });

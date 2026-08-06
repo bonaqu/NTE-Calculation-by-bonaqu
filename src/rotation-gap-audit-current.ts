@@ -12,13 +12,56 @@ import { visibleActionById } from './verified-visible-actions';
 
 const gapKey = (presetId: string, sourceStepId: string): string => `${presetId}:${sourceStepId}`;
 
+const currentRotationGapOverrides = new Map<string, RotationGapAuditEntry>([
+  [gapKey('lacrimosa-discord-dot', 'lacrimosa-transform'), {
+    version: ROTATION_GAP_AUDIT_VERSION,
+    presetId: 'lacrimosa-discord-dot',
+    sourceStepId: 'lacrimosa-transform',
+    classification: 'ambiguous-source-step',
+    rationale: {
+      ru: 'Точные записи Morning Tomato и обеих форм атак уже существуют, но шаг называет только «преобразующий навык». Источник допускает Morning Tomato либо Devilish Gift, который копирует внешний навык и не имеет фиксированного собственного коэффициента.',
+      en: 'Exact Morning Tomato and both attack-form records now exist, but the step only says “transformation Skill.” The source allows Morning Tomato or Devilish Gift, which copies an external ability and has no fixed native ratio.',
+    },
+    rejectedActionIds: ['lacrimosa.morning-tomato.level-10'],
+  }],
+  [gapKey('lacrimosa-discord-dot', 'lacrimosa-basic-five'), {
+    version: ROTATION_GAP_AUDIT_VERSION,
+    presetId: 'lacrimosa-discord-dot',
+    sourceStepId: 'lacrimosa-basic-five',
+    classification: 'ambiguous-source-step',
+    rationale: {
+      ru: 'Каталог содержит полные ближнюю и дальнюю цепочки, но исходный шаг не фиксирует форму. Эти ветки имеют разные коэффициенты, поэтому выбор одной из них был бы догадкой.',
+      en: 'The catalog contains complete melee and ranged strings, but the source step does not fix the form. Their ratios differ, so selecting either would be a guess.',
+    },
+    rejectedActionIds: [
+      'lacrimosa.tomato-metal.full-direct-sequence.level-10',
+      'lacrimosa.tomato-percussion.full-sequence.level-10',
+    ],
+  }],
+  [gapKey('lacrimosa-discord-dot', 'lacrimosa-redirect-five'), {
+    version: ROTATION_GAP_AUDIT_VERSION,
+    presetId: 'lacrimosa-discord-dot',
+    sourceStepId: 'lacrimosa-redirect-five',
+    classification: 'ambiguous-source-step',
+    rationale: {
+      ru: 'Шаг требует навык перенаправления и переход к пятой атаке, но не выбирает Morning Tomato либо Devilish Gift и не указывает ближнюю или дальнюю пятую ступень.',
+      en: 'The step requires a Redirect Skill and advancement to stage five, but it selects neither Morning Tomato versus Devilish Gift nor the melee versus ranged fifth stage.',
+    },
+    rejectedActionIds: [
+      'lacrimosa.morning-tomato.level-10',
+      'lacrimosa.tomato-metal.fifth.level-10',
+      'lacrimosa.tomato-percussion.fifth.level-10',
+    ],
+  }],
+]);
+
 /**
  * The PR #123 registry remains the immutable 41-step baseline. This view keeps
  * only source steps that are still unsupported by the current exact bindings.
  */
 export const currentRotationGapAudit: readonly RotationGapAuditEntry[] = baselineRotationGapAudit.filter(
   (item) => !rotationScenarioBindings[gapKey(item.presetId, item.sourceStepId)],
-);
+).map((item) => currentRotationGapOverrides.get(gapKey(item.presetId, item.sourceStepId)) ?? item);
 
 export const currentRotationGapAuditByKey = new Map(
   currentRotationGapAudit.map((item) => [gapKey(item.presetId, item.sourceStepId), item]),
@@ -48,20 +91,13 @@ export { rotationGapClassificationLabels };
 export const currentRotationMissingActionPriorities: readonly RotationMissingActionPriority[] = [
   {
     rank: 1,
-    characterName: 'Lacrimosa',
-    capability: { ru: 'преобразование, базовая цепочка и переход к пятой атаке', en: 'transformation, Basic string and fifth-attack advance' },
-    sourceSteps: ['lacrimosa-transform', 'lacrimosa-basic-five', 'lacrimosa-redirect-five'],
-    reason: { ru: 'Добавит действия самой Лакримозы в её частичный рецепт.', en: 'Adds Lacrimosa own actions to her partial recipe.' },
-  },
-  {
-    rank: 2,
     characterName: 'Daffodill',
     capability: { ru: 'первая и вторая усиленные базовые атаки', en: 'first and second enhanced Basic Attacks' },
     sourceSteps: ['lacrimosa-phantom-one', 'lacrimosa-phantom-two', 'baicang-phantom-one', 'baicang-phantom-two'],
     reason: { ru: 'Одна пара точных записей закроет четыре повторно используемых шага двух пресетов.', en: 'One exact pair closes four reused source steps across two presets.' },
   },
   {
-    rank: 3,
+    rank: 2,
     characterName: 'Zero',
     capability: { ru: 'прямые сверхспособность и навык перенаправления', en: 'direct Ultimate and Redirect Skill' },
     sourceSteps: ['zero-fill', 'zero-blossom', 'zero-third-strike', 'nanally-zero-blossom', 'chaos-zero-remora'],
@@ -106,10 +142,10 @@ export function validateCurrentRotationGapAudit(): string[] {
   if (currentRotationGapAuditSummary.baselineTotal !== 41) errors.push('Expected the immutable 41-step baseline');
   if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 12) errors.push('Expected twelve source steps resolved since baseline');
   if (currentRotationGapAuditSummary.total !== 29) errors.push(`Expected 29 current gaps, got ${currentRotationGapAuditSummary.total}`);
-  if (currentRotationGapAuditSummary.missingActionRecord !== 16) errors.push('Expected 16 current missing-action records');
+  if (currentRotationGapAuditSummary.missingActionRecord !== 13) errors.push('Expected 13 current missing-action records');
   if (currentRotationGapAuditSummary.effectOrCycleCondition !== 3) errors.push('Expected 3 current effect/Cycle conditions');
   if (currentRotationGapAuditSummary.nonDamageOperation !== 8) errors.push('Expected 8 current non-damage operations');
-  if (currentRotationGapAuditSummary.ambiguousSourceStep !== 2) errors.push('Expected 2 current ambiguous source steps');
+  if (currentRotationGapAuditSummary.ambiguousSourceStep !== 5) errors.push('Expected 5 current ambiguous source steps');
   if (currentRotationGapAuditSummary.exactExistingAction !== 0 || currentRotationGapAuditSummary.compoundExistingActions !== 0) {
     errors.push('Current unsupported steps must not claim a safe existing-action match');
   }
