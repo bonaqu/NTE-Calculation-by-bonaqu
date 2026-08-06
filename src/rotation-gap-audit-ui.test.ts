@@ -4,41 +4,51 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import panelSource from './components/RotationGapAuditPanel.tsx?raw';
 import compositionSource from './components/TeamCombatScenarioPanel.tsx?raw';
-import domainSource from './rotation-gap-audit.ts?raw';
+import currentDomainSource from './rotation-gap-audit-current.ts?raw';
+import baselineDomainSource from './rotation-gap-audit.ts?raw';
 import {
-  rotationGapAuditSummary,
-  rotationMissingActionPriorities,
-} from './rotation-gap-audit';
+  currentRotationGapAuditSummary,
+  currentRotationMissingActionPriorities,
+} from './rotation-gap-audit-current';
 
 const styles = readFileSync(new URL('./rotation-gap-audit.css', import.meta.url), 'utf8');
 
 describe('Rotation Lab gap audit UI', () => {
-  it('shows the complete classification totals in both locales', () => {
-    expect(rotationGapAuditSummary.total).toBe(41);
-    expect(panelSource).toContain('41 ШАГ · КАТАЛОГ ИСЧЕРПАН БЕЗ ПОДМЕН');
-    expect(panelSource).toContain('41 STEPS · CATALOG EXHAUSTED WITHOUT SUBSTITUTION');
-    expect(panelSource).toContain('rotationGapAuditSummary.missingActionRecord');
-    expect(panelSource).toContain('rotationGapAuditSummary.effectOrCycleCondition');
-    expect(panelSource).toContain('rotationGapAuditSummary.nonDamageOperation');
-    expect(panelSource).toContain('rotationGapAuditSummary.ambiguousSourceStep');
-    expect(panelSource).toContain('rotationGapAuditSummary.safelyBindableUnsupportedSteps');
+  it('shows current and baseline totals in both locales', () => {
+    expect(currentRotationGapAuditSummary).toMatchObject({
+      baselineTotal: 41,
+      resolvedSinceBaseline: 5,
+      total: 36,
+      verifiedActionCatalogCount: 91,
+    });
+    expect(panelSource).toContain('ТЕКУЩИХ ПРОБЕЛОВ');
+    expect(panelSource).toContain('CURRENT GAPS');
+    expect(panelSource).toContain('ЗАКРЫТО С BASELINE');
+    expect(panelSource).toContain('CLOSED SINCE BASELINE');
+    expect(panelSource).toContain('currentRotationGapAuditSummary.missingActionRecord');
+    expect(panelSource).toContain('currentRotationGapAuditSummary.effectOrCycleCondition');
+    expect(panelSource).toContain('currentRotationGapAuditSummary.nonDamageOperation');
+    expect(panelSource).toContain('currentRotationGapAuditSummary.ambiguousSourceStep');
+    expect(panelSource).toContain('currentRotationGapAuditSummary.resolvedSinceBaseline');
   });
 
-  it('exposes every source preset, rationale and rejected look-alike IDs', () => {
+  it('exposes every current source preset, rationale and rejected look-alike IDs', () => {
     expect(panelSource).toContain('rotationPresets.map');
-    expect(panelSource).toContain('rotationGapAudit.filter');
+    expect(panelSource).toContain('currentRotationGapAudit.filter');
     expect(panelSource).toContain('item.rationale[locale]');
     expect(panelSource).toContain('item.rejectedActionIds.join');
     expect(panelSource).toContain('Отклонённые похожие ID');
     expect(panelSource).toContain('Rejected look-alike IDs');
   });
 
-  it('shows the ranked missing-action backlog after catalog exhaustion', () => {
-    expect(rotationMissingActionPriorities).toHaveLength(6);
-    expect(panelSource).toContain('rotationMissingActionPriorities.map');
+  it('shows the updated missing-action backlog after Shinku research', () => {
+    expect(currentRotationMissingActionPriorities).toHaveLength(5);
+    expect(currentRotationMissingActionPriorities[0]?.characterName).toBe('Nanally');
+    expect(panelSource).toContain('currentRotationMissingActionPriorities.map');
     expect(panelSource).toContain('Какие записи исследовать дальше');
     expect(panelSource).toContain('Next action records to research');
-    expect(panelSource).toContain('ни один из 41 шага не был связан ценой семантической подмены');
+    expect(panelSource).toContain('verifiedActionCatalogCount');
+    expect(panelSource).toContain('без fuzzy matching');
   });
 
   it('keeps the audit between recipes and the manual editor', () => {
@@ -50,11 +60,13 @@ describe('Rotation Lab gap audit UI', () => {
     expect(manualAt).toBeGreaterThan(auditAt);
   });
 
-  it('contains no fuzzy matcher or generic automatic action substitution', () => {
-    expect(domainSource).not.toMatch(/fuzzyMatch|similarityScore|levenshtein/iu);
-    expect(domainSource).toContain('safelyBindableUnsupportedSteps: 0');
-    expect(domainSource).toContain('existingCatalogExhausted: true');
-    expect(domainSource).toContain('rejectedActionIds');
+  it('preserves the baseline registry while deriving current gaps without fuzzy matching', () => {
+    expect(baselineDomainSource).toContain('Baseline registry for all 41 source steps');
+    expect(currentDomainSource).toContain('baselineRotationGapAudit.filter');
+    expect(currentDomainSource).not.toMatch(/fuzzyMatch|similarityScore|levenshtein/iu);
+    expect(currentDomainSource).toContain('safelyBindableUnsupportedSteps: 0');
+    expect(currentDomainSource).toContain('existingCatalogExhausted: true');
+    expect(baselineDomainSource).toContain('rejectedActionIds');
   });
 
   it('uses a responsive border-led layout without gradients or shadows', () => {
