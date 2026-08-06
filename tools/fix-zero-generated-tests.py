@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 # Runs after the guarded product generator and updates cumulative factual tests only.
 
@@ -11,20 +12,20 @@ def replace_exact(path: str, old: str, new: str, expected: int = 1) -> None:
     target.write_text(text.replace(old, new), encoding='utf-8')
 
 
-def ensure_replaced(path: str, old: str, new: str) -> None:
-    target = Path(path)
-    text = target.read_text(encoding='utf-8')
-    old_count = text.count(old)
-    new_count = text.count(new)
-    if old_count == 1:
-        target.write_text(text.replace(old, new, 1), encoding='utf-8')
-        return
-    if old_count == 0 and new_count >= 1:
-        return
-    raise RuntimeError(
-        f'{path}: expected one old block or an already-correct new block; '
-        f'old={old_count}, new={new_count}'
+def set_preset_cycle_count(preset_id: str, expected_count: int) -> None:
+    path = Path('src/verified-rotation-recipes.test.ts')
+    text = path.read_text(encoding='utf-8')
+    pattern = re.compile(
+        rf"(presetId: '{re.escape(preset_id)}',[\s\S]*?omittedCycleConditions: )\d+(,)",
     )
+    updated, count = pattern.subn(
+        lambda match: f'{match.group(1)}{expected_count}{match.group(2)}',
+        text,
+        count=1,
+    )
+    if count != 1:
+        raise RuntimeError(f'{path}: expected one Cycle-count block for {preset_id}, found {count}')
+    path.write_text(updated, encoding='utf-8')
 
 
 replace_exact('src/non-atk-action-scaling.test.ts', ').size).toBe(107);', ').size).toBe(110);')
@@ -60,23 +61,11 @@ replace_exact(
 
 replace_exact(
     'src/verified-rotation-recipes.test.ts',
-    "      omittedEffectConditions: 2,\n      omittedCycleConditions: 1,\n      promotedRecipeId: 'rotation-lab.shinku-charge.verified-actions',",
-    "      omittedEffectConditions: 2,\n      omittedCycleConditions: 0,\n      promotedRecipeId: 'rotation-lab.shinku-charge.verified-actions',",
-)
-replace_exact(
-    'src/verified-rotation-recipes.test.ts',
     "expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'shinku-charge')?.gaps).toHaveLength(10);",
     "expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'shinku-charge')?.gaps).toHaveLength(9);",
 )
-ensure_replaced(
-    'src/verified-rotation-recipes.test.ts',
-    "      omittedEffectConditions: 2,\n      omittedCycleConditions: 2,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
-    "      omittedEffectConditions: 2,\n      omittedCycleConditions: 1,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
-)
-ensure_replaced(
-    'src/verified-rotation-recipes.test.ts',
-    "      omittedEffectConditions: 1,\n      omittedCycleConditions: 2,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
-    "      omittedEffectConditions: 1,\n      omittedCycleConditions: 1,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
-)
+set_preset_cycle_count('shinku-charge', 0)
+set_preset_cycle_count('hathor-hyper', 1)
+set_preset_cycle_count('chaos-remora-bomb', 1)
 
 print('Zero cumulative test expectations corrected')
