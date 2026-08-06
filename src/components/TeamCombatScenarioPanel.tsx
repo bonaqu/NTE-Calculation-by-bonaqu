@@ -1,5 +1,6 @@
 import type { GameVisibleTeamState } from '../game-visible-build';
-import { TeamCombatScenarioPanel as ManualTeamCombatScenarioEditor } from './ManualTeamCombatScenarioEditor';
+import { ManualTeamCombatScenarioEditor } from './ManualTeamCombatScenarioEditor';
+import { RotationGapAuditPanel } from './RotationGapAuditPanel';
 import { VerifiedScenarioRecipePanel } from './VerifiedScenarioRecipePanel';
 
 interface TeamCombatScenarioPanelProps {
@@ -8,12 +9,13 @@ interface TeamCombatScenarioPanelProps {
 }
 
 /**
- * Canonical Scenario-tab composition. Evidence-gated recipes appear first;
- * the mature manual and Rotation Lab editor remains the second workspace.
+ * Canonical Scenario-tab composition. Evidence-gated recipes and their audit
+ * appear before the mature manual and Rotation Lab editor.
  */
 export function TeamCombatScenarioPanel(props: TeamCombatScenarioPanelProps) {
   return <>
     <VerifiedScenarioRecipePanel {...props} />
+    <RotationGapAuditPanel {...props} />
     <ManualTeamCombatScenarioEditor {...props} />
   </>;
 }
