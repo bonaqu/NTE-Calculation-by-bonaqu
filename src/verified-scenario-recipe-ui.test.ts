@@ -19,7 +19,7 @@ describe('verified scenario recipe UI', () => {
     expect(verifiedActionScenarioRecipes).toHaveLength(86);
     expect(new Set(verifiedActionScenarioRecipes.map((recipe) => recipe.characterName)).size).toBe(20);
     expect(verifiedRotationFragments).toHaveLength(1);
-    expect(verifiedRotationRecipes).toHaveLength(4);
+    expect(verifiedRotationRecipes).toHaveLength(5);
     expect(panelSource).toContain('verifiedActionScenarioRecipes.filter');
     expect(panelSource).toContain('verifiedRotationFragments.filter');
     expect(panelSource).toContain('verifiedRotationRecipes.filter');
@@ -63,15 +63,19 @@ describe('verified scenario recipe UI', () => {
     expect(panelSource).toContain('Источник действия');
     expect(panelSource).toContain('Источник порядка');
     expect(panelSource).toContain('Источник ротации');
+    expect(panelSource).toContain('verifiedRotationRecipes.length');
   });
 
-  it('composes recipes before the existing manual editor through one canonical TSX entry', () => {
+  it('composes recipes, the gap audit and manual editor through one canonical TSX entry', () => {
     expect(calculatorSource).toContain("from '../components/TeamCombatScenarioPanel'");
     expect(compositionSource).toContain("from './ManualTeamCombatScenarioEditor'");
-    expect(compositionSource.indexOf('<VerifiedScenarioRecipePanel {...props} />')).toBeGreaterThan(-1);
-    expect(compositionSource.indexOf('<ManualTeamCombatScenarioEditor {...props} />')).toBeGreaterThan(
-      compositionSource.indexOf('<VerifiedScenarioRecipePanel {...props} />'),
-    );
+    expect(compositionSource).toContain("from './RotationGapAuditPanel'");
+    const recipesAt = compositionSource.indexOf('<VerifiedScenarioRecipePanel {...props} />');
+    const auditAt = compositionSource.indexOf('<RotationGapAuditPanel {...props} />');
+    const manualAt = compositionSource.indexOf('<ManualTeamCombatScenarioEditor {...props} />');
+    expect(recipesAt).toBeGreaterThan(-1);
+    expect(auditAt).toBeGreaterThan(recipesAt);
+    expect(manualAt).toBeGreaterThan(auditAt);
     expect(compositionSource).not.toContain('createElement');
     expect(compositionSource).not.toContain('@ts-ignore');
     expect(compositionSource).not.toMatch(/\.tsx['"]/u);
