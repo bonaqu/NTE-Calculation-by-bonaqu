@@ -16,10 +16,10 @@ const styles = readFileSync(new URL('./verified-scenario-recipes.css', import.me
 
 describe('verified scenario recipe UI', () => {
   it('keeps standalone actions, exact fragments and audited rotation recipes separate', () => {
-    expect(verifiedActionScenarioRecipes).toHaveLength(91);
+    expect(verifiedActionScenarioRecipes).toHaveLength(100);
     expect(new Set(verifiedActionScenarioRecipes.map((recipe) => recipe.characterName)).size).toBe(20);
     expect(verifiedRotationFragments).toHaveLength(1);
-    expect(verifiedRotationRecipes).toHaveLength(5);
+    expect(verifiedRotationRecipes).toHaveLength(6);
     expect(panelSource).toContain('const verifiedActionCount = verifiedActionScenarioRecipes.length');
     expect(panelSource).toContain('`${verifiedActionCount} ДЕЙСТВИЙ + АУДИТ ROTATION LAB`');
     expect(panelSource).toContain('{availableRecipes.length} / {verifiedActionCount}');

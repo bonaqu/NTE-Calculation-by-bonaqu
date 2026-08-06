@@ -34,10 +34,10 @@ function team(builds: GameVisibleCharacterBuild[]): GameVisibleTeamState {
 }
 
 describe('verified team support effects', () => {
-  it('publishes five uniquely sourced temporary effects', () => {
-    expect(verifiedTeamEffects).toHaveLength(5);
-    expect(new Set(verifiedTeamEffects.map((effect) => effect.id)).size).toBe(5);
-    expect(verifiedTeamEffects.map((effect) => effect.sourceCharacter)).toEqual(['Haniel', 'Sakiri', 'Sakiri', 'Hathor', 'Shinku']);
+  it('publishes six uniquely sourced temporary effects', () => {
+    expect(verifiedTeamEffects).toHaveLength(6);
+    expect(new Set(verifiedTeamEffects.map((effect) => effect.id)).size).toBe(6);
+    expect(verifiedTeamEffects.map((effect) => effect.sourceCharacter)).toEqual(['Haniel', 'Sakiri', 'Sakiri', 'Hathor', 'Shinku', 'Nanally']);
     for (const effect of verifiedTeamEffects) {
       expect(effect.sourceUrl).toMatch(/^https:\/\//u);
       expect(effect.supportingSourceUrl).toMatch(/^https:\/\//u);

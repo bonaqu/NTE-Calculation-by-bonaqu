@@ -177,9 +177,10 @@ export const rotationRepeatEvidence: readonly RotationRepeatEvidence[] = [
     count: 2,
     action: { ru: 'усиленная тяжёлая атака Хаос', en: 'Chaos enhanced Heavy Attack' },
     note: {
-      ru: 'Первая и вторая атаки опубликованы отдельными шагами, но текущие exact bindings не связывают их с action ID.',
-      en: 'The first and second attacks are published as separate steps, but current exact bindings do not map them to action IDs.',
+      ru: 'Источник публикует два отдельных применения одной полностью усиленной Final Verdict. Рецепт хранит два экземпляра одного точного action ID.',
+      en: 'The source publishes two separate uses of the same fully enhanced Final Verdict. The recipe stores two instances of one exact action ID.',
     },
+    promotedActionIds: Array.from({ length: 2 }, () => 'chaos.final-verdict.enhanced.level-10'),
   },
   {
     presetId: 'nanally-hexed-dual',
@@ -188,9 +189,13 @@ export const rotationRepeatEvidence: readonly RotationRepeatEvidence[] = [
     count: 5,
     action: { ru: 'базовая атака Наналли', en: 'Nanally Basic Attack' },
     note: {
-      ru: 'Источник публикует полную пятиударную цепочку; она не заменяется одним пассивным срабатыванием Наналли.',
-      en: 'The source publishes a full five-hit string; it is not replaced by one Nanally passive trigger.',
+      ru: 'Пять ступеней собраны в одну точную запись собственного урона Наналли и отдельную запись согласованных ответов Underboss.',
+      en: 'The five stages are represented by one exact Nanally-own record and a separate coordinated Underboss response record.',
     },
+    promotedActionIds: [
+      'nanally.colucci-secret-skill.full-sequence.level-10',
+      'nanally.underboss.basic-coordinated-full-sequence.level-10',
+    ],
   },
   {
     presetId: 'nanally-hexed-dual',
@@ -199,9 +204,13 @@ export const rotationRepeatEvidence: readonly RotationRepeatEvidence[] = [
     count: 3,
     action: { ru: 'заряженная атака Наналли', en: 'Nanally Charged Attack' },
     note: {
-      ru: 'Три заряженные атаки прямо указаны источником, но пока не имеют отдельных точных action ID.',
-      en: 'Three Charged Attacks are directly stated by the source but do not yet have separate exact action IDs.',
+      ru: 'Три ступени тяжёлой цепочки собраны в одну точную запись Наналли и отдельную запись ответов Underboss.',
+      en: 'The three Heavy stages are represented by one exact Nanally record and a separate Underboss response record.',
     },
+    promotedActionIds: [
+      'nanally.heavy-hitter.full-sequence.level-10',
+      'nanally.underboss.heavy-coordinated-full-sequence.level-10',
+    ],
   },
   {
     presetId: 'lacrimosa-discord-dot',

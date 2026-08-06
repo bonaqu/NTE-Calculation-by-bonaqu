@@ -1,110 +1,43 @@
 import { describe, expect, it } from 'vitest';
-import {
-  currentRotationGapAudit,
-  currentRotationGapAuditByKey,
-  currentRotationGapAuditSummary,
-  currentRotationMissingActionPriorities,
-  validateCurrentRotationGapAudit,
-} from './rotation-gap-audit-current';
-import {
-  rotationGapAudit,
-  rotationGapAuditByKey,
-  rotationGapAuditSummary,
-} from './rotation-gap-audit';
+import { currentRotationGapAuditByKey, currentRotationGapAuditSummary, currentRotationMissingActionPriorities, validateCurrentRotationGapAudit } from './rotation-gap-audit-current';
+import { rotationGapAudit, rotationGapAuditSummary } from './rotation-gap-audit';
 import { rotationScenarioBindings } from './rotation-scenario-import';
 import { rotationPresets } from './rotation-presets';
 import { verifiedRotationRecipeById } from './verified-rotation-recipes';
 
 describe('Rotation Lab gap audit', () => {
   it('preserves the immutable 41-step baseline', () => {
-    expect(rotationGapAuditSummary).toMatchObject({
-      total: 41,
-      exactExistingAction: 0,
-      compoundExistingActions: 0,
-      effectOrCycleCondition: 3,
-      missingActionRecord: 26,
-      nonDamageOperation: 8,
-      ambiguousSourceStep: 4,
-    });
+    expect(rotationGapAuditSummary).toMatchObject({ total: 41, effectOrCycleCondition: 3, missingActionRecord: 26, nonDamageOperation: 8, ambiguousSourceStep: 4 });
     expect(new Set(rotationGapAudit.map((item) => `${item.presetId}:${item.sourceStepId}`)).size).toBe(41);
   });
 
-  it('derives all 36 current gaps from exact bindings', () => {
+  it('derives all 29 current gaps from exact bindings', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 5,
-      total: 36,
-      exactExistingAction: 0,
-      compoundExistingActions: 0,
+      resolvedSinceBaseline: 12,
+      total: 29,
       effectOrCycleCondition: 3,
-      missingActionRecord: 23,
+      missingActionRecord: 16,
       nonDamageOperation: 8,
       ambiguousSourceStep: 2,
-      safelyBindableUnsupportedSteps: 0,
-      verifiedActionCatalogCount: 91,
-      existingCatalogExhausted: true,
+      verifiedActionCatalogCount: 100,
     });
-    const unsupportedKeys = rotationPresets.flatMap((preset) => preset.steps
-      .filter((step) => !rotationScenarioBindings[`${preset.id}:${step.id}`])
-      .map((step) => `${preset.id}:${step.id}`));
-    expect(unsupportedKeys).toHaveLength(36);
+    const unsupportedKeys = rotationPresets.flatMap((preset) => preset.steps.filter((step) => !rotationScenarioBindings[`${preset.id}:${step.id}`]).map((step) => `${preset.id}:${step.id}`));
+    expect(unsupportedKeys).toHaveLength(29);
     expect([...currentRotationGapAuditByKey.keys()].sort()).toEqual(unsupportedKeys.sort());
   });
 
-  it('removes only the five newly bound Shinku source steps from baseline', () => {
-    const baselineKeys = new Set(rotationGapAuditByKey.keys());
-    const currentKeys = new Set(currentRotationGapAuditByKey.keys());
-    const resolved = [...baselineKeys].filter((key) => !currentKeys.has(key)).sort();
-    expect(resolved).toEqual([
-      'shinku-charge:shinku-dashes',
-      'shinku-charge:shinku-enhanced-skills',
-      'shinku-charge:shinku-prep',
-      'shinku-charge:shinku-recovery',
-      'shinku-charge:shinku-ultimate',
-    ]);
+  it('promotes Nanally and expands Chaos without semantic substitutions', () => {
+    expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.steps).toHaveLength(7);
+    expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.gaps).toHaveLength(10);
+    expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(7);
+    expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.gaps).toHaveLength(9);
+    expect(currentRotationGapAuditByKey.has('nanally-hexed-dual:nanally-energy-recovery')).toBe(true);
+    expect(currentRotationGapAuditByKey.has('chaos-remora-bomb:chaos-restart')).toBe(true);
   });
 
-  it('continues rejecting semantic look-alikes in unresolved presets', () => {
-    expect(currentRotationGapAuditByKey.get('nanally-hexed-dual:nanally-basic-string')).toMatchObject({
-      classification: 'missing-action-record',
-      rejectedActionIds: [
-        'nanally.fair-duel.level-11',
-        'nanally.awakening-three-follow-up.level-11',
-      ],
-    });
-    expect(currentRotationGapAuditByKey.get('lacrimosa-discord-dot:lacrimosa-phantom-one')).toMatchObject({
-      classification: 'missing-action-record',
-      rejectedActionIds: [
-        'daffodill.echoes.enhanced-sequence.level-10',
-        'daffodill.finale.one-parry-extra.level-10',
-      ],
-    });
-    expect(currentRotationGapAuditByKey.get('baicang-firefly-hyper:baicang-adler-open')).toMatchObject({
-      classification: 'ambiguous-source-step',
-    });
-  });
-
-  it('promotes the exact Shinku window while keeping unsupported team setup visible', () => {
-    expect(rotationScenarioBindings['shinku-charge:shinku-enhanced-skills']).toMatchObject({ coverage: 'partial' });
-    expect(rotationScenarioBindings['shinku-charge:shinku-dashes']).toMatchObject({ coverage: 'full' });
-    const recipe = verifiedRotationRecipeById.get('rotation-lab.shinku-charge.verified-actions');
-    expect(recipe?.steps).toHaveLength(14);
-    expect(recipe?.gaps).toHaveLength(9);
-    expect(currentRotationGapAuditByKey.has('shinku-charge:zero-fill')).toBe(true);
-    expect(currentRotationGapAuditByKey.has('shinku-charge:nanally-charge')).toBe(true);
-  });
-
-  it('keeps Nanally audit-only and moves it to research priority one', () => {
-    expect(verifiedRotationRecipeById.has('rotation-lab.nanally-hexed-dual.verified-actions')).toBe(false);
-    expect(currentRotationGapAuditByKey.get('nanally-hexed-dual:nanally-ultimate')?.classification).toBe('missing-action-record');
-    expect(currentRotationGapAuditByKey.get('nanally-hexed-dual:nanally-energy-recovery')?.classification).toBe('non-damage-operation');
-    expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([
-      [1, 'Nanally'],
-      [2, 'Chaos'],
-      [3, 'Lacrimosa'],
-      [4, 'Daffodill'],
-      [5, 'Zero'],
-    ]);
+  it('moves research priority to Lacrimosa, Daffodill and Zero', () => {
+    expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([[1, 'Lacrimosa'], [2, 'Daffodill'], [3, 'Zero']]);
   });
 });

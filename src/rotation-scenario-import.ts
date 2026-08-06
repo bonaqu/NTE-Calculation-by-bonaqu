@@ -186,7 +186,22 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
   },
   [binding('chaos-remora-bomb', 'chaos-stain')]: {
     coverage: 'partial',
-    items: [{ kind: 'activate-cycle', cycleId: 'stain' }],
+    items: [
+      { kind: 'action-sequence', actionIds: ['chaos.doubtmark.full-sequence.level-10'] },
+      { kind: 'activate-cycle', cycleId: 'stain' },
+    ],
+  },
+  [binding('chaos-remora-bomb', 'chaos-ultimate')]: {
+    coverage: 'partial',
+    items: [{ kind: 'action-sequence', actionIds: ['chaos.retribution.initial.level-10'] }],
+  },
+  [binding('chaos-remora-bomb', 'chaos-heavy-one')]: {
+    coverage: 'full',
+    items: [{ kind: 'action-sequence', actionIds: ['chaos.final-verdict.enhanced.level-10'] }],
+  },
+  [binding('chaos-remora-bomb', 'chaos-heavy-two')]: {
+    coverage: 'full',
+    items: [{ kind: 'action-sequence', actionIds: ['chaos.final-verdict.enhanced.level-10'] }],
   },
   [binding('chaos-remora-bomb', 'chaos-return-hathor')]: {
     coverage: 'partial',
@@ -196,6 +211,37 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
   [binding('nanally-hexed-dual', 'nanally-sakiri-setup')]: {
     coverage: 'partial',
     items: sakiriSetupItems,
+  },
+  [binding('nanally-hexed-dual', 'nanally-redirect')]: {
+    coverage: 'partial',
+    items: [
+      { kind: 'action-sequence', actionIds: ['nanally.colucci-howling-technique.level-10'] },
+      { kind: 'activate-effect', effectId: 'nanally.ichi-daime-authority.crit-dmg' },
+    ],
+  },
+  [binding('nanally-hexed-dual', 'nanally-ultimate')]: {
+    coverage: 'partial',
+    items: [{ kind: 'action-sequence', actionIds: ['nanally.colucci-ultimate-technique.initial.level-10'] }],
+  },
+  [binding('nanally-hexed-dual', 'nanally-basic-string')]: {
+    coverage: 'full',
+    items: [{
+      kind: 'action-sequence',
+      actionIds: [
+        'nanally.colucci-secret-skill.full-sequence.level-10',
+        'nanally.underboss.basic-coordinated-full-sequence.level-10',
+      ],
+    }],
+  },
+  [binding('nanally-hexed-dual', 'nanally-charged-string')]: {
+    coverage: 'full',
+    items: [{
+      kind: 'action-sequence',
+      actionIds: [
+        'nanally.heavy-hitter.full-sequence.level-10',
+        'nanally.underboss.heavy-coordinated-full-sequence.level-10',
+      ],
+    }],
   },
 
   [binding('lacrimosa-discord-dot', 'lacrimosa-haniel-open')]: {

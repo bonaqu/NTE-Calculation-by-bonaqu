@@ -6,13 +6,14 @@ export type VerifiedTeamEffectId =
   | 'sakiri.awakening-four.team-atk'
   | 'sakiri.impish-trick.def-reduction'
   | 'hathor.delay-warning.remora-crit-rate'
-  | 'shinku.surging-crimson.damage';
+  | 'shinku.surging-crimson.damage'
+  | 'nanally.ichi-daime-authority.crit-dmg';
 
 export type TeamEffectRecipientPolicy = 'all-team-members' | 'other-team-members' | 'source-only' | 'enemy';
 
 export interface VerifiedTeamEffect {
   id: VerifiedTeamEffectId;
-  sourceCharacter: 'Haniel' | 'Sakiri' | 'Hathor' | 'Shinku';
+  sourceCharacter: 'Haniel' | 'Sakiri' | 'Hathor' | 'Shinku' | 'Nanally';
   title: LocalizedText;
   description: LocalizedText;
   trigger: LocalizedText;
@@ -21,6 +22,7 @@ export interface VerifiedTeamEffect {
   baseAtkPercent?: number;
   enemyDefenceReduction?: number;
   critRate?: number;
+  critDamage?: number;
   damageBonus?: number;
   minimumAwakening?: number;
   sourcePublisher: string;
@@ -34,6 +36,7 @@ export interface TeamEffectSlotModifier {
   flatAtk: number;
   enemyDefenceReduction: number;
   critRate: number;
+  critDamage?: number;
   damageBonus: number;
   provenance: readonly TeamEffectProvenance[];
 }
@@ -43,7 +46,7 @@ export interface TeamEffectProvenance {
   sourceSlot: number;
   sourceCharacter: string;
   amount: number;
-  kind: 'flat-atk' | 'enemy-defence-reduction' | 'crit-rate' | 'damage-bonus';
+  kind: 'flat-atk' | 'enemy-defence-reduction' | 'crit-rate' | 'crit-damage' | 'damage-bonus';
   label: LocalizedText;
 }
 
@@ -164,6 +167,24 @@ export const verifiedTeamEffects: readonly VerifiedTeamEffect[] = [
     sourceUpdatedAt: '2026-07-31',
     verifiedAt: '2026-08-06',
   },
+  {
+    id: 'nanally.ichi-daime-authority.crit-dmg',
+    sourceCharacter: 'Nanally',
+    title: { ru: 'Ichi-daime’s Authority · крит. урон', en: 'Ichi-daime’s Authority · CRIT DMG' },
+    description: {
+      ru: 'После применения Colucci Howling Technique Наналли входит в Ichi-daime’s Authority на 12 секунд или до переключения и получает +30% к критическому урону. Ответы Underboss, Fair Duel и A3 считаются отдельно.',
+      en: 'After Colucci Howling Technique, Nanally enters Ichi-daime’s Authority for 12 seconds or until swapping out and gains +30% CRIT DMG. Underboss responses, Fair Duel and A3 remain separate.',
+    },
+    trigger: { ru: 'Применена Colucci Howling Technique', en: 'Colucci Howling Technique was cast' },
+    durationSeconds: 12,
+    recipientPolicy: 'source-only',
+    critDamage: 30,
+    sourcePublisher: 'Icy Veins / Prydwen Institute',
+    sourceUrl: 'https://www.icy-veins.com/neverness-to-everness/nanally-profile-skills',
+    supportingSourceUrl: prydwen('nanally'),
+    sourceUpdatedAt: '2026-07-31',
+    verifiedAt: '2026-08-06',
+  },
 ];
 
 export const verifiedTeamEffectById = new Map(verifiedTeamEffects.map((effect) => [effect.id, effect]));
@@ -183,6 +204,7 @@ function sourceCharacterRussianName(characterName: VerifiedTeamEffect['sourceCha
   if (characterName === 'Haniel') return 'Ханиэль';
   if (characterName === 'Sakiri') return 'Сакири';
   if (characterName === 'Shinku') return 'Шинку';
+  if (characterName === 'Nanally') return 'Наналли';
   return 'Хатор';
 }
 
@@ -206,6 +228,7 @@ function effectAmount(effect: VerifiedTeamEffect, baseAtk: number): number {
   if (effect.baseAtkPercent !== undefined) return baseAtk * effect.baseAtkPercent / 100;
   if (effect.enemyDefenceReduction !== undefined) return effect.enemyDefenceReduction;
   if (effect.critRate !== undefined) return effect.critRate;
+  if (effect.critDamage !== undefined) return effect.critDamage;
   return effect.damageBonus ?? 0;
 }
 
@@ -214,6 +237,7 @@ export function deriveVerifiedTeamEffects(state: GameVisibleTeamState): DerivedT
     flatAtk: 0,
     enemyDefenceReduction: 0,
     critRate: 0,
+    critDamage: 0,
     damageBonus: 0,
     provenance: [] as TeamEffectProvenance[],
   }));
@@ -281,6 +305,20 @@ export function deriveVerifiedTeamEffects(state: GameVisibleTeamState): DerivedT
             label: {
               ru: `${effect.title.ru}: +${effect.critRate}% к шансу крит. удара по цели под Реморой`,
               en: `${effect.title.en}: +${effect.critRate}% CRIT Rate against the Remora target`,
+            },
+          });
+        }
+        if (effect.critDamage !== undefined) {
+          target.critDamage = (target.critDamage ?? 0) + effect.critDamage;
+          target.provenance.push({
+            effectId: effect.id,
+            sourceSlot,
+            sourceCharacter: sourceBuild.characterName,
+            amount: effect.critDamage,
+            kind: 'crit-damage',
+            label: {
+              ru: `${effect.title.ru}: +${effect.critDamage}% к крит. урону Наналли на ${effect.durationSeconds} секунд`,
+              en: `${effect.title.en}: +${effect.critDamage}% Nanally CRIT DMG for ${effect.durationSeconds} seconds`,
             },
           });
         }
