@@ -16,7 +16,7 @@ def set_preset_cycle_count(preset_id: str, expected_count: int) -> None:
     path = Path('src/verified-rotation-recipes.test.ts')
     text = path.read_text(encoding='utf-8')
     pattern = re.compile(
-        rf"(presetId: '{re.escape(preset_id)}',[\s\S]*?omittedCycleConditions: )\d+(,)",
+        rf"(rotationPresetRecipeAuditById\.get\('{re.escape(preset_id)}'\)\)\.toMatchObject\(\{{[\s\S]*?omittedCycleConditions: )\d+(,)",
     )
     updated, count = pattern.subn(
         lambda match: f'{match.group(1)}{expected_count}{match.group(2)}',
@@ -24,7 +24,7 @@ def set_preset_cycle_count(preset_id: str, expected_count: int) -> None:
         count=1,
     )
     if count != 1:
-        raise RuntimeError(f'{path}: expected one Cycle-count block for {preset_id}, found {count}')
+        raise RuntimeError(f'{path}: expected one Cycle-count audit block for {preset_id}, found {count}')
     path.write_text(updated, encoding='utf-8')
 
 
