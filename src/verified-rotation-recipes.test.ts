@@ -39,12 +39,12 @@ describe('verified Rotation Lab recipes', () => {
       fullyBoundSourceStepCount: 3,
       partiallyBoundSourceStepCount: 14,
       unsupportedSourceStepCount: 41,
-      boundActionStepCount: 22,
-      promotedRecipeCount: 4,
-      promotedActionStepCount: 20,
+      boundActionStepCount: 23,
+      promotedRecipeCount: 5,
+      promotedActionStepCount: 22,
       completeActionOrderRecipeCount: 0,
-      partialActionOrderRecipeCount: 4,
-      orderOnlyRecipeCount: 4,
+      partialActionOrderRecipeCount: 5,
+      orderOnlyRecipeCount: 5,
       confirmedSecondRecipeCount: 0,
       fixedRepeatEvidenceCount: 10,
       conditionBoundRepeatEvidenceCount: 2,
@@ -60,10 +60,12 @@ describe('verified Rotation Lab recipes', () => {
       unsupportedSourceSteps: 7,
       exactActionSourceSteps: 0,
       partialActionSourceSteps: 1,
-      verifiedActionSteps: 1,
+      verifiedActionSteps: 2,
       omittedEffectConditions: 1,
       omittedCycleConditions: 0,
-      promotedRecipeId: null,
+      promotedRecipeId: 'rotation-lab.shinku-charge.verified-actions',
+      promotedCoverage: 'partial-action-order',
+      promotedTimingMode: 'order-only',
     });
     expect(rotationPresetRecipeAuditById.get('hathor-hyper')).toMatchObject({
       totalSourceSteps: 11,
@@ -121,10 +123,15 @@ describe('verified Rotation Lab recipes', () => {
 
   it('promotes only multi-action presets and preserves exact action order', () => {
     expect(verifiedRotationRecipes.map((recipe) => recipe.presetId)).toEqual([
+      'shinku-charge',
       'hathor-hyper',
       'chaos-remora-bomb',
       'lacrimosa-discord-dot',
       'baicang-firefly-hyper',
+    ]);
+    expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'shinku-charge')?.steps.map((step) => step.actionId)).toEqual([
+      'hathor.rider-express.level-10',
+      'hathor.cyclone-strike-first.level-10',
     ]);
     expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'hathor-hyper')?.steps.map((step) => step.actionId)).toEqual([
       'haniel.silent-moonlit-forest-guardian.direct.level-10',

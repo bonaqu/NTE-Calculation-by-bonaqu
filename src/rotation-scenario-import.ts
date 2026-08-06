@@ -114,7 +114,13 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
   [binding('shinku-charge', 'hathor-open')]: {
     coverage: 'partial',
     items: [
-      { kind: 'action-sequence', actionIds: ['hathor.rider-express.level-10'] },
+      {
+        kind: 'action-sequence',
+        actionIds: [
+          'hathor.rider-express.level-10',
+          'hathor.cyclone-strike-first.level-10',
+        ],
+      },
       { kind: 'activate-effect', effectId: 'hathor.delay-warning.remora-crit-rate' },
     ],
   },

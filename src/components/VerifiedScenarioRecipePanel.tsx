@@ -284,7 +284,7 @@ export function VerifiedScenarioRecipePanel({ team, locale }: VerifiedScenarioRe
       </article>
 
       <article>
-        <div className="verified-scenario-recipes__kind"><ListTree size={18} /><div><b>{ru ? 'Аудированный рецепт Rotation Lab' : 'Audited Rotation Lab recipe'}</b><small>{availableRotationRecipes.length} / 4</small></div></div>
+        <div className="verified-scenario-recipes__kind"><ListTree size={18} /><div><b>{ru ? 'Аудированный рецепт Rotation Lab' : 'Audited Rotation Lab recipe'}</b><small>{availableRotationRecipes.length} / {verifiedRotationRecipes.length}</small></div></div>
         {selectedRotationRecipe ? <>
           <label>
             <span>{ru ? 'Требуется полный исходный состав' : 'Requires the complete source lineup'}</span>
@@ -321,8 +321,8 @@ export function VerifiedScenarioRecipePanel({ team, locale }: VerifiedScenarioRe
           </div>
           <button type="button" onClick={applyRotationRecipe}><ListTree size={16} />{ru ? 'Собрать частичный порядок' : 'Build partial order'}</button>
         </> : <p>{ru
-          ? 'Ни один из четырёх аудированных рецептов не совпадает с текущим полным составом команды.'
-          : 'None of the four audited recipes matches the current complete team lineup.'}</p>}
+          ? 'Ни один аудированный рецепт не совпадает с текущим полным составом команды.'
+          : 'No audited recipe matches the current complete team lineup.'}</p>}
       </article>
     </div>
 
