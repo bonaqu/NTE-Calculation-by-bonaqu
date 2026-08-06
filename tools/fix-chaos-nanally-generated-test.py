@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Applied only after the main guarded generator has created the integration test.
 path = Path('src/nanally-chaos-integration.test.ts')
 text = path.read_text(encoding='utf-8')
 old = 'result?.normal'
