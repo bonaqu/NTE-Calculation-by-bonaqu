@@ -48,34 +48,20 @@ export { rotationGapClassificationLabels };
 export const currentRotationMissingActionPriorities: readonly RotationMissingActionPriority[] = [
   {
     rank: 1,
-    characterName: 'Nanally',
-    capability: { ru: 'навык перенаправления, сверхспособность, 5 базовых и 3 заряженные атаки', en: 'Redirect Skill, Ultimate, five Basics and three Charged Attacks' },
-    sourceSteps: ['nanally-redirect', 'nanally-ultimate', 'nanally-basic-string', 'nanally-charged-string'],
-    reason: { ru: 'Даст Наналли минимум два точных исходных шага и позволит решить вопрос повышения её пресета.', en: 'Gives Nanally at least two exact source steps and enables an evidence-based promotion decision.' },
-  },
-  {
-    rank: 2,
-    characterName: 'Chaos',
-    capability: { ru: 'сверхспособность и две усиленные тяжёлые атаки', en: 'Ultimate and two enhanced Heavy Attacks' },
-    sourceSteps: ['chaos-ultimate', 'chaos-heavy-one', 'chaos-heavy-two'],
-    reason: { ru: 'Текущий рецепт Хаос содержит только подготовку Ханиэль и завершение Хатор.', en: 'The current Chaos recipe contains only Haniel setup and Hathor closure.' },
-  },
-  {
-    rank: 3,
     characterName: 'Lacrimosa',
     capability: { ru: 'преобразование, базовая цепочка и переход к пятой атаке', en: 'transformation, Basic string and fifth-attack advance' },
     sourceSteps: ['lacrimosa-transform', 'lacrimosa-basic-five', 'lacrimosa-redirect-five'],
     reason: { ru: 'Добавит действия самой Лакримозы в её частичный рецепт.', en: 'Adds Lacrimosa own actions to her partial recipe.' },
   },
   {
-    rank: 4,
+    rank: 2,
     characterName: 'Daffodill',
     capability: { ru: 'первая и вторая усиленные базовые атаки', en: 'first and second enhanced Basic Attacks' },
     sourceSteps: ['lacrimosa-phantom-one', 'lacrimosa-phantom-two', 'baicang-phantom-one', 'baicang-phantom-two'],
     reason: { ru: 'Одна пара точных записей закроет четыре повторно используемых шага двух пресетов.', en: 'One exact pair closes four reused source steps across two presets.' },
   },
   {
-    rank: 5,
+    rank: 3,
     characterName: 'Zero',
     capability: { ru: 'прямые сверхспособность и навык перенаправления', en: 'direct Ultimate and Redirect Skill' },
     sourceSteps: ['zero-fill', 'zero-blossom', 'zero-third-strike', 'nanally-zero-blossom', 'chaos-zero-remora'],
@@ -118,9 +104,9 @@ export function validateCurrentRotationGapAudit(): string[] {
   }
 
   if (currentRotationGapAuditSummary.baselineTotal !== 41) errors.push('Expected the immutable 41-step baseline');
-  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 5) errors.push('Expected five Shinku source steps resolved since baseline');
-  if (currentRotationGapAuditSummary.total !== 36) errors.push(`Expected 36 current gaps, got ${currentRotationGapAuditSummary.total}`);
-  if (currentRotationGapAuditSummary.missingActionRecord !== 23) errors.push('Expected 23 current missing-action records');
+  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 12) errors.push('Expected twelve source steps resolved since baseline');
+  if (currentRotationGapAuditSummary.total !== 29) errors.push(`Expected 29 current gaps, got ${currentRotationGapAuditSummary.total}`);
+  if (currentRotationGapAuditSummary.missingActionRecord !== 16) errors.push('Expected 16 current missing-action records');
   if (currentRotationGapAuditSummary.effectOrCycleCondition !== 3) errors.push('Expected 3 current effect/Cycle conditions');
   if (currentRotationGapAuditSummary.nonDamageOperation !== 8) errors.push('Expected 8 current non-damage operations');
   if (currentRotationGapAuditSummary.ambiguousSourceStep !== 2) errors.push('Expected 2 current ambiguous source steps');

@@ -63,6 +63,7 @@ const emptyModifier: TeamEffectSlotModifier = {
   flatAtk: 0,
   enemyDefenceReduction: 0,
   critRate: 0,
+  critDamage: 0,
   damageBonus: 0,
   provenance: [],
 };
@@ -320,7 +321,7 @@ export function calculateGameVisibleBuild(
       + conditional.damageBonus,
     teamDamageBonus: 0,
     critRate: build.stats.critRate + modifier.critRate,
-    critDamage: build.stats.critDamage,
+    critDamage: build.stats.critDamage + (modifier.critDamage ?? 0),
     enemy: {
       ...target,
       defenceReduction: Math.min(

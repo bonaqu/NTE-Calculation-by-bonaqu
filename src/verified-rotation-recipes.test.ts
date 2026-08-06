@@ -34,17 +34,17 @@ describe('verified Rotation Lab recipes', () => {
   it('audits every preset and every current exact binding', () => {
     expect(verifiedRotationRecipeCoverage).toMatchObject({
       presetCount: 6,
-      bindingCount: 22,
+      bindingCount: 29,
       totalSourceStepCount: 58,
-      fullyBoundSourceStepCount: 4,
-      partiallyBoundSourceStepCount: 18,
-      unsupportedSourceStepCount: 36,
-      boundActionStepCount: 35,
-      promotedRecipeCount: 5,
-      promotedActionStepCount: 34,
+      fullyBoundSourceStepCount: 8,
+      partiallyBoundSourceStepCount: 21,
+      unsupportedSourceStepCount: 29,
+      boundActionStepCount: 45,
+      promotedRecipeCount: 6,
+      promotedActionStepCount: 45,
       completeActionOrderRecipeCount: 0,
-      partialActionOrderRecipeCount: 5,
-      orderOnlyRecipeCount: 5,
+      partialActionOrderRecipeCount: 6,
+      orderOnlyRecipeCount: 6,
       confirmedSecondRecipeCount: 0,
       fixedRepeatEvidenceCount: 10,
       conditionBoundRepeatEvidenceCount: 2,
@@ -82,22 +82,22 @@ describe('verified Rotation Lab recipes', () => {
     });
     expect(rotationPresetRecipeAuditById.get('chaos-remora-bomb')).toMatchObject({
       totalSourceSteps: 9,
-      fullyBoundSourceSteps: 0,
-      partiallyBoundSourceSteps: 3,
-      unsupportedSourceSteps: 6,
-      verifiedActionSteps: 3,
+      fullyBoundSourceSteps: 2,
+      partiallyBoundSourceSteps: 4,
+      unsupportedSourceSteps: 3,
+      verifiedActionSteps: 7,
       omittedEffectConditions: 1,
       omittedCycleConditions: 1,
       promotedCoverage: 'partial-action-order',
     });
     expect(rotationPresetRecipeAuditById.get('nanally-hexed-dual')).toMatchObject({
       totalSourceSteps: 9,
-      fullyBoundSourceSteps: 0,
-      partiallyBoundSourceSteps: 1,
-      unsupportedSourceSteps: 8,
-      verifiedActionSteps: 1,
-      omittedEffectConditions: 2,
-      promotedRecipeId: null,
+      fullyBoundSourceSteps: 2,
+      partiallyBoundSourceSteps: 3,
+      unsupportedSourceSteps: 4,
+      verifiedActionSteps: 7,
+      omittedEffectConditions: 3,
+      promotedRecipeId: 'rotation-lab.nanally-hexed-dual.verified-actions',
     });
     expect(rotationPresetRecipeAuditById.get('lacrimosa-discord-dot')).toMatchObject({
       totalSourceSteps: 11,
@@ -126,6 +126,7 @@ describe('verified Rotation Lab recipes', () => {
       'shinku-charge',
       'hathor-hyper',
       'chaos-remora-bomb',
+      'nanally-hexed-dual',
       'lacrimosa-discord-dot',
       'baicang-firefly-hyper',
     ]);
@@ -157,7 +158,20 @@ describe('verified Rotation Lab recipes', () => {
     expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'chaos-remora-bomb')?.steps.map((step) => step.actionId)).toEqual([
       'haniel.silent-moonlit-forest-guardian.direct.level-10',
       'haniel.a-melody-named-haniel.initial.level-10',
+      'chaos.doubtmark.full-sequence.level-10',
+      'chaos.retribution.initial.level-10',
+      'chaos.final-verdict.enhanced.level-10',
+      'chaos.final-verdict.enhanced.level-10',
       'hathor.rider-express.level-10',
+    ]);
+    expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'nanally-hexed-dual')?.steps.map((step) => step.actionId)).toEqual([
+      'sakiri.feast-of-gluttony.level-10',
+      'nanally.colucci-howling-technique.level-10',
+      'nanally.colucci-ultimate-technique.initial.level-10',
+      'nanally.colucci-secret-skill.full-sequence.level-10',
+      'nanally.underboss.basic-coordinated-full-sequence.level-10',
+      'nanally.heavy-hitter.full-sequence.level-10',
+      'nanally.underboss.heavy-coordinated-full-sequence.level-10',
     ]);
     expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'lacrimosa-discord-dot')?.steps.map((step) => step.actionId)).toEqual([
       'haniel.silent-moonlit-forest-guardian.direct.level-10',

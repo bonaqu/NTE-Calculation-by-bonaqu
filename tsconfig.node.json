@@ -33,6 +33,8 @@
     "src/verified-visible-actions-batch-e.ts",
     "src/verified-visible-actions-batch-f.ts",
     "src/verified-visible-actions-batch-g.ts",
+    "src/verified-visible-actions-batch-h.ts",
+    "src/verified-visible-actions-batch-i.ts",
     "src/team-effects.ts",
     "src/combat-cycle-models.ts",
     "src/combat-scenario.ts",
