@@ -11,6 +11,22 @@ def replace_exact(path: str, old: str, new: str, expected: int = 1) -> None:
     target.write_text(text.replace(old, new), encoding='utf-8')
 
 
+def ensure_replaced(path: str, old: str, new: str) -> None:
+    target = Path(path)
+    text = target.read_text(encoding='utf-8')
+    old_count = text.count(old)
+    new_count = text.count(new)
+    if old_count == 1:
+        target.write_text(text.replace(old, new, 1), encoding='utf-8')
+        return
+    if old_count == 0 and new_count >= 1:
+        return
+    raise RuntimeError(
+        f'{path}: expected one old block or an already-correct new block; '
+        f'old={old_count}, new={new_count}'
+    )
+
+
 replace_exact('src/non-atk-action-scaling.test.ts', ').size).toBe(107);', ').size).toBe(110);')
 
 replace_exact(
@@ -52,12 +68,12 @@ replace_exact(
     "expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'shinku-charge')?.gaps).toHaveLength(10);",
     "expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'shinku-charge')?.gaps).toHaveLength(9);",
 )
-replace_exact(
+ensure_replaced(
     'src/verified-rotation-recipes.test.ts',
     "      omittedEffectConditions: 2,\n      omittedCycleConditions: 2,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
     "      omittedEffectConditions: 2,\n      omittedCycleConditions: 1,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
 )
-replace_exact(
+ensure_replaced(
     'src/verified-rotation-recipes.test.ts',
     "      omittedEffectConditions: 1,\n      omittedCycleConditions: 2,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
     "      omittedEffectConditions: 1,\n      omittedCycleConditions: 1,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
