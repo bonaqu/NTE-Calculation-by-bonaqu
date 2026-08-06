@@ -33,8 +33,8 @@ function multiplier(id: string): number | undefined {
 describe('verified game-visible actions batch D', () => {
   it('adds fourteen unique ATK-scaling records inside the complete action catalog', () => {
     expect(verifiedVisibleActionsBatchD).toHaveLength(14);
-    expect(verifiedVisibleActions).toHaveLength(106);
-    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(106);
+    expect(verifiedVisibleActions).toHaveLength(107);
+    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(107);
     expect(new Set(verifiedVisibleActionsBatchD.map((action) => action.characterName))).toEqual(
       new Set(['Aurelia', 'Chiz', 'Edgar']),
     );

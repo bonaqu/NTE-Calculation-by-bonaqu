@@ -17,9 +17,9 @@ describe('Rotation Lab gap audit UI', () => {
   it('shows current and baseline totals in both locales', () => {
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 12,
-      total: 29,
-      verifiedActionCatalogCount: 106,
+      resolvedSinceBaseline: 16,
+      total: 25,
+      verifiedActionCatalogCount: 107,
     });
     expect(panelSource).toContain('ТЕКУЩИХ ПРОБЕЛОВ');
     expect(panelSource).toContain('CURRENT GAPS');
@@ -41,9 +41,9 @@ describe('Rotation Lab gap audit UI', () => {
     expect(panelSource).toContain('Rejected look-alike IDs');
   });
 
-  it('shows the updated missing-action backlog after Lacrimosa variant research', () => {
-    expect(currentRotationMissingActionPriorities).toHaveLength(2);
-    expect(currentRotationMissingActionPriorities[0]?.characterName).toBe('Daffodill');
+  it('shows the updated missing-action backlog after Daffodill Phantom Step research', () => {
+    expect(currentRotationMissingActionPriorities).toHaveLength(1);
+    expect(currentRotationMissingActionPriorities[0]?.characterName).toBe('Zero');
     expect(panelSource).toContain('currentRotationMissingActionPriorities.map');
     expect(panelSource).toContain('Какие записи исследовать дальше');
     expect(panelSource).toContain('Next action records to research');

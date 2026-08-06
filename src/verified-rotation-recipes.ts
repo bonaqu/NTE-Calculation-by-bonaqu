@@ -230,9 +230,10 @@ export const rotationRepeatEvidence: readonly RotationRepeatEvidence[] = [
     count: 2,
     action: { ru: 'усиленная базовая атака Даффодил', en: 'Daffodill enhanced Basic Attack' },
     note: {
-      ru: 'Первая и вторая атаки перечислены отдельно, но exact bindings для этих двух исходных шагов пока отсутствуют.',
-      en: 'The first and second attacks are listed separately, but exact bindings for those source steps are not available yet.',
+      ru: 'Первая и вторая атаки представлены двумя отдельными экземплярами одного точного Phantom Step action ID.',
+      en: 'The first and second attacks are represented by two separate instances of one exact Phantom Step action ID.',
     },
+    promotedActionIds: Array.from({ length: 2 }, () => 'daffodill.phantom-step.level-10'),
   },
   {
     presetId: 'baicang-firefly-hyper',
@@ -252,9 +253,10 @@ export const rotationRepeatEvidence: readonly RotationRepeatEvidence[] = [
     count: 2,
     action: { ru: 'усиленная базовая атака Даффодил', en: 'Daffodill enhanced Basic Attack' },
     note: {
-      ru: 'Две атаки опубликованы отдельными шагами, но не повышаются до рецепта без exact bindings именно этих шагов.',
-      en: 'Two attacks are published as separate steps but are not promoted without exact bindings for those steps.',
+      ru: 'Два быстрого переключения представлены двумя отдельными экземплярами одного точного Phantom Step action ID.',
+      en: 'The two quick swaps are represented by two separate instances of one exact Phantom Step action ID.',
     },
+    promotedActionIds: Array.from({ length: 2 }, () => 'daffodill.phantom-step.level-10'),
   },
   {
     presetId: 'lacrimosa-discord-dot',

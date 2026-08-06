@@ -256,6 +256,14 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     coverage: 'partial',
     items: daffodillUltimateRedirectItems,
   },
+  [binding('lacrimosa-discord-dot', 'lacrimosa-phantom-one')]: {
+    coverage: 'full',
+    items: [{ kind: 'action-sequence', actionIds: ['daffodill.phantom-step.level-10'] }],
+  },
+  [binding('lacrimosa-discord-dot', 'lacrimosa-phantom-two')]: {
+    coverage: 'full',
+    items: [{ kind: 'action-sequence', actionIds: ['daffodill.phantom-step.level-10'] }],
+  },
 
   [binding('baicang-firefly-hyper', 'baicang-sakiri-buff')]: {
     coverage: 'partial',
@@ -279,12 +287,20 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
       actionIds: ['baicang.heart-of-heaven-and-earth.level-10'],
     }],
   },
+  [binding('baicang-firefly-hyper', 'baicang-phantom-one')]: {
+    coverage: 'full',
+    items: [{ kind: 'action-sequence', actionIds: ['daffodill.phantom-step.level-10'] }],
+  },
   [binding('baicang-firefly-hyper', 'baicang-dodge-charged-one')]: {
     coverage: 'full',
     items: [{
       kind: 'action-sequence',
       actionIds: ['baicang.silenced-thought.full-composition.level-10'],
     }],
+  },
+  [binding('baicang-firefly-hyper', 'baicang-phantom-two')]: {
+    coverage: 'full',
+    items: [{ kind: 'action-sequence', actionIds: ['daffodill.phantom-step.level-10'] }],
   },
 };
 
