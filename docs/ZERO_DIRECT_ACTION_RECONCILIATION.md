@@ -31,6 +31,8 @@ Exact source order is stored in six partial bindings:
 
 The lower-level conditional shots and Awakening records are not inserted.
 
+Only the direct character actions above are bound. Blossom and Remora remain visible partial remainders because the current verified Combat Scenario cycle catalog provides a calculable model only for Stain. The importer does not create unsupported Blossom or Remora activation atoms.
+
 ## Coverage
 
 - action catalog: 107 → 110;
