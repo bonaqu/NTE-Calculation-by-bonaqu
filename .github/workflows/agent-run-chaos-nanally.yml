@@ -1,0 +1,44 @@
+name: Run guarded Chaos Nanally feature patch
+
+on:
+  push:
+    branches:
+      - bonaqu_projects
+    paths:
+      - .github/workflows/agent-run-chaos-nanally.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-feature-branch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: feat/chaos-ultimate-actions
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Apply guarded patch
+        run: python tools/apply-chaos-nanally-patch.py
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: Worker dry run
+        run: npm run worker:check
+      - name: Publish verified feature commit
+        run: |
+          rm tools/apply-chaos-nanally-patch.py
+          rm .github/workflows/agent-chaos-nanally-patch.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: complete Nanally and model Chaos burst actions"
+          git push origin HEAD:feat/chaos-ultimate-actions
