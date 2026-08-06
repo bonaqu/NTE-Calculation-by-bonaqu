@@ -9,6 +9,7 @@ import { verifiedVisibleActionsBatchH } from './verified-visible-actions-batch-h
 import { verifiedVisibleActionsBatchI } from './verified-visible-actions-batch-i';
 import { verifiedVisibleActionsBatchJ } from './verified-visible-actions-batch-j';
 import { verifiedVisibleActionsBatchK } from './verified-visible-actions-batch-k';
+import { verifiedVisibleActionsBatchL } from './verified-visible-actions-batch-l';
 
 export type ActionScalingStat = 'atk' | 'def' | 'max-hp';
 
@@ -18,6 +19,8 @@ export interface VerifiedVisibleAction {
   title: LocalizedText;
   description: LocalizedText;
   multiplier: number;
+  /** Action-specific additive DMG bonus sourced from the character kit. */
+  damageBonus?: number;
   /** Omitted values preserve the legacy final-ATK calculation path. */
   scalingStat?: ActionScalingStat;
   requiredSkill: 'basic' | 'skill' | 'ultimate' | 'support';
@@ -227,6 +230,7 @@ export const verifiedVisibleActions: readonly VerifiedVisibleAction[] = [
   ...verifiedVisibleActionsBatchI,
   ...verifiedVisibleActionsBatchJ,
   ...verifiedVisibleActionsBatchK,
+  ...verifiedVisibleActionsBatchL,
 ];
 
 export const visibleActionById = new Map(verifiedVisibleActions.map((action) => [action.id, action]));

@@ -91,10 +91,17 @@ export { rotationGapClassificationLabels };
 export const currentRotationMissingActionPriorities: readonly RotationMissingActionPriority[] = [
   {
     rank: 1,
-    characterName: 'Zero',
+    characterName: 'Jiuyuan',
     capability: { ru: 'прямые сверхспособность и навык перенаправления', en: 'direct Ultimate and Redirect Skill' },
-    sourceSteps: ['zero-fill', 'zero-blossom', 'zero-third-strike', 'nanally-zero-blossom', 'chaos-zero-remora'],
-    reason: { ru: 'Зеро участвует в четырёх пресетах, а текущие A1/A6-записи покрывают только условные дополнительные удары.', en: 'Zero appears in four presets while current A1/A6 records cover only conditional extra hits.' },
+    sourceSteps: ['jiuyuan-open', 'nanally-jiuyuan-hexed'],
+    reason: { ru: 'Одна точная пара действий закроет два шага в ротациях Хатор и Наналли; текущий A6-триггер относится к другой механике.', en: 'One exact action pair closes two steps in Hathor and Nanally rotations; the current A6 trigger is a different mechanic.' },
+  },
+  {
+    rank: 2,
+    characterName: 'Hathor',
+    capability: { ru: 'полностью удерживаемое Aerial Command', en: 'fully held Aerial Command' },
+    sourceSteps: ['chaos-hathor-redirect'],
+    reason: { ru: 'Источник публикует коэффициент одного тика, но для exact action нужен доказанный состав полного удержания.', en: 'The source publishes a per-tick ratio, while an exact action requires a sourced full-hold composition.' },
   },
 ];
 
@@ -133,9 +140,9 @@ export function validateCurrentRotationGapAudit(): string[] {
   }
 
   if (currentRotationGapAuditSummary.baselineTotal !== 41) errors.push('Expected the immutable 41-step baseline');
-  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 16) errors.push('Expected sixteen source steps resolved since baseline');
-  if (currentRotationGapAuditSummary.total !== 25) errors.push(`Expected 25 current gaps, got ${currentRotationGapAuditSummary.total}`);
-  if (currentRotationGapAuditSummary.missingActionRecord !== 9) errors.push('Expected 9 current missing-action records');
+  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 22) errors.push('Expected twenty-two source steps resolved since baseline');
+  if (currentRotationGapAuditSummary.total !== 19) errors.push(`Expected 19 current gaps, got ${currentRotationGapAuditSummary.total}`);
+  if (currentRotationGapAuditSummary.missingActionRecord !== 3) errors.push('Expected 3 current missing-action records');
   if (currentRotationGapAuditSummary.effectOrCycleCondition !== 3) errors.push('Expected 3 current effect/Cycle conditions');
   if (currentRotationGapAuditSummary.nonDamageOperation !== 8) errors.push('Expected 8 current non-damage operations');
   if (currentRotationGapAuditSummary.ambiguousSourceStep !== 5) errors.push('Expected 5 current ambiguous source steps');

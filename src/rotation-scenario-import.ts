@@ -137,6 +137,25 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
       { kind: 'activate-effect', effectId: 'hathor.delay-warning.remora-crit-rate' },
     ],
   },
+  [binding('shinku-charge', 'zero-fill')]: {
+    coverage: 'partial',
+    items: [{
+      kind: 'action-sequence',
+      actionIds: ['zero.divide-by-zero.level-10', 'zero.appraise-and-engrave.main.level-10'],
+    }],
+  },
+  [binding('shinku-charge', 'nanally-charge')]: {
+    coverage: 'partial',
+    items: [
+      {
+        kind: 'action-sequence',
+        actionIds: [
+          'nanally.colucci-ultimate-technique.initial.level-10',
+          'nanally.colucci-howling-technique.level-10',
+        ],
+      },
+    ],
+  },
   [binding('shinku-charge', 'shinku-ultimate')]: {
     coverage: 'partial',
     items: [
@@ -163,6 +182,12 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     items: [{ kind: 'action-sequence', actionIds: ['shinku.high-speed-breach.level-10'] }],
   },
 
+  [binding('hathor-hyper', 'zero-blossom')]: {
+    coverage: 'partial',
+    items: [
+      { kind: 'action-sequence', actionIds: ['zero.divide-by-zero.level-10'] },
+    ],
+  },
   [binding('hathor-hyper', 'haniel-buffs')]: {
     coverage: 'partial',
     items: hanielSetupItems,
@@ -179,7 +204,17 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     coverage: 'full',
     items: hathorBurstItems,
   },
+  [binding('hathor-hyper', 'zero-third-strike')]: {
+    coverage: 'partial',
+    items: [{ kind: 'action-sequence', actionIds: ['zero.appraise-and-engrave.main.level-10'] }],
+  },
 
+  [binding('chaos-remora-bomb', 'chaos-zero-remora')]: {
+    coverage: 'partial',
+    items: [
+      { kind: 'action-sequence', actionIds: ['zero.divide-by-zero.level-10'] },
+    ],
+  },
   [binding('chaos-remora-bomb', 'chaos-haniel-buffs')]: {
     coverage: 'partial',
     items: hanielSetupItems,
@@ -208,6 +243,15 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     items: [{ kind: 'action-sequence', actionIds: ['hathor.rider-express.level-10'] }],
   },
 
+  [binding('nanally-hexed-dual', 'nanally-zero-blossom')]: {
+    coverage: 'partial',
+    items: [
+      {
+        kind: 'action-sequence',
+        actionIds: ['zero.appraise-and-engrave.main.level-10', 'zero.divide-by-zero.level-10'],
+      },
+    ],
+  },
   [binding('nanally-hexed-dual', 'nanally-sakiri-setup')]: {
     coverage: 'partial',
     items: sakiriSetupItems,

@@ -14,8 +14,8 @@ const byChaosId = new Map(verifiedVisibleActionsBatchI.map((action) => [action.i
 
 describe('Nanally completion and Chaos exact action integration', () => {
   it('publishes 107 unique actions and exact Chaos arithmetic', () => {
-    expect(verifiedVisibleActions).toHaveLength(107);
-    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(107);
+    expect(verifiedVisibleActions).toHaveLength(110);
+    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(110);
     expect(verifiedVisibleActionsBatchH).toHaveLength(6);
     expect(verifiedVisibleActionsBatchI).toHaveLength(3);
     expect(byChaosId.get('chaos.doubtmark.full-sequence.level-10')?.multiplier).toBeCloseTo(599.7, 8);
@@ -72,25 +72,25 @@ describe('Nanally completion and Chaos exact action integration', () => {
     expect(validateVerifiedRotationRecipes()).toEqual([]);
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(verifiedRotationRecipeCoverage).toMatchObject({
-      bindingCount: 33,
+      bindingCount: 39,
       fullyBoundSourceStepCount: 12,
-      partiallyBoundSourceStepCount: 21,
-      unsupportedSourceStepCount: 25,
-      boundActionStepCount: 49,
+      partiallyBoundSourceStepCount: 27,
+      unsupportedSourceStepCount: 19,
+      boundActionStepCount: 58,
       promotedRecipeCount: 6,
-      promotedActionStepCount: 49,
+      promotedActionStepCount: 58,
     });
-    expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.steps).toHaveLength(7);
-    expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(7);
+    expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.steps).toHaveLength(9);
+    expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(8);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 16,
-      total: 25,
-      missingActionRecord: 9,
+      resolvedSinceBaseline: 22,
+      total: 19,
+      missingActionRecord: 3,
       effectOrCycleCondition: 3,
       nonDamageOperation: 8,
       ambiguousSourceStep: 5,
-      verifiedActionCatalogCount: 107,
+      verifiedActionCatalogCount: 110,
     });
     for (const key of [
       'nanally-hexed-dual:nanally-redirect',
@@ -102,7 +102,8 @@ describe('Nanally completion and Chaos exact action integration', () => {
       'chaos-remora-bomb:chaos-heavy-two',
     ]) expect(currentRotationGapAuditByKey.has(key)).toBe(false);
     expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([
-      [1, 'Zero'],
+      [1, 'Jiuyuan'],
+      [2, 'Hathor'],
     ]);
   });
 });
