@@ -37,7 +37,7 @@ describe('verified Shinku direct actions', () => {
       requiredLevel: 10,
     });
     expect(37 + 239.9 + 109.9 * 5 + 287.9 + 85).toBeCloseTo(1199.3, 10);
-    expect(action?.description.ru).toContain('только прямой входной урон');
+    expect(action?.description.ru).toContain('Последующее 13-секундное состояние моделируется отдельно');
     expect(action?.description.en).toContain('The following 13-second state is modeled separately');
   });
 
