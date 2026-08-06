@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Runs after the main guarded generator and updates only stale factual tests.
 
 def replace_exact(path: str, old: str, new: str, expected: int = 1) -> None:
     target = Path(path)
