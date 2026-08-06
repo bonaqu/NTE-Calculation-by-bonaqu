@@ -24,7 +24,6 @@ replace_exact(
     "it('binds Zero and Nanally setup actions while leaving unsupported Cycle parts visible', () => {\n    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');\n    const expected = {\n      'zero-fill': ['zero.divide-by-zero.level-10', 'zero.appraise-and-engrave.main.level-10'],\n      'nanally-charge': ['nanally.colucci-ultimate-technique.initial.level-10', 'nanally.colucci-howling-technique.level-10'],\n    } as const;\n    for (const [sourceStepId, actionIds] of Object.entries(expected)) {\n      const generated = imported.scenario.steps.filter((step) => (\n        imported.metadata.originsByStepId[step.id]?.sourceStepId === sourceStepId\n      ));\n      expect(generated.filter((step) => step.kind === 'action').map((step) => step.actionId)).toEqual(actionIds);\n      expect(generated.filter((step) => step.kind === 'wait' && step.note.startsWith('Непокрытая часть'))).toHaveLength(1);\n      expect(generated.every((step) => imported.metadata.originsByStepId[step.id]?.coverage === 'partial')).toBe(true);\n    }\n  });",
 )
 
-# Later Zero bindings add two actions to Nanally and one action to Chaos.
 for path in ['src/nanally-chaos-integration.test.ts', 'src/rotation-gap-audit.test.ts']:
     replace_exact(
         path,
@@ -37,7 +36,12 @@ for path in ['src/nanally-chaos-integration.test.ts', 'src/rotation-gap-audit.te
         "expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(8);",
     )
 
-# Blossom is still an unsupported partial remainder, not a verified Cycle model.
+replace_exact(
+    'src/nanally-chaos-integration.test.ts',
+    "expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([\n      [1, 'Zero'],\n    ]);",
+    "expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([\n      [1, 'Jiuyuan'],\n      [2, 'Hathor'],\n    ]);",
+)
+
 replace_exact(
     'src/verified-rotation-recipes.test.ts',
     "      omittedEffectConditions: 2,\n      omittedCycleConditions: 1,\n      promotedRecipeId: 'rotation-lab.shinku-charge.verified-actions',",
@@ -47,6 +51,11 @@ replace_exact(
     'src/verified-rotation-recipes.test.ts',
     "expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'shinku-charge')?.gaps).toHaveLength(10);",
     "expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'shinku-charge')?.gaps).toHaveLength(9);",
+)
+replace_exact(
+    'src/verified-rotation-recipes.test.ts',
+    "      omittedEffectConditions: 2,\n      omittedCycleConditions: 2,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
+    "      omittedEffectConditions: 2,\n      omittedCycleConditions: 1,\n      promotedCoverage: 'partial-action-order',\n      promotedTimingMode: 'order-only',",
 )
 
 print('Zero cumulative test expectations corrected')
