@@ -7,10 +7,10 @@ import { verifiedVisibleActions } from './verified-visible-actions';
 const byId = new Map(verifiedVisibleActionsBatchJ.map((action) => [action.id, action]));
 
 describe('verified Lacrimosa exact action variants', () => {
-  it('adds six unique level-10 records to the 110-action catalog', () => {
+  it('adds six unique level-10 records to the 112-action catalog', () => {
     expect(verifiedVisibleActionsBatchJ).toHaveLength(6);
     expect(new Set(verifiedVisibleActionsBatchJ.map((action) => action.id)).size).toBe(6);
-    expect(verifiedVisibleActions).toHaveLength(110);
+    expect(verifiedVisibleActions).toHaveLength(112);
     expect(verifiedVisibleActionsBatchJ.every((action) => action.characterName === 'Lacrimosa')).toBe(true);
     expect(verifiedVisibleActionsBatchJ.every((action) => action.requiredLevel === 10)).toBe(true);
   });
@@ -41,13 +41,13 @@ describe('verified Lacrimosa exact action variants', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 22,
-      total: 19,
-      missingActionRecord: 3,
+      resolvedSinceBaseline: 24,
+      total: 17,
+      missingActionRecord: 1,
       ambiguousSourceStep: 5,
-      verifiedActionCatalogCount: 110,
+      verifiedActionCatalogCount: 112,
     });
-    expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual(['Jiuyuan', 'Hathor']);
+    expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual(['Hathor']);
   });
 
   it('retains complete current source provenance', () => {

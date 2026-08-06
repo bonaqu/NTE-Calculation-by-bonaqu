@@ -16,7 +16,7 @@ const styles = readFileSync(new URL('./verified-scenario-recipes.css', import.me
 
 describe('verified scenario recipe UI', () => {
   it('keeps standalone actions, exact fragments and audited rotation recipes separate', () => {
-    expect(verifiedActionScenarioRecipes).toHaveLength(110);
+    expect(verifiedActionScenarioRecipes).toHaveLength(112);
     expect(new Set(verifiedActionScenarioRecipes.map((recipe) => recipe.characterName)).size).toBe(20);
     expect(verifiedRotationFragments).toHaveLength(1);
     expect(verifiedRotationRecipes).toHaveLength(6);

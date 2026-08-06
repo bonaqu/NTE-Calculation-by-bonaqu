@@ -24,10 +24,10 @@ function zeroBuild(actionId: string, damageBonus = 0) {
 }
 
 describe('verified Zero direct actions and Rotation Lab bindings', () => {
-  it('adds three exact level-10 records to the 110-action catalog', () => {
+  it('adds three exact level-10 records to the 112-action catalog', () => {
     expect(verifiedVisibleActionsBatchL).toHaveLength(3);
     expect(new Set(verifiedVisibleActionsBatchL.map((action) => action.id)).size).toBe(3);
-    expect(verifiedVisibleActions).toHaveLength(110);
+    expect(verifiedVisibleActions).toHaveLength(112);
     expect(byId.get('zero.appraise-and-engrave.main.level-10')?.multiplier).toBeCloseTo(599.8, 8);
     expect(byId.get('zero.appraise-and-engrave.extra-lower-level.base.level-10')?.multiplier).toBe(200);
     expect(byId.get('zero.divide-by-zero.level-10')?.multiplier).toBeCloseTo(999.5, 8);
@@ -107,24 +107,24 @@ describe('verified Zero direct actions and Rotation Lab bindings', () => {
     expect(validateVerifiedRotationRecipes()).toEqual([]);
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(verifiedRotationRecipeCoverage).toMatchObject({
-      bindingCount: 39,
+      bindingCount: 41,
       fullyBoundSourceStepCount: 12,
-      partiallyBoundSourceStepCount: 27,
-      unsupportedSourceStepCount: 19,
-      boundActionStepCount: 58,
+      partiallyBoundSourceStepCount: 29,
+      unsupportedSourceStepCount: 17,
+      boundActionStepCount: 62,
       promotedRecipeCount: 6,
-      promotedActionStepCount: 58,
+      promotedActionStepCount: 62,
     });
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 22,
-      total: 19,
-      missingActionRecord: 3,
+      resolvedSinceBaseline: 24,
+      total: 17,
+      missingActionRecord: 1,
       effectOrCycleCondition: 3,
       nonDamageOperation: 8,
       ambiguousSourceStep: 5,
-      verifiedActionCatalogCount: 110,
+      verifiedActionCatalogCount: 112,
     });
-    expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual(['Jiuyuan', 'Hathor']);
+    expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual(['Hathor']);
   });
 });

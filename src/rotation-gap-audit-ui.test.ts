@@ -17,9 +17,9 @@ describe('Rotation Lab gap audit UI', () => {
   it('shows current and baseline totals in both locales', () => {
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 22,
-      total: 19,
-      verifiedActionCatalogCount: 110,
+      resolvedSinceBaseline: 24,
+      total: 17,
+      verifiedActionCatalogCount: 112,
     });
     expect(panelSource).toContain('ТЕКУЩИХ ПРОБЕЛОВ');
     expect(panelSource).toContain('CURRENT GAPS');
@@ -41,9 +41,9 @@ describe('Rotation Lab gap audit UI', () => {
     expect(panelSource).toContain('Rejected look-alike IDs');
   });
 
-  it('shows the updated missing-action backlog after Zero direct-action research', () => {
-    expect(currentRotationMissingActionPriorities).toHaveLength(2);
-    expect(currentRotationMissingActionPriorities[0]?.characterName).toBe('Jiuyuan');
+  it('shows the updated missing-action backlog after Jiuyuan direct-action research', () => {
+    expect(currentRotationMissingActionPriorities).toHaveLength(1);
+    expect(currentRotationMissingActionPriorities[0]?.characterName).toBe('Hathor');
     expect(panelSource).toContain('currentRotationMissingActionPriorities.map');
     expect(panelSource).toContain('Какие записи исследовать дальше');
     expect(panelSource).toContain('Next action records to research');

@@ -15,21 +15,21 @@ describe('Rotation Lab gap audit', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 22,
-      total: 19,
+      resolvedSinceBaseline: 24,
+      total: 17,
       effectOrCycleCondition: 3,
-      missingActionRecord: 3,
+      missingActionRecord: 1,
       nonDamageOperation: 8,
       ambiguousSourceStep: 5,
-      verifiedActionCatalogCount: 110,
+      verifiedActionCatalogCount: 112,
     });
     const unsupportedKeys = rotationPresets.flatMap((preset) => preset.steps.filter((step) => !rotationScenarioBindings[`${preset.id}:${step.id}`]).map((step) => `${preset.id}:${step.id}`));
-    expect(unsupportedKeys).toHaveLength(19);
+    expect(unsupportedKeys).toHaveLength(17);
     expect([...currentRotationGapAuditByKey.keys()].sort()).toEqual(unsupportedKeys.sort());
   });
 
   it('promotes Nanally and expands Chaos without semantic substitutions', () => {
-    expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.steps).toHaveLength(9);
+    expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.steps).toHaveLength(11);
     expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.gaps).toHaveLength(10);
     expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(8);
     expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.gaps).toHaveLength(9);
@@ -37,7 +37,7 @@ describe('Rotation Lab gap audit', () => {
     expect(currentRotationGapAuditByKey.has('chaos-remora-bomb:chaos-restart')).toBe(true);
   });
 
-  it('moves missing-action research priority to Jiuyuan and held Hathor Skill', () => {
-    expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([[1, 'Jiuyuan'], [2, 'Hathor']]);
+  it('leaves held Hathor Skill as the only missing-action priority', () => {
+    expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([[1, 'Hathor']]);
   });
 });

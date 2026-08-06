@@ -35,8 +35,8 @@ function multiplier(id: string): number | undefined {
 describe('verified game-visible actions batch C', () => {
   it('keeps twenty-one unique level-10 records inside the expanded action catalog', () => {
     expect(verifiedVisibleActionsBatchC).toHaveLength(21);
-    expect(verifiedVisibleActions).toHaveLength(110);
-    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(110);
+    expect(verifiedVisibleActions).toHaveLength(112);
+    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(112);
     expect(new Set(verifiedVisibleActionsBatchC.map((action) => action.characterName))).toEqual(
       new Set(['Haniel', 'Sakiri', 'Baicang', 'Daffodill']),
     );

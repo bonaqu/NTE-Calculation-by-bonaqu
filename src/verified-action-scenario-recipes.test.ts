@@ -38,18 +38,18 @@ function teamWith(characterName: string): GameVisibleTeamState {
 }
 
 describe('verified action scenario recipes', () => {
-  it('covers all 110 verified actions exactly once across all 20 released characters', () => {
-    expect(verifiedVisibleActions).toHaveLength(110);
-    expect(verifiedActionScenarioRecipes).toHaveLength(110);
+  it('covers all 112 verified actions exactly once across all 20 released characters', () => {
+    expect(verifiedVisibleActions).toHaveLength(112);
+    expect(verifiedActionScenarioRecipes).toHaveLength(112);
     expect(verifiedActionScenarioCoverage).toMatchObject({
-      verifiedActionCount: 110,
-      standaloneRecipeCount: 110,
+      verifiedActionCount: 112,
+      standaloneRecipeCount: 112,
       representedCharacterCount: 20,
       automaticRepeatCount: 0,
     });
 
     const recipeActionIds = verifiedActionScenarioRecipes.map((recipe) => recipe.actionId);
-    expect(new Set(recipeActionIds).size).toBe(110);
+    expect(new Set(recipeActionIds).size).toBe(112);
     expect(new Set(recipeActionIds)).toEqual(new Set(verifiedVisibleActions.map((action) => action.id)));
     expect(validateVerifiedActionScenarioRecipes()).toEqual([]);
   });
