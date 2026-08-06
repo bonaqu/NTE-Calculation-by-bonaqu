@@ -23,7 +23,7 @@ Both `hathor-hyper:jiuyuan-open` and `nanally-hexed-dual:nanally-jiuyuan-hexed` 
 1. Final Reckoning;
 2. Intel Hunter.
 
-They remain partial because Pact/Settlement and Hexed consequences are not synthesized.
+They remain partial because Pact/Settlement and Hexed consequences are not synthesized. The importer appends one visible partial-remainder step after the two exact actions instead of silently treating those consequences as calculated damage.
 
 ## Coverage
 
