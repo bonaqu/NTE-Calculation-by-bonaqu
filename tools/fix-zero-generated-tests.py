@@ -1,0 +1,26 @@
+from pathlib import Path
+
+
+def replace_exact(path: str, old: str, new: str, expected: int = 1) -> None:
+    target = Path(path)
+    text = target.read_text(encoding='utf-8')
+    count = text.count(old)
+    if count != expected:
+        raise RuntimeError(f'{path}: expected {expected} occurrences of {old!r}, found {count}')
+    target.write_text(text.replace(old, new), encoding='utf-8')
+
+
+replace_exact('src/non-atk-action-scaling.test.ts', ').size).toBe(107);', ').size).toBe(110);')
+
+replace_exact(
+    'src/shinku-rotation-import.test.ts',
+    "it('reports one full, five partial and two unsupported source steps', () => {\n    expect(previewRotationScenarioImport(preset)).toMatchObject({\n      presetId: 'shinku-charge',\n      totalSourceSteps: 8,\n      fullyMappedSourceSteps: 1,\n      partiallyMappedSourceSteps: 5,\n      mappedSourceSteps: 6,\n      generatedActionSteps: 14,\n      generatedEffectSteps: 2,\n      generatedCycleSteps: 0,\n      generatedPartialRemainderSteps: 5,\n      unsupportedSourceSteps: 2,\n      coveragePercent: 43.8,\n    });\n  });",
+    "it('reports one full and seven partial source steps without unsupported setup', () => {\n    expect(previewRotationScenarioImport(preset)).toMatchObject({\n      presetId: 'shinku-charge',\n      totalSourceSteps: 8,\n      fullyMappedSourceSteps: 1,\n      partiallyMappedSourceSteps: 7,\n      mappedSourceSteps: 8,\n      generatedActionSteps: 18,\n      generatedEffectSteps: 2,\n      generatedCycleSteps: 0,\n      generatedPartialRemainderSteps: 7,\n      unsupportedSourceSteps: 0,\n      coveragePercent: 56.3,\n    });\n  });",
+)
+replace_exact(
+    'src/shinku-rotation-import.test.ts',
+    "it('leaves Zero and Nanally setup unsupported instead of synthesizing their actions', () => {\n    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');\n    for (const sourceStepId of ['zero-fill', 'nanally-charge']) {\n      const generated = imported.scenario.steps.filter((step) => (\n        imported.metadata.originsByStepId[step.id]?.sourceStepId === sourceStepId\n      ));\n      expect(generated).toHaveLength(1);\n      expect(generated[0]).toMatchObject({ kind: 'wait', actionId: '' });\n      expect(imported.metadata.originsByStepId[generated[0]!.id]?.coverage).toBe('unsupported');\n    }\n  });",
+    "it('binds Zero and Nanally setup actions while leaving unsupported Cycle parts visible', () => {\n    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');\n    const expected = {\n      'zero-fill': ['zero.divide-by-zero.level-10', 'zero.appraise-and-engrave.main.level-10'],\n      'nanally-charge': ['nanally.colucci-ultimate-technique.initial.level-10', 'nanally.colucci-howling-technique.level-10'],\n    } as const;\n    for (const [sourceStepId, actionIds] of Object.entries(expected)) {\n      const generated = imported.scenario.steps.filter((step) => (\n        imported.metadata.originsByStepId[step.id]?.sourceStepId === sourceStepId\n      ));\n      expect(generated.filter((step) => step.kind === 'action').map((step) => step.actionId)).toEqual(actionIds);\n      expect(generated.filter((step) => step.kind === 'wait' && step.note.startsWith('Непокрытая часть'))).toHaveLength(1);\n      expect(generated.every((step) => imported.metadata.originsByStepId[step.id]?.coverage === 'partial')).toBe(true);\n    }\n  });",
+)
+
+print('Zero cumulative test expectations corrected')
