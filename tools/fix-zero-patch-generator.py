@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Remove one duplicate cumulative-test replacement before applying the main guarded patch.
 path = Path('tools/apply-zero-direct-actions.py')
 text = path.read_text(encoding='utf-8')
 line = "replace_once(\"src/rotation-gap-audit.test.ts\", \"expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([[1, 'Zero']]);\", \"expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([[1, 'Jiuyuan'], [2, 'Hathor']]);\")\n"
