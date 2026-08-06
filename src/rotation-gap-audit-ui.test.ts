@@ -19,7 +19,7 @@ describe('Rotation Lab gap audit UI', () => {
       baselineTotal: 41,
       resolvedSinceBaseline: 12,
       total: 29,
-      verifiedActionCatalogCount: 100,
+      verifiedActionCatalogCount: 106,
     });
     expect(panelSource).toContain('ТЕКУЩИХ ПРОБЕЛОВ');
     expect(panelSource).toContain('CURRENT GAPS');
@@ -41,9 +41,9 @@ describe('Rotation Lab gap audit UI', () => {
     expect(panelSource).toContain('Rejected look-alike IDs');
   });
 
-  it('shows the updated missing-action backlog after Shinku, Nanally and Chaos research', () => {
-    expect(currentRotationMissingActionPriorities).toHaveLength(3);
-    expect(currentRotationMissingActionPriorities[0]?.characterName).toBe('Lacrimosa');
+  it('shows the updated missing-action backlog after Lacrimosa variant research', () => {
+    expect(currentRotationMissingActionPriorities).toHaveLength(2);
+    expect(currentRotationMissingActionPriorities[0]?.characterName).toBe('Daffodill');
     expect(panelSource).toContain('currentRotationMissingActionPriorities.map');
     expect(panelSource).toContain('Какие записи исследовать дальше');
     expect(panelSource).toContain('Next action records to research');
