@@ -25,7 +25,9 @@ Sources: Icy Veins Hathor profile, updated 2026-06-27; Prydwen Hathor profile, u
 
 ## Rotation binding
 
-`chaos-remora-bomb:chaos-hathor-redirect` receives one partial binding containing `hathor.aerial-command.full-hold.level-10`. The direct damage is exact, while resource and Cycle consequences remain a visible partial remainder.
+`chaos-remora-bomb:chaos-hathor-redirect` receives one partial binding containing `hathor.aerial-command.full-hold.level-10`.
+
+The imported source step contains the exact 3100% direct action followed by one visible partial-remainder marker. That remainder represents resource and Cycle consequences only; it does not add hidden damage, duration, Remora, or Awakening effects.
 
 ## Coverage
 
