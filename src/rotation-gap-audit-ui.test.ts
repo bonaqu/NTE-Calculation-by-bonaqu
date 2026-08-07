@@ -17,19 +17,22 @@ describe('Rotation Lab gap audit UI', () => {
   it('shows current and baseline totals in both locales', () => {
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 36,
-      total: 5,
+      resolvedSinceBaseline: 41,
+      total: 0,
       verifiedActionCatalogCount: 113,
+      parameterizedVariantSourceSteps: 5,
     });
-    expect(panelSource).toContain('ТЕКУЩИХ ПРОБЕЛОВ');
-    expect(panelSource).toContain('CURRENT GAPS');
-    expect(panelSource).toContain('ЗАКРЫТО С BASELINE');
-    expect(panelSource).toContain('CLOSED SINCE BASELINE');
+    expect(panelSource).toContain('НЕПОДДЕРЖИВАЕМЫХ ПРОБЕЛОВ');
+    expect(panelSource).toContain('UNSUPPORTED GAPS');
+    expect(panelSource).toContain('ВАРИАНТОВ С ВЫБОРОМ');
+    expect(panelSource).toContain('USER-SELECTED VARIANTS');
     expect(panelSource).toContain('currentRotationGapAuditSummary.missingActionRecord');
     expect(panelSource).toContain('currentRotationGapAuditSummary.effectOrCycleCondition');
     expect(panelSource).toContain('currentRotationGapAuditSummary.nonDamageOperation');
     expect(panelSource).toContain('currentRotationGapAuditSummary.ambiguousSourceStep');
     expect(panelSource).toContain('currentRotationGapAuditSummary.resolvedSinceBaseline');
+    expect(panelSource).toContain('currentRotationGapAuditSummary.parameterizedVariantSourceSteps');
+    expect(panelSource).toContain('rotationScenarioVariantRequirements');
   });
 
   it('exposes every current source preset, rationale and rejected look-alike IDs', () => {

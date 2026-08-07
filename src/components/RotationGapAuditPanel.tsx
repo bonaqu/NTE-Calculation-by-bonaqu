@@ -10,6 +10,7 @@ import {
 } from '../rotation-gap-audit-current';
 import type { RotationGapClassification } from '../rotation-gap-audit';
 import { rotationPresetById, rotationPresets } from '../rotation-presets';
+import { rotationScenarioVariantRequirements } from '../rotation-scenario-import';
 import { rotationPresetRecipeAuditById, verifiedRotationRecipeById } from '../verified-rotation-recipes';
 import '../rotation-gap-audit.css';
 
@@ -35,6 +36,7 @@ export function RotationGapAuditPanel({ team, locale }: RotationGapAuditPanelPro
   const [selectedPresetId, setSelectedPresetId] = useState(matchingPreset?.id ?? rotationPresets[0]?.id ?? '');
   const selectedPreset = rotationPresetById.get(selectedPresetId) ?? rotationPresets[0];
   const entries = currentRotationGapAudit.filter((item) => item.presetId === selectedPreset?.id);
+  const variantRequirements = rotationScenarioVariantRequirements.filter((item) => item.presetId === selectedPreset?.id);
   const audit = selectedPreset ? rotationPresetRecipeAuditById.get(selectedPreset.id) : undefined;
   const recipe = selectedPreset ? verifiedRotationRecipeById.get(recipeId(selectedPreset.id)) : undefined;
 
@@ -43,8 +45,8 @@ export function RotationGapAuditPanel({ team, locale }: RotationGapAuditPanelPro
       <ShieldQuestion size={22} />
       <div>
         <span>{ru
-          ? `${currentRotationGapAuditSummary.total} ТЕКУЩИХ ПРОБЕЛОВ · ${currentRotationGapAuditSummary.resolvedSinceBaseline} ЗАКРЫТО С BASELINE`
-          : `${currentRotationGapAuditSummary.total} CURRENT GAPS · ${currentRotationGapAuditSummary.resolvedSinceBaseline} CLOSED SINCE BASELINE`}</span>
+          ? `${currentRotationGapAuditSummary.total} НЕПОДДЕРЖИВАЕМЫХ ПРОБЕЛОВ · ${currentRotationGapAuditSummary.parameterizedVariantSourceSteps} ВАРИАНТОВ С ВЫБОРОМ`
+          : `${currentRotationGapAuditSummary.total} UNSUPPORTED GAPS · ${currentRotationGapAuditSummary.parameterizedVariantSourceSteps} USER-SELECTED VARIANTS`}</span>
         <h3>{ru ? 'Почему части ротации не рассчитываются' : 'Why rotation parts remain uncalculated'}</h3>
         <p>{ru
           ? 'Baseline из 41 шага сохранён для истории. Текущий список автоматически исключает шаги, которые получили точные bindings.'
@@ -58,7 +60,8 @@ export function RotationGapAuditPanel({ team, locale }: RotationGapAuditPanelPro
       <div><b>{currentRotationGapAuditSummary.effectOrCycleCondition}</b><span>{ru ? 'эффекты / циклы' : 'effects / Cycles'}</span></div>
       <div><b>{currentRotationGapAuditSummary.nonDamageOperation}</b><span>{ru ? 'небоевые операции' : 'non-damage operations'}</span></div>
       <div><b>{currentRotationGapAuditSummary.ambiguousSourceStep}</b><span>{ru ? 'неоднозначно' : 'ambiguous'}</span></div>
-      <div><b>{currentRotationGapAuditSummary.resolvedSinceBaseline}</b><span>{ru ? 'закрыто точно' : 'closed exactly'}</span></div>
+      <div><b>{currentRotationGapAuditSummary.parameterizedVariantSourceSteps}</b><span>{ru ? 'нужен выбор' : 'user-selected'}</span></div>
+      <div><b>{currentRotationGapAuditSummary.resolvedSinceBaseline}</b><span>{ru ? 'смоделировано' : 'modeled'}</span></div>
     </div>
 
     <div className="rotation-gap-audit__body">
@@ -94,9 +97,21 @@ export function RotationGapAuditPanel({ team, locale }: RotationGapAuditPanelPro
                 ? `Отклонённые похожие ID: ${item.rejectedActionIds.join(', ')}`
                 : `Rejected look-alike IDs: ${item.rejectedActionIds.join(', ')}`}</small> : null}
             </details>;
-          }) : <div className="rotation-gap-audit__safe-result"><CheckCircle2 size={18} /><span>{ru
+          }) : null}
+          {variantRequirements.map((item) => {
+            const step = selectedPreset?.steps.find((candidate) => candidate.id === item.sourceStepId);
+            return <details key={`variant:${item.presetId}:${item.sourceStepId}`}>
+              <summary>
+                <span className="rotation-gap-audit__badge ambiguous">{ru ? 'Выбор пользователя' : 'User selection'}</span>
+                <b>{localizedCharacterName(step?.actor ?? '', locale)}</b>
+                <span>{step?.instruction[locale] ?? item.sourceStepId}</span>
+              </summary>
+              <p>{item.rationale[locale]}</p>
+            </details>;
+          })}
+          {!entries.length && !variantRequirements.length ? <div className="rotation-gap-audit__safe-result"><CheckCircle2 size={18} /><span>{ru
             ? 'Для этого пресета не осталось полностью неподдерживаемых исходных шагов.'
-            : 'This preset has no fully unsupported source steps left.'}</span></div>}
+            : 'This preset has no unsupported or parameterized source steps left.'}</span></div> : null}
         </div>
       </article>
 
@@ -108,8 +123,8 @@ export function RotationGapAuditPanel({ team, locale }: RotationGapAuditPanelPro
           <small>{priority.sourceSteps.length} {ru ? 'затронутых шагов' : 'affected steps'}</small>
         </li>)}</ol>
         <div className="rotation-gap-audit__safe-result"><CheckCircle2 size={18} /><span>{ru
-          ? `Каталог из ${currentRotationGapAuditSummary.verifiedActionCatalogCount} действий проверяется без fuzzy matching: текущие ${currentRotationGapAuditSummary.total} пробелов не получили семантических подмен.`
-          : `The ${currentRotationGapAuditSummary.verifiedActionCatalogCount}-action catalog is checked without fuzzy matching: the current ${currentRotationGapAuditSummary.total} gaps received no semantic substitutions.`}</span></div>
+          ? `Каталог из ${currentRotationGapAuditSummary.verifiedActionCatalogCount} действий проверяется без fuzzy matching: неподдерживаемых пробелов нет, а ${currentRotationGapAuditSummary.parameterizedVariantSourceSteps} вариантов требуют явного выбора.`
+          : `The ${currentRotationGapAuditSummary.verifiedActionCatalogCount}-action catalog is checked without fuzzy matching: no unsupported gaps remain, while ${currentRotationGapAuditSummary.parameterizedVariantSourceSteps} variants require explicit selection.`}</span></div>
       </aside>
     </div>
   </section>;

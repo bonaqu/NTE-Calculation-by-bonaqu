@@ -117,12 +117,12 @@ describe('verified Zero direct actions and Rotation Lab bindings', () => {
     });
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 36,
-      total: 5,
+      resolvedSinceBaseline: 41,
+      total: 0,
       missingActionRecord: 0,
       effectOrCycleCondition: 0,
       nonDamageOperation: 0,
-      ambiguousSourceStep: 5,
+      ambiguousSourceStep: 0,
       verifiedActionCatalogCount: 113,
     });
     expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual([]);

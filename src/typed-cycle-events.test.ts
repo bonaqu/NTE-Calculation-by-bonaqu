@@ -107,7 +107,10 @@ describe('typed verified Esper Cycle events', () => {
 
   it('imports semantic events as pending order markers and activates them only after timing confirmation', () => {
     for (const presetId of ['hathor-hyper', 'lacrimosa-discord-dot']) {
-      const imported = importRotationPresetToScenario(rotationPresetById.get(presetId)!, team(), 'ru');
+      const selections: Record<string, string | number> = presetId === 'lacrimosa-discord-dot'
+        ? { 'lacrimosa.form': 'tomato-metal', 'lacrimosa.redirect-skill': 'morning-tomato' }
+        : {};
+      const imported = importRotationPresetToScenario(rotationPresetById.get(presetId)!, team(), 'ru', selections);
       const relevant = Object.entries(imported.metadata.pendingByStepId).filter(([, pending]) => pending.kind === 'activate-cycle');
       expect(relevant.length).toBeGreaterThan(0);
       for (const [stepId] of relevant) expect(imported.scenario.steps.find((step) => step.id === stepId)?.kind).toBe('wait');
@@ -129,12 +132,12 @@ describe('typed verified Esper Cycle events', () => {
     });
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 36,
-      total: 5,
+      resolvedSinceBaseline: 41,
+      total: 0,
       effectOrCycleCondition: 0,
       missingActionRecord: 0,
       nonDamageOperation: 0,
-      ambiguousSourceStep: 5,
+      ambiguousSourceStep: 0,
       verifiedActionCatalogCount: 113,
     });
   });

@@ -81,12 +81,12 @@ describe('verified Daffodill Phantom Step integration', () => {
     });
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 36,
-      total: 5,
+      resolvedSinceBaseline: 41,
+      total: 0,
       missingActionRecord: 0,
       effectOrCycleCondition: 0,
       nonDamageOperation: 0,
-      ambiguousSourceStep: 5,
+      ambiguousSourceStep: 0,
       verifiedActionCatalogCount: 113,
     });
     expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual([]);
@@ -94,7 +94,10 @@ describe('verified Daffodill Phantom Step integration', () => {
 
   it('imports two independent Phantom Step actions per preset without parry-extra', () => {
     for (const presetId of ['lacrimosa-discord-dot', 'baicang-firefly-hyper']) {
-      const imported = importRotationPresetToScenario(rotationPresetById.get(presetId)!, initialGameVisibleTeamState(), 'en');
+      const selections: Record<string, string | number> = presetId === 'lacrimosa-discord-dot'
+        ? { 'lacrimosa.form': 'tomato-metal', 'lacrimosa.redirect-skill': 'morning-tomato' }
+        : { 'baicang.adler-ultimate-mode': 'single-enemy-ten-hits', 'baicang.dodge-charged-count': 1 };
+      const imported = importRotationPresetToScenario(rotationPresetById.get(presetId)!, initialGameVisibleTeamState(), 'en', selections);
       const actions = imported.scenario.steps.map((step) => step.actionId).filter(Boolean);
       expect(actions.filter((id) => id === 'daffodill.phantom-step.level-10')).toHaveLength(2);
       expect(actions).not.toContain('daffodill.finale.one-parry-extra.level-10');
