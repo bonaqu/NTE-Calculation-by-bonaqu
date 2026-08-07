@@ -20,6 +20,8 @@ The final five baseline gaps were not missing records. Each source step allowed 
 - Metadata schema v1 stores normalized `variantSelections` additively.
 - Variant markers are zero-damage wait rows with explicit provenance text; they never create hidden actions or seconds.
 - Preview and import reports separately count variant-required source steps and generated variant markers.
+- A selected exact branch may increase the preset's fully mapped source-step count, such as Adler's selected Ultimate mode.
+- For a partial branch, a generated variant marker replaces the generic partial-remainder row. Coverage accounting therefore uses `partial remainder + variant markers`, preventing the same unresolved consequence from appearing twice.
 
 ## Audit semantics
 
