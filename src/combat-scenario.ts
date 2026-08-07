@@ -48,15 +48,39 @@ export interface ActiveScenarioEffect {
   title: LocalizedText;
 }
 
-export interface ActiveScenarioCycle {
+interface ActiveScenarioCycleBase {
   key: string;
   cycleId: EsperCycleId;
+  kind: VerifiedCombatCycleModel['kind'];
   startedAt: number;
-  expiresAt: number;
   name: LocalizedText;
-  affectedAttributes: VerifiedCombatCycleModel['affectedAttributes'];
-  damageBonus: number;
+  summary: LocalizedText;
 }
+
+export type ActiveScenarioCycle =
+  | (ActiveScenarioCycleBase & {
+    kind: 'damage-window';
+    expiresAt: number;
+    affectedAttributes: readonly CharacterAttribute[];
+    damageBonus: number;
+  })
+  | (ActiveScenarioCycleBase & {
+    kind: 'timed-state';
+    expiresAt: number;
+    stateEffect: LocalizedText;
+  })
+  | (ActiveScenarioCycleBase & {
+    kind: 'resource-trigger';
+    expiresAt: null;
+    ultimateEnergyPerTrigger: number;
+    triggerCondition: LocalizedText;
+  })
+  | (ActiveScenarioCycleBase & {
+    kind: 'break-trigger';
+    expiresAt: null;
+    breakReductionPercent: null;
+    triggerCondition: LocalizedText;
+  });
 
 export type CombatScenarioStepStatus = 'calculated' | 'activated' | 'wait' | 'blocked';
 
@@ -228,7 +252,9 @@ function cycleModifierForAction(
 ): { damageBonus: number; conditions: VisibleCalculationConditionForCycle[] } {
   const attribute = characterByName.get(characterName)?.attribute;
   if (!attribute) return { damageBonus: 0, conditions: [] };
-  const applicable = cycles.filter((cycle) => cycle.affectedAttributes.includes(attribute));
+  const applicable = cycles.filter((cycle): cycle is Extract<ActiveScenarioCycle, { kind: 'damage-window' }> => (
+    cycle.kind === 'damage-window' && cycle.affectedAttributes.includes(attribute)
+  ));
   return {
     damageBonus: applicable.reduce((sum, cycle) => sum + cycle.damageBonus, 0),
     conditions: applicable.map((cycle) => ({
@@ -280,6 +306,41 @@ function calculateActionAt(
 
 function damageOf(calculation: VisibleBuildCalculation | undefined): DamageResult | null {
   return calculation?.supported && calculation.result ? calculation.result : null;
+}
+
+function activatedCycleFromModel(
+  model: VerifiedCombatCycleModel,
+  name: LocalizedText,
+  startedAt: number,
+): ActiveScenarioCycle {
+  const base = { key: model.id, cycleId: model.id, kind: model.kind, startedAt, name, summary: model.summary };
+  if (model.kind === 'damage-window') return {
+    ...base,
+    kind: model.kind,
+    expiresAt: startedAt + model.durationSeconds,
+    affectedAttributes: model.affectedAttributes,
+    damageBonus: model.damageBonus,
+  };
+  if (model.kind === 'timed-state') return {
+    ...base,
+    kind: model.kind,
+    expiresAt: startedAt + model.durationSeconds,
+    stateEffect: model.stateEffect,
+  };
+  if (model.kind === 'resource-trigger') return {
+    ...base,
+    kind: model.kind,
+    expiresAt: null,
+    ultimateEnergyPerTrigger: model.ultimateEnergyPerTrigger,
+    triggerCondition: model.triggerCondition,
+  };
+  return {
+    ...base,
+    kind: model.kind,
+    expiresAt: null,
+    breakReductionPercent: model.breakReductionPercent,
+    triggerCondition: model.triggerCondition,
+  };
 }
 
 export function calculateCombatScenario(
@@ -340,8 +401,8 @@ export function calculateCombatScenario(
           activeEffects: beforeEffects,
           activeCycles: beforeCycles,
           blockedReason: blockedReason(
-            'Для выбранного цикла эспера ещё нет подтверждённой числовой модели сценария.',
-            'The selected Esper Cycle does not have a verified numerical scenario model yet.',
+            'Для выбранного цикла эспера ещё нет подтверждённой модели сценария.',
+            'The selected Esper Cycle does not have a verified scenario model yet.',
           ),
         });
         return;
@@ -361,16 +422,8 @@ export function calculateCombatScenario(
         });
         return;
       }
-      const activeCycle: ActiveScenarioCycle = {
-        key: cycle.id,
-        cycleId: cycle.id,
-        startedAt: step.at,
-        expiresAt: step.at + model.durationSeconds,
-        name: cycle.name,
-        affectedAttributes: model.affectedAttributes,
-        damageBonus: model.damageBonus,
-      };
-      cycleWindows.set(activeCycle.key, activeCycle);
+      const activeCycle = activatedCycleFromModel(model, cycle.name, step.at);
+      if (activeCycle.expiresAt !== null) cycleWindows.set(activeCycle.key, activeCycle);
       results.push({
         step,
         originalIndex,
@@ -378,7 +431,9 @@ export function calculateCombatScenario(
         sourceCharacter: sourceBuild.characterName,
         activatedCycle: activeCycle,
         activeEffects: beforeEffects,
-        activeCycles: snapshotActiveCycles(cycleWindows, step.at),
+        activeCycles: activeCycle.expiresAt === null
+          ? beforeCycles
+          : snapshotActiveCycles(cycleWindows, step.at),
       });
       return;
     }

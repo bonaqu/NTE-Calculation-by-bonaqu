@@ -123,7 +123,7 @@ describe('Stain numerical Esper Cycle model', () => {
     expect(result.activatedCycleCount).toBe(0);
   });
 
-  it('blocks cycles without a confirmed numerical scenario model', () => {
+  it('blocks cycles without a verified scenario model', () => {
     const unsupported: CombatScenarioState = {
       version: 1,
       name: 'Unsupported Blossom',
@@ -140,7 +140,7 @@ describe('Stain numerical Esper Cycle model', () => {
     };
     const result = calculateCombatScenario(team(), unsupported);
     expect(result.steps[0]?.status).toBe('blocked');
-    expect(result.steps[0]?.blockedReason?.ru).toContain('нет подтверждённой числовой модели сценария');
+    expect(result.steps[0]?.blockedReason?.ru).toContain('нет подтверждённой модели сценария');
   });
 
   it('keeps old v1 payloads valid and normalizes the new optional cycle field', () => {

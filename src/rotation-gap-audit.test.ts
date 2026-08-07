@@ -11,20 +11,20 @@ describe('Rotation Lab gap audit', () => {
     expect(new Set(rotationGapAudit.map((item) => `${item.presetId}:${item.sourceStepId}`)).size).toBe(41);
   });
 
-  it('derives all 16 current gaps from exact bindings', () => {
+  it('derives all 13 current gaps from exact bindings', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 25,
-      total: 16,
-      effectOrCycleCondition: 3,
+      resolvedSinceBaseline: 28,
+      total: 13,
+      effectOrCycleCondition: 0,
       missingActionRecord: 0,
       nonDamageOperation: 8,
       ambiguousSourceStep: 5,
       verifiedActionCatalogCount: 113,
     });
     const unsupportedKeys = rotationPresets.flatMap((preset) => preset.steps.filter((step) => !rotationScenarioBindings[`${preset.id}:${step.id}`]).map((step) => `${preset.id}:${step.id}`));
-    expect(unsupportedKeys).toHaveLength(16);
+    expect(unsupportedKeys).toHaveLength(13);
     expect([...currentRotationGapAuditByKey.keys()].sort()).toEqual(unsupportedKeys.sort());
   });
 

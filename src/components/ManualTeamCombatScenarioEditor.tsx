@@ -15,13 +15,14 @@ import {
   TimerReset,
   Trash2,
 } from 'lucide-react';
-import { verifiedCombatCycleModels } from '../combat-cycle-models';
+import { verifiedCombatCycleModels, type VerifiedCombatCycleModel } from '../combat-cycle-models';
 import {
   calculateCombatScenario,
   COMBAT_SCENARIO_STORAGE_KEY,
   createCombatScenarioStep,
   initialCombatScenarioState,
   normalizeCombatScenarioState,
+  type ActiveScenarioCycle,
   type CombatScenarioState,
   type CombatScenarioStep,
   type CombatScenarioStepKind,
@@ -80,6 +81,36 @@ function coverageLabel(coverage: RotationScenarioSourceCoverage, ru: boolean): s
   if (coverage === 'full') return ru ? 'полностью' : 'full';
   if (coverage === 'partial') return ru ? 'частично' : 'partial';
   return ru ? 'не связано' : 'unsupported';
+}
+
+function cycleModelOptionLabel(model: VerifiedCombatCycleModel, name: string, ru: boolean): string {
+  if (model.kind === 'damage-window') return `${name} · ${model.durationSeconds}${ru ? 'с' : 's'} · +${model.damageBonus}%`;
+  if (model.kind === 'timed-state') return `${name} · ${model.durationSeconds}${ru ? 'с' : 's'} · ${ru ? 'состояние DoT' : 'DoT state'}`;
+  if (model.kind === 'resource-trigger') return `${name} · +${model.ultimateEnergyPerTrigger} ${ru ? 'энергии / триггер' : 'Energy / trigger'}`;
+  return `${name} · ${ru ? 'снижение Break, % не опубликован' : 'Break reduction, % unpublished'}`;
+}
+
+function cycleActivationDisplay(cycle: ActiveScenarioCycle, ru: boolean): { value: string; label: string; kindLabel: string } {
+  if (cycle.kind === 'damage-window') return {
+    value: `${cycle.expiresAt - cycle.startedAt}${ru ? 'с' : 's'}`,
+    label: ru ? 'окно урона' : 'damage window',
+    kindLabel: ru ? 'Числовое окно общей цели' : 'Numerical shared-target window',
+  };
+  if (cycle.kind === 'timed-state') return {
+    value: `${cycle.expiresAt - cycle.startedAt}${ru ? 'с' : 's'}`,
+    label: ru ? 'состояние' : 'state',
+    kindLabel: ru ? 'Состояние общей цели без total damage' : 'Shared-target state without total damage',
+  };
+  if (cycle.kind === 'resource-trigger') return {
+    value: `+${cycle.ultimateEnergyPerTrigger}`,
+    label: ru ? 'энергии / триггер' : 'Energy / trigger',
+    kindLabel: ru ? 'Мгновенный ресурсный триггер' : 'Instant resource trigger',
+  };
+  return {
+    value: ru ? 'не указан' : 'unpublished',
+    label: ru ? 'процент Break' : 'Break percentage',
+    kindLabel: ru ? 'Мгновенный Break-триггер' : 'Instant Break trigger',
+  };
 }
 
 export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPanelProps) {
@@ -283,8 +314,8 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
     </div>
 
     <div className="combat-scenario-cycle-policy"><Sparkles size={17} /><span>{ru
-      ? 'Числовая модель сейчас подтверждена только для цикла «След»: +20% урона Психики и Лакшаны по общей цели на 12 секунд. Остальные циклы не превращаются в выдуманный урон.'
-      : 'Only Stain currently has a verified numerical model: +20% Psyche and Lakshana damage against the shared target for 12 seconds. Other cycles are not converted into invented damage.'}</span></div>
+      ? 'След изменяет формулу урона. Поджог хранится как 15-секундное состояние, Заряд — как +10 энергии за триггер, Дискорд — как Break-событие без опубликованного процента. Семантические модели не создают скрытый урон.'
+      : 'Stain changes the damage formula. Scorch is a 15-second state, Charge is +10 Energy per trigger, and Discord is a Break event with an unpublished percentage. Semantic models create no hidden damage.'}</span></div>
 
     {scenario.steps.length ? <div className="combat-scenario-editor">
       <div className="combat-scenario-editor-head"><span>{ru ? 'Порядок' : 'Order'}</span><span>{importMetadata.timingStatus === 'order-only' ? (ru ? 'Отметка' : 'Marker') : (ru ? 'Время' : 'Time')}</span><span>{ru ? 'Тип шага' : 'Step type'}</span><span>{ru ? 'Источник' : 'Source'}</span><span>{ru ? 'Действие или условие' : 'Action or condition'}</span><span /></div>
@@ -312,8 +343,8 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
             <option value="">{effects.length ? (ru ? 'Выбери эффект' : 'Select effect') : (ru ? 'Нет подтверждённых эффектов' : 'No verified effects')}</option>
             {effects.map((entry) => <option value={entry.id} key={entry.id}>{entry.title[locale]}</option>)}
           </select> : step.kind === 'activate-cycle' ? <select value={step.cycleId} aria-label={ru ? 'Подтверждённый цикл эспера' : 'Verified Esper Cycle'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, cycleId: event.target.value }), true)}>
-            <option value="">{ru ? 'Выбери численно поддержанный цикл' : 'Select a numerically supported cycle'}</option>
-            {supportedCycles.map(({ model, cycle }) => <option value={model.id} key={model.id}>{cycle?.name[locale]} · {model.durationSeconds}{ru ? 'с' : 's'} · +{model.damageBonus}%</option>)}
+            <option value="">{ru ? 'Выбери подтверждённую модель цикла' : 'Select a verified Cycle model'}</option>
+            {supportedCycles.map(({ model, cycle }) => <option value={model.id} key={model.id}>{cycleModelOptionLabel(model, cycle?.name[locale] ?? model.id, ru)}</option>)}
           </select> : <input value={step.note} maxLength={400} onChange={(event) => updateStep(step.id, (current) => ({ ...current, note: event.target.value }))} placeholder={ru ? 'Что происходит в непокрытой части ротации' : 'What happens in the unsupported rotation part'} />}{origin ? <small className={`rotation-origin coverage-${origin.coverage}`}>Rotation Lab · {coverageLabel(origin.coverage, ru)} · {origin.step.instruction[locale]}{origin.part ? ` · ${ru ? 'часть' : 'part'} ${origin.part + 1}` : ''}</small> : null}</div>
           <div className="combat-scenario-row-actions"><button type="button" aria-label={ru ? 'Дублировать' : 'Duplicate'} onClick={() => duplicateStep(step.id)}><Copy size={15} /></button><button type="button" aria-label={ru ? 'Удалить' : 'Remove'} onClick={() => removeStep(step.id)}><Trash2 size={15} /></button></div>
         </div>;
@@ -328,9 +359,8 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
         const damage = entry.calculation?.result;
         const activatedTitle = entry.activatedCycle?.name[locale] ?? entry.effectEvaluation?.effect.title[locale];
         const activeWindowCount = entry.activeEffects.length + entry.activeCycles.length;
-        const activatedDuration = entry.activatedCycle
-          ? entry.activatedCycle.expiresAt - entry.activatedCycle.startedAt
-          : entry.effectEvaluation?.effect.durationSeconds;
+        const cycleDisplay = entry.activatedCycle ? cycleActivationDisplay(entry.activatedCycle, ru) : null;
+        const activatedDuration = entry.effectEvaluation?.effect.durationSeconds;
         const origin = rotationSourceStep(importMetadata, entry.step.id);
         return <li className={`status-${entry.status}`} key={`${entry.step.id}-${entry.originalIndex}`}>
           <time>{format(entry.step.at)}{timeUnit}</time>
@@ -342,9 +372,9 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
               : entry.status === 'wait'
                 ? (entry.step.note || (ru ? 'Непокрытый промежуток' : 'Unsupported interval'))
                 : (ru ? 'Шаг заблокирован' : 'Step blocked')}</b><small>{entry.step.kind === 'activate-cycle'
-                  ? (ru ? 'Состояние общей цели' : 'Shared target state')
+                  ? (cycleDisplay?.kindLabel ?? (ru ? 'Состояние общей цели' : 'Shared target state'))
                   : entry.sourceCharacter ? localizedCharacterName(entry.sourceCharacter, locale) : ''}{activeWindowCount ? ` · ${activeWindowCount} ${ru ? 'активн. окон' : 'active windows'}` : ''}{origin ? ` · Rotation Lab: ${origin.step.id} (${coverageLabel(origin.coverage, ru)})` : ''}</small>{entry.blockedReason ? <p>{entry.blockedReason[locale]}</p> : null}</div>
-          <div className="combat-scenario-result-value">{damage ? <><strong>{format(damage.expected)}</strong><small>{ru ? 'ожидаемый' : 'expected'}</small></> : entry.status === 'activated' ? <><strong>{activatedDuration === 'combat' ? '∞' : `${activatedDuration}${ru ? 'с' : 's'}`}</strong><small>{ru ? 'окно' : 'window'}</small></> : null}</div>
+          <div className="combat-scenario-result-value">{damage ? <><strong>{format(damage.expected)}</strong><small>{ru ? 'ожидаемый' : 'expected'}</small></> : entry.status === 'activated' ? cycleDisplay ? <><strong>{cycleDisplay.value}</strong><small>{cycleDisplay.label}</small></> : <><strong>{activatedDuration === 'combat' ? '∞' : `${activatedDuration}${ru ? 'с' : 's'}`}</strong><small>{ru ? 'окно' : 'window'}</small></> : null}</div>
         </li>;
       })}</ol>
     </div> : null}

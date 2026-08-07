@@ -58,6 +58,8 @@ describe('verified team combat scenario product contract', () => {
     expect(manualEditorSource).toContain('actionsForCharacter');
     expect(manualEditorSource).toContain('teamEffectsForCharacter');
     expect(manualEditorSource).toContain('verifiedCombatCycleModels');
+    expect(manualEditorSource).toContain('cycleModelOptionLabel');
+    expect(manualEditorSource).toContain('cycleActivationDisplay');
     expect(manualEditorSource).not.toContain('skillMultiplier');
     expect(manualEditorSource).not.toContain('actionsPerRotation');
     expect(manualEditorSource).not.toContain('hitCount');
@@ -66,7 +68,7 @@ describe('verified team combat scenario product contract', () => {
   it('states partial verified coverage instead of claiming full rotation DPS', () => {
     expect(manualEditorSource).toContain('Это не полный DPS ротации');
     expect(manualEditorSource).toContain('Покрытие действий');
-    expect(manualEditorSource).toContain('Остальные циклы не превращаются в выдуманный урон');
+    expect(manualEditorSource).toContain('Семантические модели не создают скрытый урон');
     expect(manualEditorSource).toContain("coverage-${origin.coverage}");
     expect(engineSource).toContain('coveragePercent');
     expect(engineSource).toContain("status: 'blocked'");
