@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Rewrite one strict correction loop before it is executed by the guarded workflow.
 path = Path('tools/fix-parameterized-variant-generated-tests.py')
 text = path.read_text(encoding='utf-8')
 old = """for path in audit_paths:
