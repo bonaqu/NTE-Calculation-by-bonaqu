@@ -1,6 +1,6 @@
 from pathlib import Path
 
-# Rewrite one strict correction loop before it is executed by the guarded workflow.
+# Rewrite strict cumulative-test corrections before they run.
 path = Path('tools/fix-parameterized-variant-generated-tests.py')
 text = path.read_text(encoding='utf-8')
 old = """for path in audit_paths:
@@ -16,5 +16,10 @@ for path in [entry for entry in audit_paths if entry != 'src/rotation-gap-audit-
 """
 if text.count(old) != 1:
     raise RuntimeError(f'Expected one combined audit-update loop, found {text.count(old)}')
-path.write_text(text.replace(old, new), encoding='utf-8')
-print('Parameterized audit summary and classification paths separated')
+text = text.replace(old, new)
+old_import = "\"import { importRotationPresetToScenario, rotationScenarioBindings } from './rotation-scenario-import';\",\n    \"import { importRotationPresetToScenario, rotationScenarioBindings, rotationScenarioVariantSourceKeys } from './rotation-scenario-import';\","
+new_import = "\"import { rotationScenarioBindings } from './rotation-scenario-import';\",\n    \"import { rotationScenarioBindings, rotationScenarioVariantSourceKeys } from './rotation-scenario-import';\","
+if text.count(old_import) != 1:
+    raise RuntimeError(f'Expected one Lacrimosa import correction, found {text.count(old_import)}')
+path.write_text(text.replace(old_import, new_import), encoding='utf-8')
+print('Parameterized audit paths and Lacrimosa import correction aligned')
