@@ -10,10 +10,10 @@ import { verifiedVisibleActions } from './verified-visible-actions';
 const byId = new Map(verifiedVisibleActionsBatchM.map((action) => [action.id, action]));
 
 describe('verified Jiuyuan direct actions and Rotation Lab bindings', () => {
-  it('adds two exact level-10 direct actions to the 112-action catalog', () => {
+  it('adds two exact level-10 direct actions to the 113-action catalog', () => {
     expect(verifiedVisibleActionsBatchM).toHaveLength(2);
     expect(new Set(verifiedVisibleActionsBatchM.map((action) => action.id)).size).toBe(2);
-    expect(verifiedVisibleActions).toHaveLength(112);
+    expect(verifiedVisibleActions).toHaveLength(113);
     expect(byId.get('jiuyuan.intel-hunter.direct.level-10')?.multiplier).toBeCloseTo(600.3, 8);
     expect(byId.get('jiuyuan.final-reckoning.direct.level-10')?.multiplier).toBeCloseTo(1199.3, 8);
   });
@@ -61,24 +61,24 @@ describe('verified Jiuyuan direct actions and Rotation Lab bindings', () => {
     expect(validateVerifiedRotationRecipes()).toEqual([]);
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(verifiedRotationRecipeCoverage).toMatchObject({
-      bindingCount: 41,
+      bindingCount: 42,
       fullyBoundSourceStepCount: 12,
-      partiallyBoundSourceStepCount: 29,
-      unsupportedSourceStepCount: 17,
-      boundActionStepCount: 62,
+      partiallyBoundSourceStepCount: 30,
+      unsupportedSourceStepCount: 16,
+      boundActionStepCount: 63,
       promotedRecipeCount: 6,
-      promotedActionStepCount: 62,
+      promotedActionStepCount: 63,
     });
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 24,
-      total: 17,
-      missingActionRecord: 1,
+      resolvedSinceBaseline: 25,
+      total: 16,
+      missingActionRecord: 0,
       effectOrCycleCondition: 3,
       nonDamageOperation: 8,
       ambiguousSourceStep: 5,
-      verifiedActionCatalogCount: 112,
+      verifiedActionCatalogCount: 113,
     });
-    expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual(['Hathor']);
+    expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual([]);
   });
 });
