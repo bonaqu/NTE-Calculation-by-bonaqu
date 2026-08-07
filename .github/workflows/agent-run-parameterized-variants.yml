@@ -38,6 +38,7 @@ jobs:
           python tools/apply-parameterized-rotation-variants.py
           python tools/fix-parameterized-test-correction.py
           python tools/fix-parameterized-variant-generated-tests.py
+          python tools/fix-parameterized-final-tests.py
       - name: Install dependencies
         if: steps.guard.outputs.apply == 'true'
         run: npm install --no-audit --no-fund --no-package-lock
@@ -60,6 +61,7 @@ jobs:
           rm tools/fix-parameterized-variant-generator.py
           rm tools/fix-parameterized-test-correction.py
           rm tools/fix-parameterized-variant-generated-tests.py
+          rm tools/fix-parameterized-final-tests.py
           rm -f package-lock.json tsconfig.app.tsbuildinfo tsconfig.node.tsbuildinfo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
