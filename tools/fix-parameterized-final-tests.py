@@ -1,6 +1,6 @@
 from pathlib import Path
 
-
+# Final historical preview invariants after explicit variant-marker support.
 def replace_exact(path: str, old: str, new: str, expected: int = 1) -> None:
     target = Path(path)
     text = target.read_text(encoding='utf-8')
