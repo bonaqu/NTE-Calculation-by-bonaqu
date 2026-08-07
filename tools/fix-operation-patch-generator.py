@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Narrow the current-audit replacement so the immutable baseline remains unchanged.
 path = Path('tools/apply-typed-operation-markers.py')
 text = path.read_text(encoding='utf-8')
 old = "replace_once('src/rotation-gap-audit.test.ts', 'nonDamageOperation: 8,', 'nonDamageOperation: 0,')\n"
