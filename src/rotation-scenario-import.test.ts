@@ -157,7 +157,7 @@ describe('Rotation Lab to Combat Scenario import', () => {
     const previews = new Map(rotationPresets.map((preset) => [preset.id, previewRotationScenarioImport(preset)]));
     expect([...previews.values()].every((report) => report.partiallyMappedSourceSteps > 0)).toBe(true);
     expect(previews.get('hathor-hyper')?.fullyMappedSourceSteps).toBeGreaterThan(0);
-    expect(previews.get('baicang-firefly-hyper')?.fullyMappedSourceSteps).toBe(4);
+    expect(previews.get('baicang-firefly-hyper')?.fullyMappedSourceSteps).toBe(5);
 
     const preset = rotationPresetById.get('chaos-remora-bomb')!;
     const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');

@@ -125,11 +125,11 @@ export function validateCurrentRotationGapAudit(): string[] {
   }
 
   if (currentRotationGapAuditSummary.baselineTotal !== 41) errors.push('Expected the immutable 41-step baseline');
-  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 28) errors.push('Expected twenty-eight source steps resolved since baseline');
-  if (currentRotationGapAuditSummary.total !== 13) errors.push(`Expected 13 current gaps, got ${currentRotationGapAuditSummary.total}`);
+  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 36) errors.push('Expected thirty-six source steps resolved since baseline');
+  if (currentRotationGapAuditSummary.total !== 5) errors.push(`Expected 5 current gaps, got ${currentRotationGapAuditSummary.total}`);
   if (currentRotationGapAuditSummary.missingActionRecord !== 0) errors.push('Expected no current missing-action records');
   if (currentRotationGapAuditSummary.effectOrCycleCondition !== 0) errors.push('Expected no current effect/Cycle conditions');
-  if (currentRotationGapAuditSummary.nonDamageOperation !== 8) errors.push('Expected 8 current non-damage operations');
+  if (currentRotationGapAuditSummary.nonDamageOperation !== 0) errors.push('Expected no current non-damage operations');
   if (currentRotationGapAuditSummary.ambiguousSourceStep !== 5) errors.push('Expected 5 current ambiguous source steps');
   if (currentRotationGapAuditSummary.exactExistingAction !== 0 || currentRotationGapAuditSummary.compoundExistingActions !== 0) {
     errors.push('Current unsupported steps must not claim a safe existing-action match');

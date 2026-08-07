@@ -41,8 +41,8 @@ describe('verified Lacrimosa exact action variants', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 28,
-      total: 13,
+      resolvedSinceBaseline: 36,
+      total: 5,
       missingActionRecord: 0,
       ambiguousSourceStep: 5,
       verifiedActionCatalogCount: 113,

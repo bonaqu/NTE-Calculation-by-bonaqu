@@ -120,20 +120,20 @@ describe('typed verified Esper Cycle events', () => {
     expect(validateVerifiedRotationRecipes()).toEqual([]);
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(verifiedRotationRecipeCoverage).toMatchObject({
-      bindingCount: 45,
-      fullyBoundSourceStepCount: 12,
+      bindingCount: 53,
+      fullyBoundSourceStepCount: 20,
       partiallyBoundSourceStepCount: 33,
-      unsupportedSourceStepCount: 13,
+      unsupportedSourceStepCount: 5,
       boundActionStepCount: 63,
       promotedActionStepCount: 63,
     });
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 28,
-      total: 13,
+      resolvedSinceBaseline: 36,
+      total: 5,
       effectOrCycleCondition: 0,
       missingActionRecord: 0,
-      nonDamageOperation: 8,
+      nonDamageOperation: 0,
       ambiguousSourceStep: 5,
       verifiedActionCatalogCount: 113,
     });

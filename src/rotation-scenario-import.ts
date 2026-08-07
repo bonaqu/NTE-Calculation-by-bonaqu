@@ -9,6 +9,7 @@ import {
   type GameVisibleTeamState,
 } from './game-visible-build';
 import { rotationPresetById, rotationPresets } from './rotation-presets';
+import { verifiedScenarioOperationById, type VerifiedScenarioOperationId } from './scenario-operations';
 import { verifiedTeamEffectById, type VerifiedTeamEffectId } from './team-effects';
 import type { EsperCycleId, Locale, RotationPreset, RotationStep } from './types';
 import { visibleActionById } from './verified-visible-actions';
@@ -21,7 +22,8 @@ export type RotationScenarioSourceCoverage = 'full' | 'partial' | 'unsupported';
 export type RotationScenarioBindingAtom =
   | { kind: 'action-sequence'; actionIds: readonly string[] }
   | { kind: 'activate-effect'; effectId: VerifiedTeamEffectId }
-  | { kind: 'activate-cycle'; cycleId: EsperCycleId };
+  | { kind: 'activate-cycle'; cycleId: EsperCycleId }
+  | { kind: 'operation-marker'; operationId: VerifiedScenarioOperationId };
 
 export interface RotationScenarioBinding {
   coverage: Exclude<RotationScenarioSourceCoverage, 'unsupported'>;
@@ -37,6 +39,7 @@ export interface RotationScenarioImportReport {
   generatedActionSteps: number;
   generatedEffectSteps: number;
   generatedCycleSteps: number;
+  generatedOperationSteps: number;
   generatedPartialRemainderSteps: number;
   unsupportedSourceSteps: number;
   coveragePercent: number;
@@ -203,6 +206,19 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     coverage: 'partial',
     items: [{ kind: 'activate-cycle', cycleId: 'stain' }],
   },
+
+  [binding('hathor-hyper', 'hathor-quickswap')]: {
+    coverage: 'full',
+    items: [{ kind: 'operation-marker', operationId: 'zero.quick-swap-return-hathor' }],
+  },
+  [binding('hathor-hyper', 'energy-routing')]: {
+    coverage: 'full',
+    items: [{ kind: 'operation-marker', operationId: 'hathor.reaction-energy-routing' }],
+  },
+  [binding('hathor-hyper', 'haniel-rebuild')]: {
+    coverage: 'full',
+    items: [{ kind: 'operation-marker', operationId: 'haniel.energy-cycle-rebuild' }],
+  },
   [binding('hathor-hyper', 'hathor-charge')]: {
     coverage: 'partial',
     items: [{ kind: 'activate-effect', effectId: 'hathor.delay-warning.remora-crit-rate' }],
@@ -253,6 +269,10 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     coverage: 'full',
     items: [{ kind: 'action-sequence', actionIds: ['chaos.final-verdict.enhanced.level-10'] }],
   },
+  [binding('chaos-remora-bomb', 'chaos-restart')]: {
+    coverage: 'full',
+    items: [{ kind: 'operation-marker', operationId: 'hathor.cooldown-restart-chaos' }],
+  },
   [binding('chaos-remora-bomb', 'chaos-return-hathor')]: {
     coverage: 'partial',
     items: [{ kind: 'action-sequence', actionIds: ['hathor.rider-express.level-10'] }],
@@ -264,6 +284,10 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
       kind: 'action-sequence',
       actionIds: ['jiuyuan.final-reckoning.direct.level-10', 'jiuyuan.intel-hunter.direct.level-10'],
     }],
+  },
+  [binding('nanally-hexed-dual', 'nanally-jiuyuan-open')]: {
+    coverage: 'full',
+    items: [{ kind: 'operation-marker', operationId: 'jiuyuan.start-position-nanally' }],
   },
   [binding('nanally-hexed-dual', 'nanally-zero-blossom')]: {
     coverage: 'partial',
@@ -299,6 +323,10 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
       ],
     }],
   },
+  [binding('nanally-hexed-dual', 'nanally-energy-recovery')]: {
+    coverage: 'full',
+    items: [{ kind: 'operation-marker', operationId: 'sakiri.energy-recovery-preserve-hexed' }],
+  },
   [binding('nanally-hexed-dual', 'nanally-charged-string')]: {
     coverage: 'full',
     items: [{
@@ -326,6 +354,10 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     coverage: 'partial',
     items: [{ kind: 'activate-cycle', cycleId: 'discord' }],
   },
+  [binding('lacrimosa-discord-dot', 'lacrimosa-repeat-loop')]: {
+    coverage: 'full',
+    items: [{ kind: 'operation-marker', operationId: 'lacrimosa.conditional-support-energy-loop' }],
+  },
   [binding('lacrimosa-discord-dot', 'lacrimosa-daffodill-open')]: {
     coverage: 'partial',
     items: daffodillUltimateRedirectItems,
@@ -339,6 +371,10 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     items: [{ kind: 'action-sequence', actionIds: ['daffodill.phantom-step.level-10'] }],
   },
 
+  [binding('baicang-firefly-hyper', 'baicang-restart')]: {
+    coverage: 'full',
+    items: [{ kind: 'operation-marker', operationId: 'adler.energy-check-restart' }],
+  },
   [binding('baicang-firefly-hyper', 'baicang-sakiri-buff')]: {
     coverage: 'partial',
     items: sakiriSetupItems,
@@ -477,10 +513,11 @@ export function normalizeRotationScenarioImportMetadata(value: unknown): Rotatio
 function atomFingerprint(atom: RotationScenarioBindingAtom): string {
   if (atom.kind === 'action-sequence') return `actions:${atom.actionIds.join(',')}`;
   if (atom.kind === 'activate-effect') return `effect:${atom.effectId}`;
-  return `cycle:${atom.cycleId}`;
+  if (atom.kind === 'activate-cycle') return `cycle:${atom.cycleId}`;
+  return `operation:${atom.operationId}`;
 }
 
-function validBindingAtom(step: RotationStep, atom: RotationScenarioBindingAtom): boolean {
+function validBindingAtom(preset: RotationPreset, step: RotationStep, atom: RotationScenarioBindingAtom): boolean {
   if (atom.kind === 'action-sequence') {
     return atom.actionIds.length > 0
       && atom.actionIds.every((actionId) => visibleActionById.get(actionId)?.characterName === step.actor);
@@ -488,7 +525,13 @@ function validBindingAtom(step: RotationStep, atom: RotationScenarioBindingAtom)
   if (atom.kind === 'activate-effect') {
     return verifiedTeamEffectById.get(atom.effectId)?.sourceCharacter === step.actor;
   }
-  return step.cycle === atom.cycleId && verifiedCombatCycleModelById.has(atom.cycleId);
+  if (atom.kind === 'activate-cycle') {
+    return step.cycle === atom.cycleId && verifiedCombatCycleModelById.has(atom.cycleId);
+  }
+  const operation = verifiedScenarioOperationById.get(atom.operationId);
+  return operation?.presetId === preset.id
+    && operation.sourceStepId === step.id
+    && operation.sourceCharacter === step.actor;
 }
 
 function validatedBinding(preset: RotationPreset, step: RotationStep): RotationScenarioBinding | null {
@@ -496,7 +539,7 @@ function validatedBinding(preset: RotationPreset, step: RotationStep): RotationS
   if (!candidate || candidate.items.length === 0) return null;
   const fingerprints = candidate.items.map(atomFingerprint);
   if (new Set(fingerprints).size !== fingerprints.length) return null;
-  return candidate.items.every((atom) => validBindingAtom(step, atom)) ? candidate : null;
+  return candidate.items.every((atom) => validBindingAtom(preset, step, atom)) ? candidate : null;
 }
 
 function stepNote(step: RotationStep, locale: Locale): string {
@@ -524,6 +567,7 @@ function baseScenarioStep(
     actionId: '',
     effectId: '',
     cycleId: '',
+    operationId: '',
     note: '',
   };
 }
@@ -541,6 +585,7 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
   let generatedActionSteps = 0;
   let generatedEffectSteps = 0;
   let generatedCycleSteps = 0;
+  let generatedOperationSteps = 0;
   let generatedPartialRemainderSteps = 0;
 
   const append = (
@@ -580,6 +625,18 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
           generatedActionSteps += 1;
           part += 1;
         }
+        continue;
+      }
+
+      if (atom.kind === 'operation-marker') {
+        append({
+          ...baseScenarioStep(preset, sourceStep, sourceIndex, sourceSlot, part),
+          kind: 'operation',
+          operationId: atom.operationId,
+          note: stepNote(sourceStep, locale),
+        }, sourceStep, part, matched.coverage);
+        generatedOperationSteps += 1;
+        part += 1;
         continue;
       }
 
@@ -627,6 +684,7 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
     generatedActionSteps,
     generatedEffectSteps,
     generatedCycleSteps,
+    generatedOperationSteps,
     generatedPartialRemainderSteps,
     unsupportedSourceSteps,
     coveragePercent: preset.steps.length

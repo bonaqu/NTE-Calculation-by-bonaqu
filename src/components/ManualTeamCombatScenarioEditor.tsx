@@ -38,6 +38,7 @@ import {
 import { localizedCharacterName } from '../gameTerms';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { rotationPresetById, rotationPresets } from '../rotation-presets';
+import { verifiedScenarioOperationById, verifiedScenarioOperations } from '../scenario-operations';
 import {
   confirmRotationScenarioTiming,
   importRotationPresetToScenario,
@@ -73,6 +74,7 @@ function numberValue(value: string): number {
 function stepLabel(kind: CombatScenarioStepKind, ru: boolean): string {
   if (kind === 'activate-effect') return ru ? 'Включить эффект персонажа' : 'Activate character effect';
   if (kind === 'activate-cycle') return ru ? 'Активировать цикл эспера' : 'Activate Esper Cycle';
+  if (kind === 'operation') return ru ? 'Подтверждённая небоевая операция' : 'Verified non-damage operation';
   if (kind === 'wait') return ru ? 'Ожидание / непокрытый шаг' : 'Wait / unsupported step';
   return ru ? 'Подтверждённое действие' : 'Verified action';
 }
@@ -138,6 +140,9 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
     [selectedPreset],
   );
   const importedPreset = rotationPresetById.get(importMetadata.sourceRotationId);
+  const supportedOperations = useMemo(() => verifiedScenarioOperations.filter((operation) => (
+    team.builds.some((build) => build.characterName === operation.sourceCharacter)
+  )), [team.builds]);
   const supportedCycles = useMemo(() => verifiedCombatCycleModels.map((model) => ({
     model,
     cycle: esperCycleById.get(model.id),
@@ -188,6 +193,12 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
       if (kind === 'activate-cycle') {
         step.sourceSlot = 0;
         step.cycleId = supportedCycles[0]?.model.id ?? '';
+      }
+      if (kind === 'operation') {
+        const operation = supportedOperations[0];
+        step.operationId = operation?.id ?? '';
+        const sourceSlot = team.builds.findIndex((build) => build.characterName === operation?.sourceCharacter);
+        step.sourceSlot = sourceSlot >= 0 ? sourceSlot : 0;
       }
       return { ...current, steps: [...current.steps, step] };
     });
@@ -252,8 +263,8 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
         <span>{ru ? 'ПЕРВЫЙ СЛОЙ РЕАЛЬНОГО КОМАНДНОГО РАСЧЁТА' : 'FIRST REAL TEAM-COMBAT LAYER'}</span>
         <h2>{ru ? 'Боевой сценарий' : 'Combat scenario'}</h2>
         <p>{ru
-          ? 'Расставь подтверждённые действия, эффекты персонажей и циклы эспера по времени. Сайт посчитает только доказанные части и покажет, что пока не покрыто моделью.'
-          : 'Place verified actions, character effects and Esper Cycles on a timeline. The site calculates only sourced parts and exposes everything not covered yet.'}</p>
+          ? 'Расставь подтверждённые действия, эффекты персонажей, циклы эспера и небоевые операции по времени. Сайт посчитает только доказанные части и покажет, что пока не покрыто моделью.'
+          : 'Place verified actions, character effects, Esper Cycles and non-damage operations on a timeline. The site calculates only sourced parts and exposes everything not covered yet.'}</p>
       </div>
       <div className="combat-scenario-warning"><Shield size={18} /><span>{ru
         ? 'Это не полный DPS ротации: анимации, энергия и неподтверждённые удары не додумываются.'
@@ -278,6 +289,7 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
         <div className="coverage-unsupported"><span>{ru ? 'Не связано' : 'Unsupported'}</span><b>{importPreview.unsupportedSourceSteps}</b></div>
         <div><span>{ru ? 'Действий' : 'Actions'}</span><b>{importPreview.generatedActionSteps}</b></div>
         <div><span>{ru ? 'Окон' : 'Windows'}</span><b>{importPreview.generatedEffectSteps + importPreview.generatedCycleSteps}</b></div>
+        <div><span>{ru ? 'Операций' : 'Operations'}</span><b>{importPreview.generatedOperationSteps}</b></div>
         <div className="coverage-weighted"><span>{ru ? 'Взвешенное покрытие' : 'Weighted coverage'}</span><b>{importPreview.coveragePercent}%</b></div>
       </div> : null}
       {selectedPreset ? <div className="rotation-scenario-source"><span>{selectedPreset.sourcePublisher} · {selectedPreset.sourceUpdatedAt}</span><a href={selectedPreset.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Источник ротации' : 'Rotation source'} <ExternalLink size={13} /></a><small>{ru ? 'Полный шаг = 1, частичный = 0,5. Это не покрытие полного DPS.' : 'A full step counts as 1 and a partial step as 0.5. This is not full-DPS coverage.'}</small></div> : null}
@@ -301,6 +313,7 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
       <div><span>{importMetadata.timingStatus === 'order-only' ? (ru ? 'Диапазон порядка' : 'Order span') : (ru ? 'Длительность отметок' : 'Timeline span')}</span><strong>{format(result.durationSeconds)} {timeUnit}</strong></div>
       <div><span>{ru ? 'Эффектов персонажей' : 'Character effects'}</span><strong>{result.activatedEffectCount}</strong></div>
       <div><span>{ru ? 'Циклов эспера' : 'Esper Cycles'}</span><strong>{result.activatedCycleCount}</strong></div>
+      <div><span>{ru ? 'Небоевых операций' : 'Non-damage operations'}</span><strong>{result.completedOperationCount}</strong><small>{result.completedOperationCount}/{result.operationStepCount}</small></div>
     </div>
 
     <div className="combat-scenario-toolbar">
@@ -309,6 +322,7 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
         <button type="button" onClick={() => addStep('action')}><Swords size={16} />{ru ? 'Действие' : 'Action'}</button>
         <button type="button" onClick={() => addStep('activate-effect')}><Shield size={16} />{ru ? 'Эффект' : 'Effect'}</button>
         <button type="button" onClick={() => addStep('activate-cycle')}><Sparkles size={16} />{ru ? 'Цикл' : 'Cycle'}</button>
+        <button type="button" onClick={() => addStep('operation')}><TimerReset size={16} />{ru ? 'Операция' : 'Operation'}</button>
         <button type="button" onClick={() => addStep('wait')}><Clock3 size={16} />{ru ? 'Ожидание' : 'Wait'}</button>
       </div>
     </div>
@@ -327,10 +341,11 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
         return <div className="combat-scenario-editor-row" key={step.id}>
           <div className="combat-scenario-order"><b>{index + 1}</b><button type="button" aria-label={ru ? 'Выше' : 'Move up'} disabled={index === 0} onClick={() => moveStep(step.id, -1)}><ChevronUp size={15} /></button><button type="button" aria-label={ru ? 'Ниже' : 'Move down'} disabled={index === scenario.steps.length - 1} onClick={() => moveStep(step.id, 1)}><ChevronDown size={15} /></button></div>
           <label className="combat-scenario-time"><span className="sr-only">{ru ? 'Отметка времени' : 'Time marker'}</span><input type="number" min="0" max="600" step="0.1" value={step.at} onChange={(event) => updateTimestamp(step.id, numberValue(event.target.value))} /><small>{timeUnit}</small></label>
-          <select value={step.kind} aria-label={ru ? 'Тип шага' : 'Step type'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, kind: event.target.value as CombatScenarioStepKind, actionId: '', effectId: '', cycleId: '' }), true)}>
+          <select value={step.kind} aria-label={ru ? 'Тип шага' : 'Step type'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, kind: event.target.value as CombatScenarioStepKind, actionId: '', effectId: '', cycleId: '', operationId: '' }), true)}>
             <option value="action">{stepLabel('action', ru)}</option>
             <option value="activate-effect">{stepLabel('activate-effect', ru)}</option>
             <option value="activate-cycle">{stepLabel('activate-cycle', ru)}</option>
+            <option value="operation">{stepLabel('operation', ru)}</option>
             <option value="wait">{stepLabel('wait', ru)}</option>
           </select>
           {step.kind === 'activate-cycle' ? <div className="combat-scenario-shared-target">{ru ? 'Общая цель' : 'Shared target'}</div> : <select value={step.sourceSlot} aria-label={ru ? 'Слот команды' : 'Team slot'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, sourceSlot: Number(event.target.value), actionId: '', effectId: '' }), true)}>
@@ -345,11 +360,18 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
           </select> : step.kind === 'activate-cycle' ? <select value={step.cycleId} aria-label={ru ? 'Подтверждённый цикл эспера' : 'Verified Esper Cycle'} onChange={(event) => updateStep(step.id, (current) => ({ ...current, cycleId: event.target.value }), true)}>
             <option value="">{ru ? 'Выбери подтверждённую модель цикла' : 'Select a verified Cycle model'}</option>
             {supportedCycles.map(({ model, cycle }) => <option value={model.id} key={model.id}>{cycleModelOptionLabel(model, cycle?.name[locale] ?? model.id, ru)}</option>)}
+          </select> : step.kind === 'operation' ? <select value={step.operationId} aria-label={ru ? 'Подтверждённая небоевая операция' : 'Verified non-damage operation'} onChange={(event) => updateStep(step.id, (current) => {
+            const operation = verifiedScenarioOperationById.get(event.target.value as never);
+            const sourceSlot = team.builds.findIndex((entry) => entry.characterName === operation?.sourceCharacter);
+            return { ...current, operationId: event.target.value, sourceSlot: sourceSlot >= 0 ? sourceSlot : current.sourceSlot };
+          }, true)}>
+            <option value="">{ru ? 'Выбери подтверждённую операцию' : 'Select a verified operation'}</option>
+            {supportedOperations.map((operation) => <option value={operation.id} key={operation.id}>{operation.title[locale]}</option>)}
           </select> : <input value={step.note} maxLength={400} onChange={(event) => updateStep(step.id, (current) => ({ ...current, note: event.target.value }))} placeholder={ru ? 'Что происходит в непокрытой части ротации' : 'What happens in the unsupported rotation part'} />}{origin ? <small className={`rotation-origin coverage-${origin.coverage}`}>Rotation Lab · {coverageLabel(origin.coverage, ru)} · {origin.step.instruction[locale]}{origin.part ? ` · ${ru ? 'часть' : 'part'} ${origin.part + 1}` : ''}</small> : null}</div>
           <div className="combat-scenario-row-actions"><button type="button" aria-label={ru ? 'Дублировать' : 'Duplicate'} onClick={() => duplicateStep(step.id)}><Copy size={15} /></button><button type="button" aria-label={ru ? 'Удалить' : 'Remove'} onClick={() => removeStep(step.id)}><Trash2 size={15} /></button></div>
         </div>;
       })}
-    </div> : <div className="combat-scenario-empty"><Clock3 size={24} /><h3>{ru ? 'Сценарий пока пуст' : 'The scenario is empty'}</h3><p>{ru ? 'Импортируй ротацию или добавь эффект, цикл эспера, действие либо промежуток ожидания.' : 'Import a rotation or add an effect, Esper Cycle, action or wait step.'}</p><button type="button" onClick={() => addStep('action')}><Plus size={16} />{ru ? 'Добавить первое действие' : 'Add first action'}</button></div>}
+    </div> : <div className="combat-scenario-empty"><Clock3 size={24} /><h3>{ru ? 'Сценарий пока пуст' : 'The scenario is empty'}</h3><p>{ru ? 'Импортируй ротацию или добавь действие, эффект, цикл эспера, небоевую операцию либо промежуток ожидания.' : 'Import a rotation or add an action, effect, Esper Cycle, non-damage operation or wait step.'}</p><button type="button" onClick={() => addStep('action')}><Plus size={16} />{ru ? 'Добавить первое действие' : 'Add first action'}</button></div>}
 
     {result.steps.length ? <div className="combat-scenario-results">
       <div className="combat-scenario-results-heading"><div><h3>{importMetadata.timingStatus === 'order-only' ? (ru ? 'Импортированный порядок' : 'Imported order') : (ru ? 'Проверенная временная шкала' : 'Verified timeline')}</h3><p>{importMetadata.timingStatus === 'order-only'
@@ -358,6 +380,7 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
       <ol>{result.steps.map((entry) => {
         const damage = entry.calculation?.result;
         const activatedTitle = entry.activatedCycle?.name[locale] ?? entry.effectEvaluation?.effect.title[locale];
+        const operationTitle = entry.operation?.title[locale];
         const activeWindowCount = entry.activeEffects.length + entry.activeCycles.length;
         const cycleDisplay = entry.activatedCycle ? cycleActivationDisplay(entry.activatedCycle, ru) : null;
         const activatedDuration = entry.effectEvaluation?.effect.durationSeconds;
@@ -369,12 +392,16 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
             ? entry.calculation?.title[locale]
             : entry.status === 'activated'
               ? activatedTitle
-              : entry.status === 'wait'
+              : entry.status === 'operation'
+                ? operationTitle
+                : entry.status === 'wait'
                 ? (entry.step.note || (ru ? 'Непокрытый промежуток' : 'Unsupported interval'))
                 : (ru ? 'Шаг заблокирован' : 'Step blocked')}</b><small>{entry.step.kind === 'activate-cycle'
                   ? (cycleDisplay?.kindLabel ?? (ru ? 'Состояние общей цели' : 'Shared target state'))
+                  : entry.step.kind === 'operation'
+                    ? (ru ? 'Подтверждённая небоевая операция · 0 урона по замыслу' : 'Verified non-damage operation · 0 damage by design')
                   : entry.sourceCharacter ? localizedCharacterName(entry.sourceCharacter, locale) : ''}{activeWindowCount ? ` · ${activeWindowCount} ${ru ? 'активн. окон' : 'active windows'}` : ''}{origin ? ` · Rotation Lab: ${origin.step.id} (${coverageLabel(origin.coverage, ru)})` : ''}</small>{entry.blockedReason ? <p>{entry.blockedReason[locale]}</p> : null}</div>
-          <div className="combat-scenario-result-value">{damage ? <><strong>{format(damage.expected)}</strong><small>{ru ? 'ожидаемый' : 'expected'}</small></> : entry.status === 'activated' ? cycleDisplay ? <><strong>{cycleDisplay.value}</strong><small>{cycleDisplay.label}</small></> : <><strong>{activatedDuration === 'combat' ? '∞' : `${activatedDuration}${ru ? 'с' : 's'}`}</strong><small>{ru ? 'окно' : 'window'}</small></> : null}</div>
+          <div className="combat-scenario-result-value">{damage ? <><strong>{format(damage.expected)}</strong><small>{ru ? 'ожидаемый' : 'expected'}</small></> : entry.status === 'operation' ? <><strong>0</strong><small>{ru ? 'урон по замыслу' : 'damage by design'}</small></> : entry.status === 'activated' ? cycleDisplay ? <><strong>{cycleDisplay.value}</strong><small>{cycleDisplay.label}</small></> : <><strong>{activatedDuration === 'combat' ? '∞' : `${activatedDuration}${ru ? 'с' : 's'}`}</strong><small>{ru ? 'окно' : 'window'}</small></> : null}</div>
         </li>;
       })}</ol>
     </div> : null}

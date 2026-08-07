@@ -15,6 +15,7 @@ import {
   type RotationScenarioSourceCoverage,
 } from './rotation-scenario-import';
 import { rotationPresetById, rotationPresets } from './rotation-presets';
+import { verifiedScenarioOperationById } from './scenario-operations';
 import { verifiedTeamEffectById } from './team-effects';
 import type { LocalizedText, RotationPreset, RotationStep } from './types';
 import { visibleActionById } from './verified-visible-actions';
@@ -37,7 +38,8 @@ export type VerifiedRotationRecipeGapKind =
   | 'unsupported-source-step'
   | 'partial-source-step-remainder'
   | 'unconfirmed-effect'
-  | 'unconfirmed-cycle';
+  | 'unconfirmed-cycle'
+  | 'non-damage-operation';
 
 export interface VerifiedRotationRecipeGap {
   sourceStepId: string;
@@ -95,6 +97,7 @@ export interface RotationPresetRecipeAudit {
   verifiedActionSteps: number;
   omittedEffectConditions: number;
   omittedCycleConditions: number;
+  omittedOperationMarkers: number;
   fixedRepeatEvidence: readonly RotationRepeatEvidence[];
   conditionBoundRepeatEvidence: readonly RotationRepeatEvidence[];
   confirmedSecondEvidence: readonly RotationConfirmedSecondEvidence[];
@@ -285,7 +288,7 @@ export const rotationRepeatEvidence: readonly RotationRepeatEvidence[] = [
 /** Rotation Lab currently publishes order and conditions, but no confirmed per-step seconds. */
 export const rotationConfirmedSecondEvidence: readonly RotationConfirmedSecondEvidence[] = [];
 
-function validBindingAtom(step: RotationStep, atom: RotationScenarioBindingAtom): boolean {
+function validBindingAtom(preset: RotationPreset, step: RotationStep, atom: RotationScenarioBindingAtom): boolean {
   if (atom.kind === 'action-sequence') {
     return atom.actionIds.length > 0
       && atom.actionIds.every((actionId) => visibleActionById.get(actionId)?.characterName === step.actor);
@@ -293,13 +296,17 @@ function validBindingAtom(step: RotationStep, atom: RotationScenarioBindingAtom)
   if (atom.kind === 'activate-effect') {
     return verifiedTeamEffectById.get(atom.effectId)?.sourceCharacter === step.actor;
   }
-  return step.cycle === atom.cycleId && verifiedCombatCycleModelById.has(atom.cycleId);
+  if (atom.kind === 'activate-cycle') {
+    return step.cycle === atom.cycleId && verifiedCombatCycleModelById.has(atom.cycleId);
+  }
+  const operation = verifiedScenarioOperationById.get(atom.operationId);
+  return operation?.presetId === preset.id && operation.sourceStepId === step.id && operation.sourceCharacter === step.actor;
 }
 
 function bindingForStep(preset: RotationPreset, step: RotationStep): RotationScenarioBinding | null {
   const candidate = rotationScenarioBindings[bindingKey(preset.id, step.id)];
   if (!candidate || candidate.items.length === 0) return null;
-  return candidate.items.every((atom) => validBindingAtom(step, atom)) ? candidate : null;
+  return candidate.items.every((atom) => validBindingAtom(preset, step, atom)) ? candidate : null;
 }
 
 function gapNote(kind: VerifiedRotationRecipeGapKind, step: RotationStep): LocalizedText {
@@ -313,6 +320,12 @@ function gapNote(kind: VerifiedRotationRecipeGapKind, step: RotationStep): Local
     return {
       ru: `В шаге «${step.instruction.ru}» есть эффект без подтверждённых секунд; он не активирован автоматически.`,
       en: `The step “${step.instruction.en}” contains an effect without verified seconds; it was not activated automatically.`,
+    };
+  }
+  if (kind === 'non-damage-operation') {
+    return {
+      ru: `Небоевая операция «${step.instruction.ru}» подтверждена, но намеренно не включена в action-only рецепт.`,
+      en: `The non-damage operation “${step.instruction.en}” is verified but intentionally excluded from the action-only recipe.`,
     };
   }
   if (kind === 'unconfirmed-cycle') {
@@ -366,7 +379,9 @@ function extractPresetActions(preset: RotationPreset): {
 
       const kind: VerifiedRotationRecipeGapKind = atom.kind === 'activate-effect'
         ? 'unconfirmed-effect'
-        : 'unconfirmed-cycle';
+        : atom.kind === 'activate-cycle'
+          ? 'unconfirmed-cycle'
+          : 'non-damage-operation';
       gaps.push({
         sourceStepId: sourceStep.id,
         sourceStepIndex,
@@ -437,6 +452,7 @@ function buildAudit(preset: RotationPreset): RotationPresetRecipeAudit {
   let verifiedActionSteps = 0;
   let omittedEffectConditions = 0;
   let omittedCycleConditions = 0;
+  let omittedOperationMarkers = 0;
 
   for (const step of preset.steps) {
     const matched = bindingForStep(preset, step);
@@ -454,6 +470,7 @@ function buildAudit(preset: RotationPreset): RotationPresetRecipeAudit {
     }
     omittedEffectConditions += matched.items.filter((atom) => atom.kind === 'activate-effect').length;
     omittedCycleConditions += matched.items.filter((atom) => atom.kind === 'activate-cycle').length;
+    omittedOperationMarkers += matched.items.filter((atom) => atom.kind === 'operation-marker').length;
   }
 
   const repeats = rotationRepeatEvidence.filter((entry) => entry.presetId === preset.id);
@@ -471,6 +488,7 @@ function buildAudit(preset: RotationPreset): RotationPresetRecipeAudit {
     verifiedActionSteps,
     omittedEffectConditions,
     omittedCycleConditions,
+    omittedOperationMarkers,
     fixedRepeatEvidence: repeats.filter((entry) => entry.kind === 'fixed-count'),
     conditionBoundRepeatEvidence: repeats.filter((entry) => entry.kind === 'condition-bound'),
     confirmedSecondEvidence: seconds,
@@ -534,6 +552,7 @@ export function compileVerifiedRotationRecipe(
       actionId: step.actionId,
       effectId: '',
       cycleId: '',
+      operationId: '',
       note: locale === 'ru'
         ? `Позиция ${index + 1} в подтверждённом порядке действий. Секунды не назначены; исходный шаг: ${step.sourceStepId}.`
         : `Position ${index + 1} in the verified action order. Seconds are not assigned; source step: ${step.sourceStepId}.`,
