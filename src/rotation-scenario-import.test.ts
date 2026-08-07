@@ -95,8 +95,8 @@ describe('Rotation Lab to Combat Scenario import', () => {
     const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');
     const pendingIds = Object.keys(imported.metadata.pendingByStepId);
     expect(imported.report.generatedEffectSteps).toBe(2);
-    expect(imported.report.generatedCycleSteps).toBe(1);
-    expect(pendingIds).toHaveLength(3);
+    expect(imported.report.generatedCycleSteps).toBe(2);
+    expect(pendingIds).toHaveLength(4);
     expect(imported.scenario.steps.filter((step) => pendingIds.includes(step.id)).every((step) => step.kind === 'wait')).toBe(true);
 
     const confirmed = confirmRotationScenarioTiming(imported.scenario, imported.metadata);

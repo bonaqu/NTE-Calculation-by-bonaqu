@@ -61,20 +61,20 @@ describe('verified Jiuyuan direct actions and Rotation Lab bindings', () => {
     expect(validateVerifiedRotationRecipes()).toEqual([]);
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(verifiedRotationRecipeCoverage).toMatchObject({
-      bindingCount: 42,
+      bindingCount: 45,
       fullyBoundSourceStepCount: 12,
-      partiallyBoundSourceStepCount: 30,
-      unsupportedSourceStepCount: 16,
+      partiallyBoundSourceStepCount: 33,
+      unsupportedSourceStepCount: 13,
       boundActionStepCount: 63,
       promotedRecipeCount: 6,
       promotedActionStepCount: 63,
     });
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 25,
-      total: 16,
+      resolvedSinceBaseline: 28,
+      total: 13,
       missingActionRecord: 0,
-      effectOrCycleCondition: 3,
+      effectOrCycleCondition: 0,
       nonDamageOperation: 8,
       ambiguousSourceStep: 5,
       verifiedActionCatalogCount: 113,

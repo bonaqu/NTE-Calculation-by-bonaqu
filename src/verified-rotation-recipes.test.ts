@@ -34,11 +34,11 @@ describe('verified Rotation Lab recipes', () => {
   it('audits every preset and every current exact binding', () => {
     expect(verifiedRotationRecipeCoverage).toMatchObject({
       presetCount: 6,
-      bindingCount: 42,
+      bindingCount: 45,
       totalSourceStepCount: 58,
       fullyBoundSourceStepCount: 12,
-      partiallyBoundSourceStepCount: 30,
-      unsupportedSourceStepCount: 16,
+      partiallyBoundSourceStepCount: 33,
+      unsupportedSourceStepCount: 13,
       boundActionStepCount: 63,
       promotedRecipeCount: 6,
       promotedActionStepCount: 63,
@@ -70,13 +70,13 @@ describe('verified Rotation Lab recipes', () => {
     expect(rotationPresetRecipeAuditById.get('hathor-hyper')).toMatchObject({
       totalSourceSteps: 11,
       fullyBoundSourceSteps: 1,
-      partiallyBoundSourceSteps: 6,
-      unsupportedSourceSteps: 4,
+      partiallyBoundSourceSteps: 7,
+      unsupportedSourceSteps: 3,
       exactActionSourceSteps: 1,
       partialActionSourceSteps: 4,
       verifiedActionSteps: 10,
       omittedEffectConditions: 2,
-      omittedCycleConditions: 1,
+      omittedCycleConditions: 2,
       promotedCoverage: 'partial-action-order',
       promotedTimingMode: 'order-only',
     });
@@ -102,10 +102,11 @@ describe('verified Rotation Lab recipes', () => {
     expect(rotationPresetRecipeAuditById.get('lacrimosa-discord-dot')).toMatchObject({
       totalSourceSteps: 11,
       fullyBoundSourceSteps: 2,
-      partiallyBoundSourceSteps: 3,
-      unsupportedSourceSteps: 6,
+      partiallyBoundSourceSteps: 5,
+      unsupportedSourceSteps: 4,
       verifiedActionSteps: 7,
       omittedEffectConditions: 3,
+      omittedCycleConditions: 2,
       promotedCoverage: 'partial-action-order',
     });
     expect(rotationPresetRecipeAuditById.get('baicang-firefly-hyper')).toMatchObject({

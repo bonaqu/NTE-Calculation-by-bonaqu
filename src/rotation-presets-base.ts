@@ -146,7 +146,7 @@ export const rotationPresets: RotationPreset[] = [
         outcome: { ru: 'Зеро быстро подготавливает следующую реакцию.', en: 'Zero rapidly prepares the next reaction.' },
       },
       {
-        id: 'jiuyuan-second-charge', actor: 'Jiuyuan', phase: 'recovery', action: 'swap', cycle: 'blossom',
+        id: 'jiuyuan-second-charge', actor: 'Jiuyuan', phase: 'recovery', action: 'swap', cycle: 'charge',
         instruction: { ru: 'Переключись на Цзююань, снова запусти Цветение и последующий Заряд.', en: 'Swap to Jiuyuan to trigger Blossom and the following Charge again.' },
         outcome: { ru: 'Второй Заряд создаёт дополнительное восстановление энергии сверхспособности.', en: 'A second Charge creates another Ultimate Energy recovery window.' },
       },

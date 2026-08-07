@@ -215,6 +215,10 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     coverage: 'partial',
     items: [{ kind: 'action-sequence', actionIds: ['zero.appraise-and-engrave.main.level-10'] }],
   },
+  [binding('hathor-hyper', 'jiuyuan-second-charge')]: {
+    coverage: 'partial',
+    items: [{ kind: 'activate-cycle', cycleId: 'charge' }],
+  },
 
   [binding('chaos-remora-bomb', 'chaos-hathor-redirect')]: {
     coverage: 'partial',
@@ -313,6 +317,14 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
   [binding('lacrimosa-discord-dot', 'lacrimosa-sakiri-buffs')]: {
     coverage: 'partial',
     items: sakiriSetupItems,
+  },
+  [binding('lacrimosa-discord-dot', 'lacrimosa-scorch')]: {
+    coverage: 'partial',
+    items: [{ kind: 'activate-cycle', cycleId: 'scorch' }],
+  },
+  [binding('lacrimosa-discord-dot', 'lacrimosa-discord')]: {
+    coverage: 'partial',
+    items: [{ kind: 'activate-cycle', cycleId: 'discord' }],
   },
   [binding('lacrimosa-discord-dot', 'lacrimosa-daffodill-open')]: {
     coverage: 'partial',

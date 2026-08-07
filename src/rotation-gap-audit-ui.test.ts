@@ -17,8 +17,8 @@ describe('Rotation Lab gap audit UI', () => {
   it('shows current and baseline totals in both locales', () => {
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 25,
-      total: 16,
+      resolvedSinceBaseline: 28,
+      total: 13,
       verifiedActionCatalogCount: 113,
     });
     expect(panelSource).toContain('ТЕКУЩИХ ПРОБЕЛОВ');
