@@ -371,7 +371,7 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
           <div className="combat-scenario-row-actions"><button type="button" aria-label={ru ? 'Дублировать' : 'Duplicate'} onClick={() => duplicateStep(step.id)}><Copy size={15} /></button><button type="button" aria-label={ru ? 'Удалить' : 'Remove'} onClick={() => removeStep(step.id)}><Trash2 size={15} /></button></div>
         </div>;
       })}
-    </div> : <div className="combat-scenario-empty"><Clock3 size={24} /><h3>{ru ? 'Сценарий пока пуст' : 'The scenario is empty'}</h3><p>{ru ? 'Импортируй ротацию или добавь действие, эффект, цикл эспера, небoевую операцию либо промежуток ожидания.' : 'Import a rotation or add an action, effect, Esper Cycle, non-damage operation or wait step.'}</p><button type="button" onClick={() => addStep('action')}><Plus size={16} />{ru ? 'Добавить первое действие' : 'Add first action'}</button></div>}
+    </div> : <div className="combat-scenario-empty"><Clock3 size={24} /><h3>{ru ? 'Сценарий пока пуст' : 'The scenario is empty'}</h3><p>{ru ? 'Импортируй ротацию или добавь действие, эффект, цикл эспера, небоевую операцию либо промежуток ожидания.' : 'Import a rotation or add an action, effect, Esper Cycle, non-damage operation or wait step.'}</p><button type="button" onClick={() => addStep('action')}><Plus size={16} />{ru ? 'Добавить первое действие' : 'Add first action'}</button></div>}
 
     {result.steps.length ? <div className="combat-scenario-results">
       <div className="combat-scenario-results-heading"><div><h3>{importMetadata.timingStatus === 'order-only' ? (ru ? 'Импортированный порядок' : 'Imported order') : (ru ? 'Проверенная временная шкала' : 'Verified timeline')}</h3><p>{importMetadata.timingStatus === 'order-only'
