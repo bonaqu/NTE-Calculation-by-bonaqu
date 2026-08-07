@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Append two strict product fixes before the main guarded generator is executed.
 path = Path('tools/apply-parameterized-rotation-variants.py')
 text = path.read_text(encoding='utf-8')
 append = r'''
