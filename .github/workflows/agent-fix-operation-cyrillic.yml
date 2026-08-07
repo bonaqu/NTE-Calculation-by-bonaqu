@@ -1,0 +1,61 @@
+name: Fix operation UI Cyrillic text
+
+on:
+  pull_request:
+    branches:
+      - bonaqu_projects
+    types: [synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-feature-branch:
+    if: github.head_ref == 'feat/typed-operation-markers'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: feat/typed-operation-markers
+          fetch-depth: 0
+      - name: Check whether correction is pending
+        id: guard
+        shell: bash
+        run: |
+          if [[ -f tools/fix-operation-ui-cyrillic.py ]]; then
+            echo "apply=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "apply=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v6
+        if: steps.guard.outputs.apply == 'true'
+        with:
+          node-version: 24
+      - name: Apply correction
+        if: steps.guard.outputs.apply == 'true'
+        run: python tools/fix-operation-ui-cyrillic.py
+      - name: Install dependencies
+        if: steps.guard.outputs.apply == 'true'
+        run: npm install --no-audit --no-fund --no-package-lock
+      - name: Typecheck
+        if: steps.guard.outputs.apply == 'true'
+        run: npm run typecheck
+      - name: Unit tests
+        if: steps.guard.outputs.apply == 'true'
+        run: npm test
+      - name: Production build
+        if: steps.guard.outputs.apply == 'true'
+        run: npm run build
+      - name: Worker dry run
+        if: steps.guard.outputs.apply == 'true'
+        run: npm run worker:check
+      - name: Publish corrected feature commit
+        if: steps.guard.outputs.apply == 'true'
+        run: |
+          rm tools/fix-operation-ui-cyrillic.py
+          rm -f package-lock.json tsconfig.app.tsbuildinfo tsconfig.node.tsbuildinfo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: normalize operation UI Cyrillic text"
+          git push origin HEAD:feat/typed-operation-markers
