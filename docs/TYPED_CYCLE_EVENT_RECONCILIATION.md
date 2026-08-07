@@ -20,6 +20,8 @@ Primary source: Prydwen Esper Cycles guide, updated 2026-04-23. Cross-check: Icy
 - Stain and Scorch are timed active windows.
 - Charge and Discord are instantaneous activation results and are not retained in `activeCycles`.
 - Only `kind: damage-window` participates in `cycleModifierForAction`.
+- Imported order markers remain inert until the user confirms real seconds.
+- The action-only verified-recipe audit still lists Cycle atoms as omitted conditions because those recipes deliberately contain actions only; this is separate from the current source-step gap audit.
 - Existing Combat Scenario schema v1 remains valid; no storage migration is required.
 
 ## Rotation bindings
