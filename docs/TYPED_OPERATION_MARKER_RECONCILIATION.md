@@ -15,6 +15,7 @@ Combat Scenario therefore adds `kind: operation` and an additive schema-v1 `oper
 - It does not change effects, Cycle windows, action coverage or timeline duration.
 - Unknown IDs or a source-character mismatch are blocked.
 - Manual UI and imported scenarios display the operation title and source instruction.
+- Russian operation labels use normalized Cyrillic text without mixed-script characters.
 
 ## Verified registry
 
@@ -23,6 +24,8 @@ The eight stable IDs map one-to-one to their source preset and source step. Thei
 ## Rotation bindings
 
 All eight non-damage source steps receive full `operation-marker` bindings. Action-only verified recipes intentionally exclude these markers and report them through `omittedOperationMarkers` rather than treating them as unknown source gaps.
+
+A source step may therefore be fully bound for Rotation Lab import while its operation marker remains intentionally omitted from the action-only recipe. These are separate coverage dimensions rather than contradictory states.
 
 ## Coverage
 
