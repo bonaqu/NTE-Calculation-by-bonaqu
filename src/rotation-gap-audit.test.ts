@@ -11,20 +11,20 @@ describe('Rotation Lab gap audit', () => {
     expect(new Set(rotationGapAudit.map((item) => `${item.presetId}:${item.sourceStepId}`)).size).toBe(41);
   });
 
-  it('derives all 13 current gaps from exact bindings', () => {
+  it('derives the five remaining ambiguous gaps from exact bindings', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 28,
-      total: 13,
+      resolvedSinceBaseline: 36,
+      total: 5,
       effectOrCycleCondition: 0,
       missingActionRecord: 0,
-      nonDamageOperation: 8,
+      nonDamageOperation: 0,
       ambiguousSourceStep: 5,
       verifiedActionCatalogCount: 113,
     });
     const unsupportedKeys = rotationPresets.flatMap((preset) => preset.steps.filter((step) => !rotationScenarioBindings[`${preset.id}:${step.id}`]).map((step) => `${preset.id}:${step.id}`));
-    expect(unsupportedKeys).toHaveLength(13);
+    expect(unsupportedKeys).toHaveLength(5);
     expect([...currentRotationGapAuditByKey.keys()].sort()).toEqual(unsupportedKeys.sort());
   });
 
@@ -33,8 +33,8 @@ describe('Rotation Lab gap audit', () => {
     expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.gaps).toHaveLength(10);
     expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(9);
     expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.gaps).toHaveLength(9);
-    expect(currentRotationGapAuditByKey.has('nanally-hexed-dual:nanally-energy-recovery')).toBe(true);
-    expect(currentRotationGapAuditByKey.has('chaos-remora-bomb:chaos-restart')).toBe(true);
+    expect(currentRotationGapAuditByKey.has('nanally-hexed-dual:nanally-energy-recovery')).toBe(false);
+    expect(currentRotationGapAuditByKey.has('chaos-remora-bomb:chaos-restart')).toBe(false);
   });
 
   it('has no remaining missing-action priorities', () => {

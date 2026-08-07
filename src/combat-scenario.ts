@@ -4,6 +4,7 @@ import { characterByName } from './characters';
 import { esperCycleById } from './esper-cycles';
 import { calculateGameVisibleBuild, type VisibleBuildCalculation } from './game-visible-calculation';
 import type { GameVisibleTeamState } from './game-visible-build';
+import { verifiedScenarioOperationById, type VerifiedScenarioOperation, type VerifiedScenarioOperationId } from './scenario-operations';
 import {
   deriveVerifiedTeamEffects,
   verifiedTeamEffectById,
@@ -18,7 +19,7 @@ export const COMBAT_SCENARIO_VERSION = 1 as const;
 export const COMBAT_SCENARIO_STORAGE_KEY = 'nte.team.scenario.v1';
 export const COMBAT_SCENARIO_MAX_STEPS = 64;
 
-export type CombatScenarioStepKind = 'action' | 'activate-effect' | 'activate-cycle' | 'wait';
+export type CombatScenarioStepKind = 'action' | 'activate-effect' | 'activate-cycle' | 'operation' | 'wait';
 
 export interface CombatScenarioStep {
   id: string;
@@ -29,6 +30,8 @@ export interface CombatScenarioStep {
   effectId: string;
   /** Added within schema v1; old v1 saves omit it and normalize to an empty string. */
   cycleId?: string;
+  /** Added within schema v1; old v1 saves omit it and normalize to an empty string. */
+  operationId?: string;
   note: string;
 }
 
@@ -82,7 +85,7 @@ export type ActiveScenarioCycle =
     triggerCondition: LocalizedText;
   });
 
-export type CombatScenarioStepStatus = 'calculated' | 'activated' | 'wait' | 'blocked';
+export type CombatScenarioStepStatus = 'calculated' | 'activated' | 'operation' | 'wait' | 'blocked';
 
 export interface CombatScenarioStepResult {
   step: CombatScenarioStep;
@@ -92,6 +95,7 @@ export interface CombatScenarioStepResult {
   calculation?: VisibleBuildCalculation;
   effectEvaluation?: TeamEffectEvaluation;
   activatedCycle?: ActiveScenarioCycle;
+  operation?: VerifiedScenarioOperation;
   activeEffects: readonly ActiveScenarioEffect[];
   activeCycles: readonly ActiveScenarioCycle[];
   blockedReason?: LocalizedText;
@@ -108,6 +112,8 @@ export interface CombatScenarioResult {
   blockedActionCount: number;
   activatedEffectCount: number;
   activatedCycleCount: number;
+  operationStepCount: number;
+  completedOperationCount: number;
   blockedStepCount: number;
   coveragePercent: number;
   finalActiveEffects: readonly ActiveScenarioEffect[];
@@ -125,7 +131,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function normalizeKind(value: unknown): CombatScenarioStepKind {
-  if (value === 'activate-effect' || value === 'activate-cycle' || value === 'wait') return value;
+  if (value === 'activate-effect' || value === 'activate-cycle' || value === 'operation' || value === 'wait') return value;
   return 'action';
 }
 
@@ -138,6 +144,7 @@ export function createCombatScenarioStep(index = 0, kind: CombatScenarioStepKind
     actionId: '',
     effectId: '',
     cycleId: '',
+    operationId: '',
     note: '',
   };
 }
@@ -171,6 +178,7 @@ export function normalizeCombatScenarioState(value: unknown): CombatScenarioStat
       actionId: text(input.actionId, '', 160),
       effectId: text(input.effectId, '', 160),
       cycleId: text(input.cycleId, '', 80),
+      operationId: text(input.operationId, '', 120),
       note: text(input.note, '', 400),
     } satisfies CombatScenarioStep;
   });
@@ -389,6 +397,35 @@ export function calculateCombatScenario(
       return;
     }
 
+    if (step.kind === 'operation') {
+      const operation = verifiedScenarioOperationById.get(step.operationId as VerifiedScenarioOperationId);
+      if (!operation || operation.sourceCharacter !== sourceBuild.characterName) {
+        results.push({
+          step,
+          originalIndex,
+          status: 'blocked',
+          sourceCharacter: sourceBuild.characterName,
+          activeEffects: beforeEffects,
+          activeCycles: beforeCycles,
+          blockedReason: blockedReason(
+            'Выбранная небоевая операция не принадлежит персонажу в этом слоте или не подтверждена.',
+            'The selected non-damage operation does not belong to this slot character or is not verified.',
+          ),
+        });
+        return;
+      }
+      results.push({
+        step,
+        originalIndex,
+        status: 'operation',
+        sourceCharacter: sourceBuild.characterName,
+        operation,
+        activeEffects: beforeEffects,
+        activeCycles: beforeCycles,
+      });
+      return;
+    }
+
     if (step.kind === 'activate-cycle') {
       const cycle = esperCycleById.get(step.cycleId as EsperCycleId);
       const model = verifiedCombatCycleModelById.get(step.cycleId as EsperCycleId);
@@ -554,6 +591,8 @@ export function calculateCombatScenario(
     blockedActionCount: actionResults.length - calculated.length,
     activatedEffectCount: results.filter((result) => result.status === 'activated' && result.step.kind === 'activate-effect').length,
     activatedCycleCount: results.filter((result) => result.status === 'activated' && result.step.kind === 'activate-cycle').length,
+    operationStepCount: results.filter((result) => result.step.kind === 'operation').length,
+    completedOperationCount: results.filter((result) => result.status === 'operation').length,
     blockedStepCount: results.filter((result) => result.status === 'blocked').length,
     coveragePercent: actionResults.length ? Math.round(calculated.length / actionResults.length * 1_000) / 10 : 0,
     finalActiveEffects: snapshotActiveEffects(effectWindows, durationSeconds),

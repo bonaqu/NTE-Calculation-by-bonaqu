@@ -72,10 +72,10 @@ describe('Nanally completion and Chaos exact action integration', () => {
     expect(validateVerifiedRotationRecipes()).toEqual([]);
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(verifiedRotationRecipeCoverage).toMatchObject({
-      bindingCount: 45,
-      fullyBoundSourceStepCount: 12,
+      bindingCount: 53,
+      fullyBoundSourceStepCount: 20,
       partiallyBoundSourceStepCount: 33,
-      unsupportedSourceStepCount: 13,
+      unsupportedSourceStepCount: 5,
       boundActionStepCount: 63,
       promotedRecipeCount: 6,
       promotedActionStepCount: 63,
@@ -84,11 +84,11 @@ describe('Nanally completion and Chaos exact action integration', () => {
     expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(9);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 28,
-      total: 13,
+      resolvedSinceBaseline: 36,
+      total: 5,
       missingActionRecord: 0,
       effectOrCycleCondition: 0,
-      nonDamageOperation: 8,
+      nonDamageOperation: 0,
       ambiguousSourceStep: 5,
       verifiedActionCatalogCount: 113,
     });
