@@ -25,5 +25,10 @@ replace_exact(
     'expect(new Set(verifiedVisibleActions.map((entry) => entry.id)).size).toBe(112);',
     'expect(new Set(verifiedVisibleActions.map((entry) => entry.id)).size).toBe(113);',
 )
+replace_exact(
+    'src/nanally-chaos-integration.test.ts',
+    "expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([\n      [1, 'Hathor'],\n    ]);",
+    "expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([]);",
+)
 
 print('Hathor cumulative test expectations corrected')
