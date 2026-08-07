@@ -1,6 +1,6 @@
 from pathlib import Path
 
-
+# Runs after the guarded product generator and updates cumulative factual tests only.
 def replace_exact(path: str, old: str, new: str, expected: int = 1) -> None:
     target = Path(path)
     text = target.read_text(encoding='utf-8')
