@@ -46,10 +46,13 @@ import {
   invalidateRotationScenarioTiming,
   normalizeRotationScenarioImportMetadata,
   previewRotationScenarioImport,
+  rotationScenarioVariantControlsForPreset,
+  unresolvedRotationScenarioVariantControls,
   ROTATION_SCENARIO_IMPORT_STORAGE_KEY,
   rotationSourceStep,
   type RotationScenarioImportMetadata,
   type RotationScenarioSourceCoverage,
+  type RotationScenarioVariantSelections,
 } from '../rotation-scenario-import';
 import { teamEffectsForCharacter } from '../team-effects';
 import { BuildProfileManager } from './BuildProfileManager';
@@ -82,6 +85,7 @@ function stepLabel(kind: CombatScenarioStepKind, ru: boolean): string {
 function coverageLabel(coverage: RotationScenarioSourceCoverage, ru: boolean): string {
   if (coverage === 'full') return ru ? 'полностью' : 'full';
   if (coverage === 'partial') return ru ? 'частично' : 'partial';
+  if (coverage === 'variant-required') return ru ? 'нужен выбор' : 'variant required';
   return ru ? 'не связано' : 'unsupported';
 }
 
@@ -133,11 +137,20 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
     { normalize: normalizeRotationScenarioImportMetadata },
   );
   const [selectedRotationId, setSelectedRotationId] = useState(rotationPresets[0]?.id ?? '');
+  const [variantSelections, setVariantSelections] = useState<RotationScenarioVariantSelections>({});
   const result = useMemo(() => calculateCombatScenario(team, scenario), [scenario, team]);
   const selectedPreset = rotationPresetById.get(selectedRotationId) ?? rotationPresets[0];
+  const variantControls = useMemo(
+    () => rotationScenarioVariantControlsForPreset(selectedPreset?.id ?? ''),
+    [selectedPreset?.id],
+  );
+  const unresolvedVariantControls = useMemo(
+    () => unresolvedRotationScenarioVariantControls(selectedPreset?.id ?? '', variantSelections),
+    [selectedPreset?.id, variantSelections],
+  );
   const importPreview = useMemo(
-    () => selectedPreset ? previewRotationScenarioImport(selectedPreset) : null,
-    [selectedPreset],
+    () => selectedPreset ? previewRotationScenarioImport(selectedPreset, variantSelections) : null,
+    [selectedPreset, variantSelections],
   );
   const importedPreset = rotationPresetById.get(importMetadata.sourceRotationId);
   const supportedOperations = useMemo(() => verifiedScenarioOperations.filter((operation) => (
@@ -242,7 +255,7 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
         : 'Importing will replace the current lineup and every Combat Scenario step. Continue?');
       if (!accepted) return;
     }
-    const imported = importRotationPresetToScenario(selectedPreset, team, locale);
+    const imported = importRotationPresetToScenario(selectedPreset, team, locale, variantSelections);
     setStoredTeam(imported.team);
     setScenario(imported.scenario);
     setImportMetadata(imported.metadata);
@@ -279,17 +292,40 @@ export function TeamCombatScenarioPanel({ team, locale }: TeamCombatScenarioPane
           : 'Transfers the sourced order without presenting ordinal positions as seconds.'}</p></div>
       </div>
       <div className="rotation-scenario-import-controls">
-        <label><span>{ru ? 'Ротация' : 'Rotation'}</span><select value={selectedRotationId} onChange={(event) => setSelectedRotationId(event.target.value)}>{rotationPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.title[locale]}</option>)}</select></label>
-        <button type="button" onClick={importRotation} disabled={!selectedPreset}><Download size={16} />{ru ? 'Импортировать' : 'Import'}</button>
+        <label><span>{ru ? 'Ротация' : 'Rotation'}</span><select value={selectedRotationId} onChange={(event) => { setSelectedRotationId(event.target.value); setVariantSelections({}); }}>{rotationPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.title[locale]}</option>)}</select></label>
+        <button type="button" onClick={importRotation} disabled={!selectedPreset || unresolvedVariantControls.length > 0}><Download size={16} />{ru ? 'Импортировать' : 'Import'}</button>
       </div>
+      {variantControls.length ? <div className="rotation-scenario-variant-controls" aria-label={ru ? 'Обязательные варианты импорта' : 'Required import variants'}>
+        {variantControls.map((control) => <label key={control.id}>
+          <span>{control.title[locale]}</span>
+          {control.kind === 'select' ? <select value={typeof variantSelections[control.id] === 'string' ? String(variantSelections[control.id]) : ''} onChange={(event) => setVariantSelections((current) => ({ ...current, [control.id]: event.target.value }))}>
+            <option value="">{ru ? 'Выбери вариант' : 'Select a variant'}</option>
+            {control.options.map((option) => <option value={option.id} key={option.id}>{option.label[locale]}</option>)}
+          </select> : <input type="number" min={control.minimum} max={control.maximum} value={typeof variantSelections[control.id] === 'number' ? Number(variantSelections[control.id]) : ''} onChange={(event) => {
+            const value = event.target.value === '' ? undefined : Number(event.target.value);
+            setVariantSelections((current) => {
+              const next = { ...current };
+              if (value === undefined) delete next[control.id];
+              else next[control.id] = Math.trunc(value);
+              return next;
+            });
+          }} />}
+          <small>{control.description[locale]}</small>
+        </label>)}
+        {unresolvedVariantControls.length ? <p>{ru
+          ? `До импорта заполни: ${unresolvedVariantControls.map((control) => control.title.ru).join(', ')}.`
+          : `Complete before import: ${unresolvedVariantControls.map((control) => control.title.en).join(', ')}.`}</p> : null}
+      </div> : null}
       {selectedPreset && importPreview ? <div className="rotation-scenario-preview">
         <div><span>{ru ? 'Исходных шагов' : 'Source steps'}</span><b>{importPreview.totalSourceSteps}</b></div>
         <div className="coverage-full"><span>{ru ? 'Полностью' : 'Full'}</span><b>{importPreview.fullyMappedSourceSteps}</b></div>
         <div className="coverage-partial"><span>{ru ? 'Частично' : 'Partial'}</span><b>{importPreview.partiallyMappedSourceSteps}</b></div>
+        <div className="coverage-unsupported"><span>{ru ? 'Нужен выбор' : 'Variant required'}</span><b>{importPreview.variantRequiredSourceSteps}</b></div>
         <div className="coverage-unsupported"><span>{ru ? 'Не связано' : 'Unsupported'}</span><b>{importPreview.unsupportedSourceSteps}</b></div>
         <div><span>{ru ? 'Действий' : 'Actions'}</span><b>{importPreview.generatedActionSteps}</b></div>
         <div><span>{ru ? 'Окон' : 'Windows'}</span><b>{importPreview.generatedEffectSteps + importPreview.generatedCycleSteps}</b></div>
         <div><span>{ru ? 'Операций' : 'Operations'}</span><b>{importPreview.generatedOperationSteps}</b></div>
+        <div><span>{ru ? 'Variant markers' : 'Variant markers'}</span><b>{importPreview.generatedVariantMarkerSteps}</b></div>
         <div className="coverage-weighted"><span>{ru ? 'Взвешенное покрытие' : 'Weighted coverage'}</span><b>{importPreview.coveragePercent}%</b></div>
       </div> : null}
       {selectedPreset ? <div className="rotation-scenario-source"><span>{selectedPreset.sourcePublisher} · {selectedPreset.sourceUpdatedAt}</span><a href={selectedPreset.sourceUrl} target="_blank" rel="noreferrer">{ru ? 'Источник ротации' : 'Rotation source'} <ExternalLink size={13} /></a><small>{ru ? 'Полный шаг = 1, частичный = 0,5. Это не покрытие полного DPS.' : 'A full step counts as 1 and a partial step as 0.5. This is not full-DPS coverage.'}</small></div> : null}

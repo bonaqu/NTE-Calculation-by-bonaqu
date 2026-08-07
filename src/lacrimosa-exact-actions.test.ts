@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { currentRotationGapAuditByKey, currentRotationGapAuditSummary, currentRotationMissingActionPriorities, validateCurrentRotationGapAudit } from './rotation-gap-audit-current';
-import { rotationScenarioBindings } from './rotation-scenario-import';
+import { rotationScenarioBindings, rotationScenarioVariantSourceKeys } from './rotation-scenario-import';
 import { verifiedVisibleActionsBatchJ } from './verified-visible-actions-batch-j';
 import { verifiedVisibleActions } from './verified-visible-actions';
 
@@ -33,18 +33,19 @@ describe('verified Lacrimosa exact action variants', () => {
     expect(verifiedVisibleActionsBatchJ.some((action) => action.id.includes('discord-enhancement'))).toBe(false);
     for (const stepId of ['lacrimosa-transform', 'lacrimosa-basic-five', 'lacrimosa-redirect-five']) {
       expect(rotationScenarioBindings[`lacrimosa-discord-dot:${stepId}`]).toBeUndefined();
-      expect(currentRotationGapAuditByKey.get(`lacrimosa-discord-dot:${stepId}`)?.classification).toBe('ambiguous-source-step');
+      expect(rotationScenarioVariantSourceKeys.has(`lacrimosa-discord-dot:${stepId}`)).toBe(true);
+      expect(currentRotationGapAuditByKey.has(`lacrimosa-discord-dot:${stepId}`)).toBe(false);
     }
   });
 
-  it('keeps Lacrimosa ambiguity while Phantom Step reduces the current gap total', () => {
+  it('keeps Lacrimosa variants explicit while the unsupported gap total reaches zero', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 36,
-      total: 5,
+      resolvedSinceBaseline: 41,
+      total: 0,
       missingActionRecord: 0,
-      ambiguousSourceStep: 5,
+      ambiguousSourceStep: 0,
       verifiedActionCatalogCount: 113,
     });
     expect(currentRotationMissingActionPriorities.map((item) => item.characterName)).toEqual([]);

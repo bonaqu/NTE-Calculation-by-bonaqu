@@ -11,23 +11,143 @@ import {
 import { rotationPresetById, rotationPresets } from './rotation-presets';
 import { verifiedScenarioOperationById, type VerifiedScenarioOperationId } from './scenario-operations';
 import { verifiedTeamEffectById, type VerifiedTeamEffectId } from './team-effects';
-import type { EsperCycleId, Locale, RotationPreset, RotationStep } from './types';
+import type { EsperCycleId, Locale, LocalizedText, RotationPreset, RotationStep } from './types';
 import { visibleActionById } from './verified-visible-actions';
 
 export const ROTATION_SCENARIO_IMPORT_STORAGE_KEY = 'nte.team.scenario.rotation-import.v1';
 export const ROTATION_SCENARIO_IMPORT_VERSION = 1 as const;
 
-export type RotationScenarioSourceCoverage = 'full' | 'partial' | 'unsupported';
+export type RotationScenarioSourceCoverage = 'full' | 'partial' | 'variant-required' | 'unsupported';
 
 export type RotationScenarioBindingAtom =
   | { kind: 'action-sequence'; actionIds: readonly string[] }
   | { kind: 'activate-effect'; effectId: VerifiedTeamEffectId }
   | { kind: 'activate-cycle'; cycleId: EsperCycleId }
-  | { kind: 'operation-marker'; operationId: VerifiedScenarioOperationId };
+  | { kind: 'operation-marker'; operationId: VerifiedScenarioOperationId }
+  | { kind: 'variant-marker'; variantId: string; note: LocalizedText };
 
 export interface RotationScenarioBinding {
-  coverage: Exclude<RotationScenarioSourceCoverage, 'unsupported'>;
+  coverage: Extract<RotationScenarioSourceCoverage, 'full' | 'partial'>;
   items: readonly RotationScenarioBindingAtom[];
+}
+
+export type RotationScenarioVariantSelectionValue = string | number;
+export type RotationScenarioVariantSelections = Readonly<Record<string, RotationScenarioVariantSelectionValue>>;
+
+interface RotationScenarioVariantControlBase {
+  id: string;
+  presetId: string;
+  title: LocalizedText;
+  description: LocalizedText;
+}
+
+export interface RotationScenarioSelectVariantControl extends RotationScenarioVariantControlBase {
+  kind: 'select';
+  options: readonly { id: string; label: LocalizedText; description: LocalizedText }[];
+}
+
+export interface RotationScenarioCountVariantControl extends RotationScenarioVariantControlBase {
+  kind: 'count';
+  minimum: number;
+  maximum: number;
+}
+
+export type RotationScenarioVariantControl = RotationScenarioSelectVariantControl | RotationScenarioCountVariantControl;
+
+export interface RotationScenarioVariantRequirement {
+  presetId: string;
+  sourceStepId: string;
+  controlIds: readonly string[];
+  rationale: LocalizedText;
+}
+
+export const rotationScenarioVariantControls: readonly RotationScenarioVariantControl[] = [
+  {
+    id: 'lacrimosa.form',
+    presetId: 'lacrimosa-discord-dot',
+    kind: 'select',
+    title: { ru: 'Форма атак Лакримозы', en: 'Lacrimosa attack form' },
+    description: { ru: 'Один выбор согласованно применяется к полной базовой цепочке и пятой атаке.', en: 'One selection is applied consistently to the full Basic string and fifth attack.' },
+    options: [
+      { id: 'tomato-metal', label: { ru: 'Tomato Metal · ближняя форма', en: 'Tomato Metal · melee form' }, description: { ru: '974,3% прямая цепочка; пятая атака 386,3%.', en: '974.3% direct string; 386.3% fifth attack.' } },
+      { id: 'tomato-percussion', label: { ru: 'Tomato Percussion · дальняя форма', en: 'Tomato Percussion · ranged form' }, description: { ru: '1127,6% полная цепочка; пятая атака 247,7%.', en: '1127.6% full string; 247.7% fifth attack.' } },
+    ],
+  },
+  {
+    id: 'lacrimosa.redirect-skill',
+    presetId: 'lacrimosa-discord-dot',
+    kind: 'select',
+    title: { ru: 'Вариант навыка перенаправления', en: 'Redirect Skill variant' },
+    description: { ru: 'Morning Tomato имеет собственный коэффициент. Devilish Gift копирует внешнюю способность и остаётся видимым marker.', en: 'Morning Tomato has a native ratio. Devilish Gift copies an external ability and remains a visible marker.' },
+    options: [
+      { id: 'morning-tomato', label: { ru: 'Morning Tomato', en: 'Morning Tomato' }, description: { ru: 'Точный прямой урон 599,7% АТК.', en: 'Exact 599.7% ATK direct damage.' } },
+      { id: 'devilish-gift', label: { ru: 'Devilish Gift', en: 'Devilish Gift' }, description: { ru: 'Урон зависит от скопированной внешней способности и не синтезируется.', en: 'Damage depends on the copied external ability and is not synthesized.' } },
+    ],
+  },
+  {
+    id: 'baicang.adler-ultimate-mode',
+    presetId: 'baicang-firefly-hyper',
+    kind: 'select',
+    title: { ru: 'Режим сверхспособности Адлер', en: 'Adler Ultimate mode' },
+    description: { ru: 'Источник допускает взаимоисключающие варианты на 5 или 10 попаданий.', en: 'The source allows mutually exclusive five-hit or ten-hit variants.' },
+    options: [
+      { id: 'five-target-hits', label: { ru: '5 попаданий по нескольким целям', en: '5 hits across multiple targets' }, description: { ru: 'Использует точный five-target action ID.', en: 'Uses the exact five-target action ID.' } },
+      { id: 'single-enemy-ten-hits', label: { ru: '10 попаданий по одной цели', en: '10 hits against one enemy' }, description: { ru: 'Использует точный single-enemy ten-hit action ID.', en: 'Uses the exact single-enemy ten-hit action ID.' } },
+    ],
+  },
+  {
+    id: 'baicang.dodge-charged-count',
+    presetId: 'baicang-firefly-hyper',
+    kind: 'count',
+    title: { ru: 'Число Dodge Charged Attack Байканг', en: 'Baicang Dodge Charged Attack count' },
+    description: { ru: 'Задаёт конечное число Silenced Thought. Контратаки и Skill when ready остаются visible remainder.', en: 'Sets a finite Silenced Thought count. Counters and Skill when ready remain a visible remainder.' },
+    minimum: 1,
+    maximum: 20,
+  },
+];
+
+export const rotationScenarioVariantRequirements: readonly RotationScenarioVariantRequirement[] = [
+  { presetId: 'lacrimosa-discord-dot', sourceStepId: 'lacrimosa-transform', controlIds: ['lacrimosa.redirect-skill'], rationale: { ru: 'Нужно выбрать Morning Tomato либо Devilish Gift.', en: 'Choose Morning Tomato or Devilish Gift.' } },
+  { presetId: 'lacrimosa-discord-dot', sourceStepId: 'lacrimosa-basic-five', controlIds: ['lacrimosa.form'], rationale: { ru: 'Нужно выбрать ближнюю либо дальнюю форму полной цепочки.', en: 'Choose the melee or ranged full string.' } },
+  { presetId: 'lacrimosa-discord-dot', sourceStepId: 'lacrimosa-redirect-five', controlIds: ['lacrimosa.redirect-skill', 'lacrimosa.form'], rationale: { ru: 'Нужно выбрать Redirect Skill и согласованную форму пятой атаки.', en: 'Choose the Redirect Skill and matching fifth-attack form.' } },
+  { presetId: 'baicang-firefly-hyper', sourceStepId: 'baicang-adler-open', controlIds: ['baicang.adler-ultimate-mode'], rationale: { ru: 'Нужно выбрать 5-hit либо 10-hit Ultimate Адлер.', en: 'Choose Adler five-hit or ten-hit Ultimate.' } },
+  { presetId: 'baicang-firefly-hyper', sourceStepId: 'baicang-dodge-spam', controlIds: ['baicang.dodge-charged-count'], rationale: { ru: 'Нужно задать конечное число Dodge Charged Attack.', en: 'Set a finite Dodge Charged Attack count.' } },
+];
+
+const variantControlById = new Map(rotationScenarioVariantControls.map((control) => [control.id, control]));
+export const rotationScenarioVariantSourceKeys = new Set(
+  rotationScenarioVariantRequirements.map((requirement) => `${requirement.presetId}:${requirement.sourceStepId}`),
+);
+
+export function rotationScenarioVariantControlsForPreset(presetId: string): readonly RotationScenarioVariantControl[] {
+  return rotationScenarioVariantControls.filter((control) => control.presetId === presetId);
+}
+
+export function normalizeRotationScenarioVariantSelections(
+  presetId: string,
+  value: unknown,
+): RotationScenarioVariantSelections {
+  if (!isRecord(value)) return {};
+  const result: Record<string, RotationScenarioVariantSelectionValue> = {};
+  for (const control of rotationScenarioVariantControlsForPreset(presetId)) {
+    const raw = value[control.id];
+    if (control.kind === 'select') {
+      if (typeof raw === 'string' && control.options.some((option) => option.id === raw)) result[control.id] = raw;
+      continue;
+    }
+    if (typeof raw === 'number' && Number.isInteger(raw) && raw >= control.minimum && raw <= control.maximum) {
+      result[control.id] = raw;
+    }
+  }
+  return result;
+}
+
+export function unresolvedRotationScenarioVariantControls(
+  presetId: string,
+  selections: RotationScenarioVariantSelections,
+): readonly RotationScenarioVariantControl[] {
+  const normalized = normalizeRotationScenarioVariantSelections(presetId, selections);
+  return rotationScenarioVariantControlsForPreset(presetId).filter((control) => normalized[control.id] === undefined);
 }
 
 export interface RotationScenarioImportReport {
@@ -40,6 +160,8 @@ export interface RotationScenarioImportReport {
   generatedEffectSteps: number;
   generatedCycleSteps: number;
   generatedOperationSteps: number;
+  generatedVariantMarkerSteps: number;
+  variantRequiredSourceSteps: number;
   generatedPartialRemainderSteps: number;
   unsupportedSourceSteps: number;
   coveragePercent: number;
@@ -62,6 +184,7 @@ export interface RotationScenarioImportMetadata {
   report: RotationScenarioImportReport | null;
   originsByStepId: Record<string, RotationScenarioStepOrigin>;
   pendingByStepId: Record<string, PendingRotationCondition>;
+  variantSelections: RotationScenarioVariantSelections;
 }
 
 export interface RotationScenarioImportResult {
@@ -414,6 +537,109 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
   },
 };
 
+function variantRequirementForStep(presetId: string, sourceStepId: string): RotationScenarioVariantRequirement | undefined {
+  return rotationScenarioVariantRequirements.find((requirement) => (
+    requirement.presetId === presetId && requirement.sourceStepId === sourceStepId
+  ));
+}
+
+function lacrimosaFormAction(form: RotationScenarioVariantSelectionValue | undefined, fifth = false): string | null {
+  if (form === 'tomato-metal') return fifth
+    ? 'lacrimosa.tomato-metal.fifth.level-10'
+    : 'lacrimosa.tomato-metal.full-direct-sequence.level-10';
+  if (form === 'tomato-percussion') return fifth
+    ? 'lacrimosa.tomato-percussion.fifth.level-10'
+    : 'lacrimosa.tomato-percussion.full-sequence.level-10';
+  return null;
+}
+
+function variantBindingForStep(
+  preset: RotationPreset,
+  step: RotationStep,
+  selections: RotationScenarioVariantSelections,
+): RotationScenarioBinding | null {
+  const normalized = normalizeRotationScenarioVariantSelections(preset.id, selections);
+  if (preset.id === 'lacrimosa-discord-dot') {
+    const redirect = normalized['lacrimosa.redirect-skill'];
+    const form = normalized['lacrimosa.form'];
+    if (step.id === 'lacrimosa-transform') {
+      if (redirect === 'morning-tomato') return {
+        coverage: 'partial',
+        items: [{ kind: 'action-sequence', actionIds: ['lacrimosa.morning-tomato.level-10'] }],
+      };
+      if (redirect === 'devilish-gift') return {
+        coverage: 'partial',
+        items: [{
+          kind: 'variant-marker',
+          variantId: 'lacrimosa.devilish-gift.copied-external-ability',
+          note: {
+            ru: 'Выбран Devilish Gift: прямой урон зависит от скопированной внешней способности и не добавлен в расчёт.',
+            en: 'Devilish Gift selected: direct damage depends on the copied external ability and is not added to the calculation.',
+          },
+        }],
+      };
+      return null;
+    }
+    if (step.id === 'lacrimosa-basic-five') {
+      const actionId = lacrimosaFormAction(form);
+      return actionId ? { coverage: 'full', items: [{ kind: 'action-sequence', actionIds: [actionId] }] } : null;
+    }
+    if (step.id === 'lacrimosa-redirect-five') {
+      const fifthActionId = lacrimosaFormAction(form, true);
+      if (!fifthActionId || !redirect) return null;
+      if (redirect === 'morning-tomato') return {
+        coverage: 'full',
+        items: [{ kind: 'action-sequence', actionIds: ['lacrimosa.morning-tomato.level-10', fifthActionId] }],
+      };
+      return {
+        coverage: 'partial',
+        items: [
+          {
+            kind: 'variant-marker',
+            variantId: 'lacrimosa.devilish-gift.copied-external-ability',
+            note: {
+              ru: 'Devilish Gift выбран, но его скопированная внешняя способность не имеет фиксированного action ID.',
+              en: 'Devilish Gift is selected, but its copied external ability has no fixed action ID.',
+            },
+          },
+          { kind: 'action-sequence', actionIds: [fifthActionId] },
+        ],
+      };
+    }
+  }
+  if (preset.id === 'baicang-firefly-hyper' && step.id === 'baicang-adler-open') {
+    const mode = normalized['baicang.adler-ultimate-mode'];
+    const ultimateId = mode === 'five-target-hits'
+      ? 'adler.tranquility.five-target-hits.level-10'
+      : mode === 'single-enemy-ten-hits'
+        ? 'adler.tranquility.single-enemy-ten-hits.level-10'
+        : null;
+    return ultimateId ? {
+      coverage: 'full',
+      items: [{ kind: 'action-sequence', actionIds: [ultimateId, 'adler.evils-bane.initial-composition.level-10'] }],
+    } : null;
+  }
+  if (preset.id === 'baicang-firefly-hyper' && step.id === 'baicang-dodge-spam') {
+    const count = normalized['baicang.dodge-charged-count'];
+    if (typeof count !== 'number') return null;
+    return {
+      coverage: 'partial',
+      items: [
+        { kind: 'action-sequence', actionIds: Array.from({ length: count }, () => 'baicang.silenced-thought.full-composition.level-10') },
+        {
+          kind: 'variant-marker',
+          variantId: 'baicang.dodge-spam.counter-and-skill-order',
+          note: {
+            ru: 'Число Dodge Charged Attack задано пользователем. Количество и порядок контратак и навыка по готовности источник не фиксирует.',
+            en: 'The Dodge Charged Attack count is user-selected. The source does not fix the count or order of counters and Skill casts when ready.',
+          },
+        },
+      ],
+    };
+  }
+  return null;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -434,6 +660,7 @@ export function initialRotationScenarioImportMetadata(): RotationScenarioImportM
     report: null,
     originsByStepId: {},
     pendingByStepId: {},
+    variantSelections: {},
   };
 }
 
@@ -447,7 +674,7 @@ export function normalizeRotationScenarioImportMetadata(value: unknown): Rotatio
       const part = typeof raw.part === 'number' && Number.isFinite(raw.part)
         ? Math.max(0, Math.min(40, Math.trunc(raw.part)))
         : 0;
-      const coverage = raw.coverage === 'full' || raw.coverage === 'partial' || raw.coverage === 'unsupported'
+      const coverage = raw.coverage === 'full' || raw.coverage === 'partial' || raw.coverage === 'variant-required' || raw.coverage === 'unsupported'
         ? raw.coverage
         : undefined;
       if (stepId && sourceStepId) {
@@ -487,15 +714,17 @@ export function normalizeRotationScenarioImportMetadata(value: unknown): Rotatio
     ? value.timingStatus
     : 'none';
   const preset = rotationPresetById.get(sourceRotationId);
+  const variantSelections = normalizeRotationScenarioVariantSelections(preset?.id ?? '', value.variantSelections);
   const rawReport = isRecord(value.report) ? value.report : null;
-  const report = preset && rawReport ? previewRotationScenarioImport(preset) : null;
+  const report = preset && rawReport ? previewRotationScenarioImport(preset, variantSelections) : null;
 
   if (preset) {
     for (const origin of Object.values(originsByStepId)) {
       if (origin.coverage) continue;
       const sourceStep = preset.steps.find((step) => step.id === origin.sourceStepId);
       origin.coverage = sourceStep
-        ? validatedBinding(preset, sourceStep)?.coverage ?? 'unsupported'
+        ? validatedBinding(preset, sourceStep, variantSelections)?.coverage
+          ?? (variantRequirementForStep(preset.id, sourceStep.id) ? 'variant-required' : 'unsupported')
         : 'unsupported';
     }
   }
@@ -507,6 +736,7 @@ export function normalizeRotationScenarioImportMetadata(value: unknown): Rotatio
     report,
     originsByStepId,
     pendingByStepId,
+    variantSelections,
   };
 }
 
@@ -514,7 +744,8 @@ function atomFingerprint(atom: RotationScenarioBindingAtom): string {
   if (atom.kind === 'action-sequence') return `actions:${atom.actionIds.join(',')}`;
   if (atom.kind === 'activate-effect') return `effect:${atom.effectId}`;
   if (atom.kind === 'activate-cycle') return `cycle:${atom.cycleId}`;
-  return `operation:${atom.operationId}`;
+  if (atom.kind === 'operation-marker') return `operation:${atom.operationId}`;
+  return `variant:${atom.variantId}`;
 }
 
 function validBindingAtom(preset: RotationPreset, step: RotationStep, atom: RotationScenarioBindingAtom): boolean {
@@ -528,14 +759,22 @@ function validBindingAtom(preset: RotationPreset, step: RotationStep, atom: Rota
   if (atom.kind === 'activate-cycle') {
     return step.cycle === atom.cycleId && verifiedCombatCycleModelById.has(atom.cycleId);
   }
-  const operation = verifiedScenarioOperationById.get(atom.operationId);
-  return operation?.presetId === preset.id
-    && operation.sourceStepId === step.id
-    && operation.sourceCharacter === step.actor;
+  if (atom.kind === 'operation-marker') {
+    const operation = verifiedScenarioOperationById.get(atom.operationId);
+    return operation?.presetId === preset.id
+      && operation.sourceStepId === step.id
+      && operation.sourceCharacter === step.actor;
+  }
+  return Boolean(atom.variantId && atom.note.ru && atom.note.en);
 }
 
-function validatedBinding(preset: RotationPreset, step: RotationStep): RotationScenarioBinding | null {
-  const candidate = rotationScenarioBindings[binding(preset.id, step.id)];
+function validatedBinding(
+  preset: RotationPreset,
+  step: RotationStep,
+  selections: RotationScenarioVariantSelections = {},
+): RotationScenarioBinding | null {
+  const candidate = rotationScenarioBindings[binding(preset.id, step.id)]
+    ?? variantBindingForStep(preset, step, selections);
   if (!candidate || candidate.items.length === 0) return null;
   const fingerprints = candidate.items.map(atomFingerprint);
   if (new Set(fingerprints).size !== fingerprints.length) return null;
@@ -544,6 +783,12 @@ function validatedBinding(preset: RotationPreset, step: RotationStep): RotationS
 
 function stepNote(step: RotationStep, locale: Locale): string {
   return `${step.instruction[locale]} ${step.outcome[locale]}`.normalize('NFKC').trim().slice(0, 400);
+}
+
+function variantRequiredNote(preset: RotationPreset, step: RotationStep, locale: Locale): string {
+  const requirement = variantRequirementForStep(preset.id, step.id);
+  const prefix = locale === 'ru' ? 'Требуется выбор варианта:' : 'Variant selection required:';
+  return `${prefix} ${requirement?.rationale[locale] ?? stepNote(step, locale)}`.slice(0, 400);
 }
 
 function partialRemainderNote(step: RotationStep, locale: Locale): string {
@@ -572,7 +817,11 @@ function baseScenarioStep(
   };
 }
 
-function importedSteps(preset: RotationPreset, locale: Locale): {
+function importedSteps(
+  preset: RotationPreset,
+  locale: Locale,
+  selections: RotationScenarioVariantSelections = {},
+): {
   steps: CombatScenarioStep[];
   metadata: RotationScenarioImportMetadata;
   report: RotationScenarioImportReport;
@@ -586,6 +835,8 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
   let generatedEffectSteps = 0;
   let generatedCycleSteps = 0;
   let generatedOperationSteps = 0;
+  let generatedVariantMarkerSteps = 0;
+  let variantRequiredSourceSteps = 0;
   let generatedPartialRemainderSteps = 0;
 
   const append = (
@@ -600,13 +851,15 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
 
   preset.steps.forEach((sourceStep, sourceIndex) => {
     const sourceSlot = preset.team.indexOf(sourceStep.actor);
-    const matched = sourceSlot >= 0 ? validatedBinding(preset, sourceStep) : null;
+    const matched = sourceSlot >= 0 ? validatedBinding(preset, sourceStep, selections) : null;
 
     if (!matched) {
+      const variantRequired = sourceSlot >= 0 && Boolean(variantRequirementForStep(preset.id, sourceStep.id));
       append({
         ...baseScenarioStep(preset, sourceStep, sourceIndex, Math.max(0, sourceSlot), 0),
-        note: stepNote(sourceStep, locale),
-      }, sourceStep, 0, 'unsupported');
+        note: variantRequired ? variantRequiredNote(preset, sourceStep, locale) : stepNote(sourceStep, locale),
+      }, sourceStep, 0, variantRequired ? 'variant-required' : 'unsupported');
+      if (variantRequired) variantRequiredSourceSteps += 1;
       return;
     }
 
@@ -614,6 +867,7 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
     else partiallyMappedSourceSteps += 1;
 
     let part = 0;
+    let hasVariantMarker = false;
     for (const atom of matched.items) {
       if (atom.kind === 'action-sequence') {
         for (const actionId of atom.actionIds) {
@@ -625,6 +879,17 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
           generatedActionSteps += 1;
           part += 1;
         }
+        continue;
+      }
+
+      if (atom.kind === 'variant-marker') {
+        append({
+          ...baseScenarioStep(preset, sourceStep, sourceIndex, sourceSlot, part),
+          note: atom.note[locale],
+        }, sourceStep, part, matched.coverage);
+        generatedVariantMarkerSteps += 1;
+        hasVariantMarker = true;
+        part += 1;
         continue;
       }
 
@@ -663,7 +928,7 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
       part += 1;
     }
 
-    if (matched.coverage === 'partial') {
+    if (matched.coverage === 'partial' && !hasVariantMarker) {
       append({
         ...baseScenarioStep(preset, sourceStep, sourceIndex, sourceSlot, part),
         note: partialRemainderNote(sourceStep, locale),
@@ -673,7 +938,7 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
   });
 
   const mappedSourceSteps = fullyMappedSourceSteps + partiallyMappedSourceSteps;
-  const unsupportedSourceSteps = preset.steps.length - mappedSourceSteps;
+  const unsupportedSourceSteps = preset.steps.length - mappedSourceSteps - variantRequiredSourceSteps;
   const weightedMappedSteps = fullyMappedSourceSteps + partiallyMappedSourceSteps * 0.5;
   const report: RotationScenarioImportReport = {
     presetId: preset.id,
@@ -685,6 +950,8 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
     generatedEffectSteps,
     generatedCycleSteps,
     generatedOperationSteps,
+    generatedVariantMarkerSteps,
+    variantRequiredSourceSteps,
     generatedPartialRemainderSteps,
     unsupportedSourceSteps,
     coveragePercent: preset.steps.length
@@ -701,23 +968,33 @@ function importedSteps(preset: RotationPreset, locale: Locale): {
       report,
       originsByStepId,
       pendingByStepId,
+      variantSelections: normalizeRotationScenarioVariantSelections(preset.id, selections),
     },
   };
 }
 
-export function previewRotationScenarioImport(preset: RotationPreset): RotationScenarioImportReport {
-  return importedSteps(preset, 'ru').report;
+export function previewRotationScenarioImport(
+  preset: RotationPreset,
+  selections: RotationScenarioVariantSelections = {},
+): RotationScenarioImportReport {
+  return importedSteps(preset, 'ru', selections).report;
 }
 
 export function importRotationPresetToScenario(
   preset: RotationPreset,
   currentTeam: GameVisibleTeamState,
   locale: Locale,
+  selections: RotationScenarioVariantSelections = {},
 ): RotationScenarioImportResult {
   if (preset.team.length !== 4 || new Set(preset.team).size !== 4) {
     throw new Error(`Rotation preset ${preset.id} must contain four unique characters.`);
   }
-  const generated = importedSteps(preset, locale);
+  const normalizedSelections = normalizeRotationScenarioVariantSelections(preset.id, selections);
+  const unresolved = unresolvedRotationScenarioVariantControls(preset.id, normalizedSelections);
+  if (unresolved.length > 0) {
+    throw new Error(`Rotation preset ${preset.id} requires variant selections: ${unresolved.map((control) => control.id).join(', ')}`);
+  }
+  const generated = importedSteps(preset, locale, normalizedSelections);
   const team: GameVisibleTeamState = {
     ...currentTeam,
     activeSlot: 0,
@@ -793,7 +1070,9 @@ export function rotationSourceStep(
     preset,
     step,
     part: origin.part,
-    coverage: origin.coverage ?? validatedBinding(preset, step)?.coverage ?? 'unsupported',
+    coverage: origin.coverage
+      ?? validatedBinding(preset, step, metadata.variantSelections)?.coverage
+      ?? (variantRequirementForStep(preset.id, step.id) ? 'variant-required' : 'unsupported'),
   } : null;
 }
 
@@ -803,6 +1082,37 @@ export function validateRotationScenarioBindings(): string[] {
   for (const preset of rotationPresets) {
     for (const step of preset.steps) knownKeys.add(binding(preset.id, step.id));
   }
+  for (const control of rotationScenarioVariantControls) {
+    if (!rotationPresetById.has(control.presetId)) errors.push(`Unknown variant-control preset: ${control.id}`);
+    if (control.kind === 'select' && (control.options.length < 2 || new Set(control.options.map((option) => option.id)).size !== control.options.length)) {
+      errors.push(`Invalid select variant control: ${control.id}`);
+    }
+    if (control.kind === 'count' && (!Number.isInteger(control.minimum) || !Number.isInteger(control.maximum) || control.minimum < 0 || control.maximum < control.minimum)) {
+      errors.push(`Invalid count variant control: ${control.id}`);
+    }
+  }
+  for (const requirement of rotationScenarioVariantRequirements) {
+    const key = binding(requirement.presetId, requirement.sourceStepId);
+    if (!knownKeys.has(key)) errors.push(`Unknown variant source step: ${key}`);
+    if (rotationScenarioBindings[key]) errors.push(`Variant source step also has a fixed binding: ${key}`);
+    for (const controlId of requirement.controlIds) {
+      const control = variantControlById.get(controlId);
+      if (!control || control.presetId !== requirement.presetId) errors.push(`Invalid variant control reference: ${key}:${controlId}`);
+    }
+  }
+  const sampleSelections: Record<string, Record<string, RotationScenarioVariantSelectionValue>> = {};
+  for (const control of rotationScenarioVariantControls) {
+    sampleSelections[control.presetId] ??= {};
+    sampleSelections[control.presetId]![control.id] = control.kind === 'select' ? control.options[0]!.id : control.minimum;
+  }
+  for (const requirement of rotationScenarioVariantRequirements) {
+    const preset = rotationPresetById.get(requirement.presetId);
+    const step = preset?.steps.find((entry) => entry.id === requirement.sourceStepId);
+    if (preset && step && !validatedBinding(preset, step, sampleSelections[preset.id] ?? {})) {
+      errors.push(`Unresolvable variant source step: ${requirement.presetId}:${requirement.sourceStepId}`);
+    }
+  }
+
   for (const [key, candidate] of Object.entries(rotationScenarioBindings)) {
     if (!knownKeys.has(key)) {
       errors.push(`Unknown rotation step binding: ${key}`);

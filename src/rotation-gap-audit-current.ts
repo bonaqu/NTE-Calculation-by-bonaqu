@@ -6,7 +6,11 @@ import {
   type RotationGapClassification,
   type RotationMissingActionPriority,
 } from './rotation-gap-audit';
-import { rotationScenarioBindings } from './rotation-scenario-import';
+import {
+  rotationScenarioBindings,
+  rotationScenarioVariantRequirements,
+  rotationScenarioVariantSourceKeys,
+} from './rotation-scenario-import';
 import { rotationPresetById, rotationPresets } from './rotation-presets';
 import { visibleActionById } from './verified-visible-actions';
 
@@ -60,7 +64,8 @@ const currentRotationGapOverrides = new Map<string, RotationGapAuditEntry>([
  * only source steps that are still unsupported by the current exact bindings.
  */
 export const currentRotationGapAudit: readonly RotationGapAuditEntry[] = baselineRotationGapAudit.filter(
-  (item) => !rotationScenarioBindings[gapKey(item.presetId, item.sourceStepId)],
+  (item) => !rotationScenarioBindings[gapKey(item.presetId, item.sourceStepId)]
+    && !rotationScenarioVariantSourceKeys.has(gapKey(item.presetId, item.sourceStepId)),
 ).map((item) => currentRotationGapOverrides.get(gapKey(item.presetId, item.sourceStepId)) ?? item);
 
 export const currentRotationGapAuditByKey = new Map(
@@ -83,6 +88,7 @@ export const currentRotationGapAuditSummary = Object.freeze({
   ambiguousSourceStep: count('ambiguous-source-step'),
   safelyBindableUnsupportedSteps: 0,
   verifiedActionCatalogCount: visibleActionById.size,
+  parameterizedVariantSourceSteps: rotationScenarioVariantRequirements.length,
   existingCatalogExhausted: true,
 });
 
@@ -92,7 +98,8 @@ export const currentRotationMissingActionPriorities: readonly RotationMissingAct
 
 function currentUnsupportedKeys(): string[] {
   return rotationPresets.flatMap((preset) => preset.steps
-    .filter((step) => !rotationScenarioBindings[gapKey(preset.id, step.id)])
+    .filter((step) => !rotationScenarioBindings[gapKey(preset.id, step.id)]
+      && !rotationScenarioVariantSourceKeys.has(gapKey(preset.id, step.id)))
     .map((step) => gapKey(preset.id, step.id)));
 }
 
@@ -125,12 +132,13 @@ export function validateCurrentRotationGapAudit(): string[] {
   }
 
   if (currentRotationGapAuditSummary.baselineTotal !== 41) errors.push('Expected the immutable 41-step baseline');
-  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 36) errors.push('Expected thirty-six source steps resolved since baseline');
-  if (currentRotationGapAuditSummary.total !== 5) errors.push(`Expected 5 current gaps, got ${currentRotationGapAuditSummary.total}`);
+  if (currentRotationGapAuditSummary.resolvedSinceBaseline !== 41) errors.push('Expected all forty-one source steps modeled since baseline');
+  if (currentRotationGapAuditSummary.total !== 0) errors.push(`Expected no current unsupported gaps, got ${currentRotationGapAuditSummary.total}`);
   if (currentRotationGapAuditSummary.missingActionRecord !== 0) errors.push('Expected no current missing-action records');
   if (currentRotationGapAuditSummary.effectOrCycleCondition !== 0) errors.push('Expected no current effect/Cycle conditions');
   if (currentRotationGapAuditSummary.nonDamageOperation !== 0) errors.push('Expected no current non-damage operations');
-  if (currentRotationGapAuditSummary.ambiguousSourceStep !== 5) errors.push('Expected 5 current ambiguous source steps');
+  if (currentRotationGapAuditSummary.ambiguousSourceStep !== 0) errors.push('Expected no current ambiguous source steps');
+  if (currentRotationGapAuditSummary.parameterizedVariantSourceSteps !== 5) errors.push('Expected five parameterized variant source steps');
   if (currentRotationGapAuditSummary.exactExistingAction !== 0 || currentRotationGapAuditSummary.compoundExistingActions !== 0) {
     errors.push('Current unsupported steps must not claim a safe existing-action match');
   }

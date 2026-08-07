@@ -9,6 +9,7 @@ import {
   previewRotationScenarioImport,
   ROTATION_SCENARIO_IMPORT_VERSION,
   rotationScenarioBindings,
+  rotationScenarioVariantSourceKeys,
   type RotationScenarioBinding,
   type RotationScenarioBindingAtom,
   type RotationScenarioImportMetadata,
@@ -39,7 +40,8 @@ export type VerifiedRotationRecipeGapKind =
   | 'partial-source-step-remainder'
   | 'unconfirmed-effect'
   | 'unconfirmed-cycle'
-  | 'non-damage-operation';
+  | 'non-damage-operation'
+  | 'variant-choice-required';
 
 export interface VerifiedRotationRecipeGap {
   sourceStepId: string;
@@ -299,8 +301,11 @@ function validBindingAtom(preset: RotationPreset, step: RotationStep, atom: Rota
   if (atom.kind === 'activate-cycle') {
     return step.cycle === atom.cycleId && verifiedCombatCycleModelById.has(atom.cycleId);
   }
-  const operation = verifiedScenarioOperationById.get(atom.operationId);
-  return operation?.presetId === preset.id && operation.sourceStepId === step.id && operation.sourceCharacter === step.actor;
+  if (atom.kind === 'operation-marker') {
+    const operation = verifiedScenarioOperationById.get(atom.operationId);
+    return operation?.presetId === preset.id && operation.sourceStepId === step.id && operation.sourceCharacter === step.actor;
+  }
+  return Boolean(atom.variantId && atom.note.ru && atom.note.en);
 }
 
 function bindingForStep(preset: RotationPreset, step: RotationStep): RotationScenarioBinding | null {
@@ -328,6 +333,12 @@ function gapNote(kind: VerifiedRotationRecipeGapKind, step: RotationStep): Local
       en: `The non-damage operation “${step.instruction.en}” is verified but intentionally excluded from the action-only recipe.`,
     };
   }
+  if (kind === 'variant-choice-required') {
+    return {
+      ru: `Шаг «${step.instruction.ru}» параметризован, но action-only рецепт не выбирает вариант за пользователя.`,
+      en: `The step “${step.instruction.en}” is parameterized, but the action-only recipe does not choose a variant for the user.`,
+    };
+  }
   if (kind === 'unconfirmed-cycle') {
     return {
       ru: `В шаге «${step.instruction.ru}» есть цикл эспера без подтверждённых секунд; он оставлен пробелом.`,
@@ -350,12 +361,15 @@ function extractPresetActions(preset: RotationPreset): {
   preset.steps.forEach((sourceStep, sourceStepIndex) => {
     const matched = bindingForStep(preset, sourceStep);
     if (!matched) {
+      const kind: VerifiedRotationRecipeGapKind = rotationScenarioVariantSourceKeys.has(bindingKey(preset.id, sourceStep.id))
+        ? 'variant-choice-required'
+        : 'unsupported-source-step';
       gaps.push({
         sourceStepId: sourceStep.id,
         sourceStepIndex,
         part: 0,
-        kind: 'unsupported-source-step',
-        note: gapNote('unsupported-source-step', sourceStep),
+        kind,
+        note: gapNote(kind, sourceStep),
       });
       return;
     }
@@ -575,6 +589,7 @@ export function compileVerifiedRotationRecipe(
       report,
       originsByStepId,
       pendingByStepId: {},
+      variantSelections: {},
     },
     sourceSlots,
   };

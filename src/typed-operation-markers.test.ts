@@ -96,7 +96,12 @@ describe('typed verified non-damage operation markers', () => {
     let operationSteps = 0;
     for (const presetId of ['hathor-hyper', 'chaos-remora-bomb', 'nanally-hexed-dual', 'lacrimosa-discord-dot', 'baicang-firefly-hyper']) {
       const preset = rotationPresetById.get(presetId)!;
-      const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');
+      const selections: Record<string, string | number> = presetId === 'lacrimosa-discord-dot'
+        ? { 'lacrimosa.form': 'tomato-metal', 'lacrimosa.redirect-skill': 'morning-tomato' }
+        : presetId === 'baicang-firefly-hyper'
+          ? { 'baicang.adler-ultimate-mode': 'single-enemy-ten-hits', 'baicang.dodge-charged-count': 1 }
+          : {};
+      const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru', selections);
       const operations = imported.scenario.steps.filter((step) => step.kind === 'operation');
       operationSteps += operations.length;
       expect(imported.report.generatedOperationSteps).toBe(operations.length);
@@ -105,7 +110,7 @@ describe('typed verified non-damage operation markers', () => {
         expect(imported.metadata.pendingByStepId[step.id]).toBeUndefined();
         expect(imported.metadata.originsByStepId[step.id]?.coverage).toBe('full');
       }
-      expect(previewRotationScenarioImport(preset).generatedOperationSteps).toBe(operations.length);
+      expect(previewRotationScenarioImport(preset, selections).generatedOperationSteps).toBe(operations.length);
     }
     expect(operationSteps).toBe(8);
   });
@@ -124,16 +129,16 @@ describe('typed verified non-damage operation markers', () => {
     });
   });
 
-  it('reduces current audit to five ambiguous variants only', () => {
+  it('reduces unsupported audit to zero while retaining five parameterized variants', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 36,
-      total: 5,
+      resolvedSinceBaseline: 41,
+      total: 0,
       missingActionRecord: 0,
       effectOrCycleCondition: 0,
       nonDamageOperation: 0,
-      ambiguousSourceStep: 5,
+      ambiguousSourceStep: 0,
       verifiedActionCatalogCount: 113,
     });
   });

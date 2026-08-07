@@ -84,12 +84,12 @@ describe('Nanally completion and Chaos exact action integration', () => {
     expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(9);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 36,
-      total: 5,
+      resolvedSinceBaseline: 41,
+      total: 0,
       missingActionRecord: 0,
       effectOrCycleCondition: 0,
       nonDamageOperation: 0,
-      ambiguousSourceStep: 5,
+      ambiguousSourceStep: 0,
       verifiedActionCatalogCount: 113,
     });
     for (const key of [

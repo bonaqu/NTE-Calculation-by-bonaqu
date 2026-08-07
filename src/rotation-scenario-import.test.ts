@@ -13,12 +13,24 @@ import {
   validateRotationScenarioBindings,
 } from './rotation-scenario-import';
 
+function variantSelectionsForPreset(presetId: string): Record<string, string | number> {
+  if (presetId === 'lacrimosa-discord-dot') return {
+    'lacrimosa.form': 'tomato-metal',
+    'lacrimosa.redirect-skill': 'morning-tomato',
+  } as const;
+  if (presetId === 'baicang-firefly-hyper') return {
+    'baicang.adler-ultimate-mode': 'single-enemy-ten-hits',
+    'baicang.dodge-charged-count': 2,
+  } as const;
+  return {};
+}
+
 describe('Rotation Lab to Combat Scenario import', () => {
   it('imports all six sourced presets deterministically with honest coverage accounting', () => {
     expect(rotationPresets).toHaveLength(6);
     for (const preset of rotationPresets) {
-      const first = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');
-      const second = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');
+      const first = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru', variantSelectionsForPreset(preset.id));
+      const second = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru', variantSelectionsForPreset(preset.id));
       expect(first).toEqual(second);
       expect(first.team.builds.map((build) => build.characterName)).toEqual(preset.team);
       expect(new Set(first.team.builds.map((build) => build.characterName)).size).toBe(4);
@@ -34,7 +46,8 @@ describe('Rotation Lab to Combat Scenario import', () => {
       expect(first.report.mappedSourceSteps).toBe(
         first.report.fullyMappedSourceSteps + first.report.partiallyMappedSourceSteps,
       );
-      expect(first.report.generatedPartialRemainderSteps).toBe(first.report.partiallyMappedSourceSteps);
+      expect(first.report.generatedPartialRemainderSteps + first.report.generatedVariantMarkerSteps)
+        .toBe(first.report.partiallyMappedSourceSteps);
       expect(first.report.coveragePercent).toBeGreaterThanOrEqual(0);
       expect(first.report.coveragePercent).toBeLessThanOrEqual(100);
     }
@@ -60,7 +73,7 @@ describe('Rotation Lab to Combat Scenario import', () => {
 
   it('expands the exact Hathor burst source step into four fully mapped verified actions', () => {
     const preset = rotationPresetById.get('hathor-hyper')!;
-    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'en');
+    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'en', variantSelectionsForPreset(preset.id));
     const source = preset.steps.find((step) => step.id === 'hathor-ultimate')!;
     const generated = imported.scenario.steps.filter((step) => (
       imported.metadata.originsByStepId[step.id]?.sourceStepId === source.id
@@ -77,7 +90,7 @@ describe('Rotation Lab to Combat Scenario import', () => {
 
   it('expands a Haniel source step into exact actions, a pending effect and one visible remainder', () => {
     const preset = rotationPresetById.get('chaos-remora-bomb')!;
-    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');
+    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru', variantSelectionsForPreset(preset.id));
     const generated = imported.scenario.steps.filter((step) => (
       imported.metadata.originsByStepId[step.id]?.sourceStepId === 'chaos-haniel-buffs'
     ));
@@ -92,7 +105,7 @@ describe('Rotation Lab to Combat Scenario import', () => {
 
   it('keeps timed effects and cycles inert until seconds are explicitly confirmed', () => {
     const preset = rotationPresetById.get('hathor-hyper')!;
-    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');
+    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru', variantSelectionsForPreset(preset.id));
     const pendingIds = Object.keys(imported.metadata.pendingByStepId);
     expect(imported.report.generatedEffectSteps).toBe(2);
     expect(imported.report.generatedCycleSteps).toBe(2);
@@ -112,15 +125,15 @@ describe('Rotation Lab to Combat Scenario import', () => {
   it('does not choose an ambiguous Sakiri press or hold action from generic rotation prose', () => {
     for (const presetId of ['nanally-hexed-dual', 'lacrimosa-discord-dot', 'baicang-firefly-hyper']) {
       const preset = rotationPresetById.get(presetId)!;
-      const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'en');
+      const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'en', variantSelectionsForPreset(preset.id));
       expect(imported.scenario.steps.some((step) => step.actionId.startsWith('sakiri.devour-whole.'))).toBe(false);
       expect(imported.scenario.steps.some((step) => step.actionId === 'sakiri.feast-of-gluttony.level-10')).toBe(true);
     }
   });
 
-  it('maps one explicit Baicang dodge attack but leaves open-ended spam unsupported', () => {
+  it('maps the explicit Baicang dodge attack and the selected finite spam count', () => {
     const preset = rotationPresetById.get('baicang-firefly-hyper')!;
-    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');
+    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru', variantSelectionsForPreset(preset.id));
     const explicit = imported.scenario.steps.filter((step) => (
       imported.metadata.originsByStepId[step.id]?.sourceStepId === 'baicang-dodge-charged-one'
     ));
@@ -131,9 +144,10 @@ describe('Rotation Lab to Combat Scenario import', () => {
     const spam = imported.scenario.steps.filter((step) => (
       imported.metadata.originsByStepId[step.id]?.sourceStepId === 'baicang-dodge-spam'
     ));
-    expect(spam).toHaveLength(1);
-    expect(spam[0]).toMatchObject({ kind: 'wait', actionId: '' });
-    expect(imported.metadata.originsByStepId[spam[0]!.id]?.coverage).toBe('unsupported');
+    expect(spam.filter((step) => step.actionId === 'baicang.silenced-thought.full-composition.level-10')).toHaveLength(2);
+    expect(spam.filter((step) => step.kind === 'wait')).toHaveLength(1);
+    expect(spam.find((step) => step.kind === 'wait')?.note).toContain('Количество и порядок контратак');
+    expect(spam.every((step) => imported.metadata.originsByStepId[step.id]?.coverage === 'partial')).toBe(true);
   });
 
   it('normalizes legacy v1 import metadata without changing scenario storage', () => {
@@ -142,7 +156,7 @@ describe('Rotation Lab to Combat Scenario import', () => {
     expect(normalizeRotationScenarioImportMetadata({ version: 2 })).toBeNull();
 
     const preset = rotationPresetById.get('chaos-remora-bomb')!;
-    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');
+    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru', variantSelectionsForPreset(preset.id));
     const legacy = JSON.parse(JSON.stringify(imported.metadata)) as {
       originsByStepId: Record<string, { sourceStepId: string; part: number; coverage?: string }>;
     };
@@ -154,13 +168,13 @@ describe('Rotation Lab to Combat Scenario import', () => {
 
   it('reports source origins and validates every stable binding', () => {
     expect(validateRotationScenarioBindings()).toEqual([]);
-    const previews = new Map(rotationPresets.map((preset) => [preset.id, previewRotationScenarioImport(preset)]));
+    const previews = new Map(rotationPresets.map((preset) => [preset.id, previewRotationScenarioImport(preset, variantSelectionsForPreset(preset.id))]));
     expect([...previews.values()].every((report) => report.partiallyMappedSourceSteps > 0)).toBe(true);
     expect(previews.get('hathor-hyper')?.fullyMappedSourceSteps).toBeGreaterThan(0);
-    expect(previews.get('baicang-firefly-hyper')?.fullyMappedSourceSteps).toBe(5);
+    expect(previews.get('baicang-firefly-hyper')?.fullyMappedSourceSteps).toBe(6);
 
     const preset = rotationPresetById.get('chaos-remora-bomb')!;
-    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru');
+    const imported = importRotationPresetToScenario(preset, initialGameVisibleTeamState(), 'ru', variantSelectionsForPreset(preset.id));
     const scenarioStep = imported.scenario.steps.find((step) => imported.metadata.originsByStepId[step.id]?.sourceStepId === 'chaos-stain')!;
     const origin = rotationSourceStep(imported.metadata, scenarioStep.id);
     expect(origin?.preset.id).toBe(preset.id);

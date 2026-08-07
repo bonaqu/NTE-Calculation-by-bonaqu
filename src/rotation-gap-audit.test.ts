@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { currentRotationGapAuditByKey, currentRotationGapAuditSummary, currentRotationMissingActionPriorities, validateCurrentRotationGapAudit } from './rotation-gap-audit-current';
 import { rotationGapAudit, rotationGapAuditSummary } from './rotation-gap-audit';
-import { rotationScenarioBindings } from './rotation-scenario-import';
+import { rotationScenarioBindings, rotationScenarioVariantSourceKeys } from './rotation-scenario-import';
 import { rotationPresets } from './rotation-presets';
 import { verifiedRotationRecipeById } from './verified-rotation-recipes';
 
@@ -11,21 +11,25 @@ describe('Rotation Lab gap audit', () => {
     expect(new Set(rotationGapAudit.map((item) => `${item.presetId}:${item.sourceStepId}`)).size).toBe(41);
   });
 
-  it('derives the five remaining ambiguous gaps from exact bindings', () => {
+  it('derives zero unsupported gaps while preserving five parameterized requirements', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 36,
-      total: 5,
+      resolvedSinceBaseline: 41,
+      total: 0,
       effectOrCycleCondition: 0,
       missingActionRecord: 0,
       nonDamageOperation: 0,
-      ambiguousSourceStep: 5,
+      ambiguousSourceStep: 0,
       verifiedActionCatalogCount: 113,
     });
-    const unsupportedKeys = rotationPresets.flatMap((preset) => preset.steps.filter((step) => !rotationScenarioBindings[`${preset.id}:${step.id}`]).map((step) => `${preset.id}:${step.id}`));
-    expect(unsupportedKeys).toHaveLength(5);
-    expect([...currentRotationGapAuditByKey.keys()].sort()).toEqual(unsupportedKeys.sort());
+    const unsupportedKeys = rotationPresets.flatMap((preset) => preset.steps
+      .filter((step) => !rotationScenarioBindings[`${preset.id}:${step.id}`]
+        && !rotationScenarioVariantSourceKeys.has(`${preset.id}:${step.id}`))
+      .map((step) => `${preset.id}:${step.id}`));
+    expect(unsupportedKeys).toEqual([]);
+    expect([...currentRotationGapAuditByKey.keys()]).toEqual([]);
+    expect(rotationScenarioVariantSourceKeys.size).toBe(5);
   });
 
   it('promotes Nanally and expands Chaos without semantic substitutions', () => {
