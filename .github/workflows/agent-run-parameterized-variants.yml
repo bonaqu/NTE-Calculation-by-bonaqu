@@ -33,7 +33,9 @@ jobs:
           node-version: 24
       - name: Apply guarded patch
         if: steps.guard.outputs.apply == 'true'
-        run: python tools/apply-parameterized-rotation-variants.py
+        run: |
+          python tools/fix-parameterized-variant-generator.py
+          python tools/apply-parameterized-rotation-variants.py
       - name: Install dependencies
         if: steps.guard.outputs.apply == 'true'
         run: npm install --no-audit --no-fund --no-package-lock
@@ -53,6 +55,7 @@ jobs:
         if: steps.guard.outputs.apply == 'true'
         run: |
           rm tools/apply-parameterized-rotation-variants.py
+          rm tools/fix-parameterized-variant-generator.py
           rm -f package-lock.json tsconfig.app.tsbuildinfo tsconfig.node.tsbuildinfo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
