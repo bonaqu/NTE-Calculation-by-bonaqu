@@ -11,33 +11,33 @@ describe('Rotation Lab gap audit', () => {
     expect(new Set(rotationGapAudit.map((item) => `${item.presetId}:${item.sourceStepId}`)).size).toBe(41);
   });
 
-  it('derives all 29 current gaps from exact bindings', () => {
+  it('derives all 16 current gaps from exact bindings', () => {
     expect(validateCurrentRotationGapAudit()).toEqual([]);
     expect(currentRotationGapAuditSummary).toMatchObject({
       baselineTotal: 41,
-      resolvedSinceBaseline: 24,
-      total: 17,
+      resolvedSinceBaseline: 25,
+      total: 16,
       effectOrCycleCondition: 3,
-      missingActionRecord: 1,
+      missingActionRecord: 0,
       nonDamageOperation: 8,
       ambiguousSourceStep: 5,
-      verifiedActionCatalogCount: 112,
+      verifiedActionCatalogCount: 113,
     });
     const unsupportedKeys = rotationPresets.flatMap((preset) => preset.steps.filter((step) => !rotationScenarioBindings[`${preset.id}:${step.id}`]).map((step) => `${preset.id}:${step.id}`));
-    expect(unsupportedKeys).toHaveLength(17);
+    expect(unsupportedKeys).toHaveLength(16);
     expect([...currentRotationGapAuditByKey.keys()].sort()).toEqual(unsupportedKeys.sort());
   });
 
   it('promotes Nanally and expands Chaos without semantic substitutions', () => {
     expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.steps).toHaveLength(11);
     expect(verifiedRotationRecipeById.get('rotation-lab.nanally-hexed-dual.verified-actions')?.gaps).toHaveLength(10);
-    expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(8);
+    expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.steps).toHaveLength(9);
     expect(verifiedRotationRecipeById.get('rotation-lab.chaos-remora-bomb.verified-actions')?.gaps).toHaveLength(9);
     expect(currentRotationGapAuditByKey.has('nanally-hexed-dual:nanally-energy-recovery')).toBe(true);
     expect(currentRotationGapAuditByKey.has('chaos-remora-bomb:chaos-restart')).toBe(true);
   });
 
-  it('leaves held Hathor Skill as the only missing-action priority', () => {
-    expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([[1, 'Hathor']]);
+  it('has no remaining missing-action priorities', () => {
+    expect(currentRotationMissingActionPriorities.map((item) => [item.rank, item.characterName])).toEqual([]);
   });
 });

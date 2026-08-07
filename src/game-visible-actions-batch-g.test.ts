@@ -8,7 +8,7 @@ describe('verified Shinku direct actions', () => {
   it('adds five unique level-10 actions to the shared catalog', () => {
     expect(verifiedVisibleActionsBatchG).toHaveLength(5);
     expect(new Set(verifiedVisibleActionsBatchG.map((action) => action.id)).size).toBe(5);
-    expect(verifiedVisibleActions).toHaveLength(112);
+    expect(verifiedVisibleActions).toHaveLength(113);
     expect(verifiedVisibleActionsBatchG.every((action) => action.characterName === 'Shinku')).toBe(true);
     expect(verifiedVisibleActionsBatchG.every((action) => action.requiredLevel === 10)).toBe(true);
     expect(verifiedVisibleActionsBatchG.every((action) => visibleActionById.get(action.id) === action)).toBe(true);

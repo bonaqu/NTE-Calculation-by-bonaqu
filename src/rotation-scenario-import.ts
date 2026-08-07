@@ -216,6 +216,10 @@ export const rotationScenarioBindings: Readonly<Record<string, RotationScenarioB
     items: [{ kind: 'action-sequence', actionIds: ['zero.appraise-and-engrave.main.level-10'] }],
   },
 
+  [binding('chaos-remora-bomb', 'chaos-hathor-redirect')]: {
+    coverage: 'partial',
+    items: [{ kind: 'action-sequence', actionIds: ['hathor.aerial-command.full-hold.level-10'] }],
+  },
   [binding('chaos-remora-bomb', 'chaos-zero-remora')]: {
     coverage: 'partial',
     items: [

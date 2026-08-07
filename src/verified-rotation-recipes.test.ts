@@ -34,14 +34,14 @@ describe('verified Rotation Lab recipes', () => {
   it('audits every preset and every current exact binding', () => {
     expect(verifiedRotationRecipeCoverage).toMatchObject({
       presetCount: 6,
-      bindingCount: 41,
+      bindingCount: 42,
       totalSourceStepCount: 58,
       fullyBoundSourceStepCount: 12,
-      partiallyBoundSourceStepCount: 29,
-      unsupportedSourceStepCount: 17,
-      boundActionStepCount: 62,
+      partiallyBoundSourceStepCount: 30,
+      unsupportedSourceStepCount: 16,
+      boundActionStepCount: 63,
       promotedRecipeCount: 6,
-      promotedActionStepCount: 62,
+      promotedActionStepCount: 63,
       completeActionOrderRecipeCount: 0,
       partialActionOrderRecipeCount: 6,
       orderOnlyRecipeCount: 6,
@@ -83,9 +83,9 @@ describe('verified Rotation Lab recipes', () => {
     expect(rotationPresetRecipeAuditById.get('chaos-remora-bomb')).toMatchObject({
       totalSourceSteps: 9,
       fullyBoundSourceSteps: 2,
-      partiallyBoundSourceSteps: 5,
-      unsupportedSourceSteps: 2,
-      verifiedActionSteps: 8,
+      partiallyBoundSourceSteps: 6,
+      unsupportedSourceSteps: 1,
+      verifiedActionSteps: 9,
       omittedEffectConditions: 1,
       omittedCycleConditions: 1,
       promotedCoverage: 'partial-action-order',
@@ -164,6 +164,7 @@ describe('verified Rotation Lab recipes', () => {
       'zero.appraise-and-engrave.main.level-10',
     ]);
     expect(verifiedRotationRecipes.find((recipe) => recipe.presetId === 'chaos-remora-bomb')?.steps.map((step) => step.actionId)).toEqual([
+      'hathor.aerial-command.full-hold.level-10',
       'zero.divide-by-zero.level-10',
       'haniel.silent-moonlit-forest-guardian.direct.level-10',
       'haniel.a-melody-named-haniel.initial.level-10',

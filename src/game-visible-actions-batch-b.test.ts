@@ -31,8 +31,8 @@ function combatBuild(characterName: string): GameVisibleCharacterBuild {
 describe('verified game-visible actions batch B', () => {
   it('keeps five unique Batch B records inside the expanded public catalog', () => {
     expect(verifiedVisibleActionsBatchB).toHaveLength(5);
-    expect(verifiedVisibleActions).toHaveLength(112);
-    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(112);
+    expect(verifiedVisibleActions).toHaveLength(113);
+    expect(new Set(verifiedVisibleActions.map((action) => action.id)).size).toBe(113);
     expect(new Set(verifiedVisibleActionsBatchB.map((action) => action.characterName)))
       .toEqual(new Set(['Hathor', 'Jiuyuan']));
     for (const action of verifiedVisibleActionsBatchB) {
@@ -57,7 +57,7 @@ describe('verified game-visible actions batch B', () => {
       expect(action.description.ru).not.toMatch(/официальное русское название/iu);
       expect(action.description.ru).not.toMatch(/A4|A5|A6/iu);
     }
-    expect(verifiedVisibleActions.some((action) => action.id.includes('aerial-command'))).toBe(false);
+    expect(verifiedVisibleActions.find((action) => action.id === 'hathor.aerial-command.full-hold.level-10')?.multiplier).toBeCloseTo(3100, 8);
   });
 
   it('requires the exact sourced Hathor skill level', () => {
