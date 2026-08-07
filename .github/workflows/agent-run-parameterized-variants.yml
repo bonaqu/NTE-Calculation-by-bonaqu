@@ -36,6 +36,7 @@ jobs:
         run: |
           python tools/fix-parameterized-variant-generator.py
           python tools/apply-parameterized-rotation-variants.py
+          python tools/fix-parameterized-test-correction.py
           python tools/fix-parameterized-variant-generated-tests.py
       - name: Install dependencies
         if: steps.guard.outputs.apply == 'true'
@@ -57,6 +58,7 @@ jobs:
         run: |
           rm tools/apply-parameterized-rotation-variants.py
           rm tools/fix-parameterized-variant-generator.py
+          rm tools/fix-parameterized-test-correction.py
           rm tools/fix-parameterized-variant-generated-tests.py
           rm -f package-lock.json tsconfig.app.tsbuildinfo tsconfig.node.tsbuildinfo
           git config user.name "github-actions[bot]"
