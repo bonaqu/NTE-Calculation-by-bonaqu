@@ -33,7 +33,9 @@ jobs:
           node-version: 24
       - name: Apply guarded patch
         if: steps.guard.outputs.apply == 'true'
-        run: python tools/apply-typed-cycle-events.py
+        run: |
+          python tools/apply-typed-cycle-events.py
+          python tools/fix-typed-cycle-generated-tests.py
       - name: Install dependencies
         if: steps.guard.outputs.apply == 'true'
         run: npm install --no-audit --no-fund --no-package-lock
@@ -53,6 +55,7 @@ jobs:
         if: steps.guard.outputs.apply == 'true'
         run: |
           rm tools/apply-typed-cycle-events.py
+          rm tools/fix-typed-cycle-generated-tests.py
           rm -f package-lock.json tsconfig.app.tsbuildinfo tsconfig.node.tsbuildinfo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
