@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# One exact mixed-script correction; the guarded workflow runs the full project afterward.
 path = Path('src/components/ManualTeamCombatScenarioEditor.tsx')
 text = path.read_text(encoding='utf-8')
 old = 'небoевую'
