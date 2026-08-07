@@ -36,6 +36,7 @@ jobs:
         run: |
           python tools/fix-operation-patch-generator.py
           python tools/apply-typed-operation-markers.py
+          python tools/fix-operation-generated-tests.py
       - name: Install dependencies
         if: steps.guard.outputs.apply == 'true'
         run: npm install --no-audit --no-fund --no-package-lock
@@ -56,6 +57,7 @@ jobs:
         run: |
           rm tools/apply-typed-operation-markers.py
           rm tools/fix-operation-patch-generator.py
+          rm tools/fix-operation-generated-tests.py
           rm -f package-lock.json tsconfig.app.tsbuildinfo tsconfig.node.tsbuildinfo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
